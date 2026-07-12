@@ -1,7 +1,5 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Binaries and build artifacts
+bin/
 *.exe
 *.exe~
 *.dll
@@ -11,22 +9,34 @@
 # Test binary, built with `go test -c`
 *.test
 
-# Code coverage profiles and other test artifacts
+# Coverage and profiling output
 *.out
+coverage/
 coverage.*
 *.coverprofile
 profile.cov
+*.prof
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
+# Go workspace files
 go.work
 go.work.sum
 
-# env file
-.env
+# Dependency directories (uncomment to vendor)
+# vendor/
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# Local environment overrides
+.env
+.env.*
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+
+# VS Code: track shareable project config, ignore personal/workspace state.
+# Add another `!.vscode/<file>` line to share more (e.g. launch.json, tasks.json).
+.vscode/*
+!.vscode/settings.json
+
+# Local-only notes and scratch docs (not part of the repo)
+local-notes/

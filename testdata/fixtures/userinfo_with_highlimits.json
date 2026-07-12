@@ -1,0 +1,23 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "userinfo": {
+      "id": 3,
+      "name": "TestAdmin",
+      "rights": [
+        "read",
+        "edit",
+        "delete",
+        "undelete",
+        "move",
+        "apihighlimits"
+      ],
+      "groups": [
+        "*",
+        "user",
+        "sysop"
+      ]
+    }
+  }
+}
+

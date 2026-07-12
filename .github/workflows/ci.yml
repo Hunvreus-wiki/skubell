@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    name: Build, test & lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Fyne needs a C toolchain and OpenGL/X11 headers to compile the GUI packages.
+      - name: Install Fyne system dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race ./internal/...
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.12.2
+
+  integration:
+    name: Integration (MediaWiki ${{ matrix.mw }})
+    runs-on: ubuntu-latest
+    needs: ci
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mw: "1.43"       # current LTS / minimum supported version
+            service: mw143
+            port: 8081
+          - mw: "1.46"       # latest stable
+            service: mw146
+            port: 8082
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # The integration test binary is pure Go (no cgo), so no Fyne/C deps are needed here.
+      # curl, jq and docker compose are preinstalled on ubuntu-latest.
+      - name: Start MediaWiki ${{ matrix.mw }} (self-installs; its DB starts via depends_on)
+        run: docker compose -f docker-compose.test.yml up -d ${{ matrix.service }}
+
+      - name: Provision the wiki (users, bot passwords, seed pages, blocks)
+        env:
+          WAIT_TIMEOUT_SECONDS: "300" # cold runner: image pull + DB init + MediaWiki install
+        run: ./scripts/provision-test-wiki.sh localhost:${{ matrix.port }}
+
+      - name: Run integration tests
+        env:
+          SKUBELL_TEST_API: http://localhost:${{ matrix.port }}/api.php
+        run: go test -tags integration -count=1 ./internal/integration/...
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs --no-color --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v

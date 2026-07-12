@@ -1,0 +1,310 @@
+{
+  "common_back": {
+    "other": "← Distreiñ"
+  },
+  "common_cancel": {
+    "other": "Nullañ"
+  },
+  "common_connect": {
+    "other": "Kevreañ"
+  },
+  "common_delete": {
+    "other": "Diverkañ"
+  },
+  "common_edit": {
+    "other": "Kemmañ"
+  },
+  "common_home": {
+    "other": "Degemer"
+  },
+  "common_preferences": {
+    "other": "Penndibaboù"
+  },
+  "common_proceed": {
+    "other": "Kenderc'hel"
+  },
+  "common_save": {
+    "other": "Enrollañ"
+  },
+  "del_add_to_list": {
+    "other": "Ouzhpennañ d'ar roll"
+  },
+  "del_category_not_empty": {
+    "one": "  ⚠ rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur",
+    "other": "  ⚠ rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur"
+  },
+  "del_check_broken_redirects": {
+    "other": "Adkasoù torr"
+  },
+  "del_check_delete_redirects": {
+    "other": "Dilemel an adkasoù ivez"
+  },
+  "del_check_delete_talk": {
+    "other": "Dilemel ar pajennoù kaozeal ivez"
+  },
+  "del_check_dry_run": {
+    "other": "Darvanañ"
+  },
+  "del_check_include_categories": {
+    "other": "Enklozañ ar rummadoù"
+  },
+  "del_check_recursive": {
+    "other": "Klask askizat"
+  },
+  "del_check_redirects_only": {
+    "other": "Adkasoù hepken"
+  },
+  "del_clear_list": {
+    "other": "Goullonderiñ ar roll"
+  },
+  "del_clear_results": {
+    "other": "Goullonderiñ an disoc'hoù"
+  },
+  "del_computing": {
+    "other": "O jediñ ar pajennoù da ziverkañ…"
+  },
+  "del_download": {
+    "other": "Pellgargañ"
+  },
+  "del_download_failures": {
+    "other": "Pellgargañ an emnontoù c’hwitet"
+  },
+  "del_download_journal": {
+    "other": "Pellgargañ ar marilh"
+  },
+  "del_download_successes": {
+    "other": "Pellgargañ an enmontoù aet da benn mat"
+  },
+  "del_dryrun_complete": {
+    "other": "Darvanañ echu."
+  },
+  "del_err_reasons": {
+    "other": "Abegoù diverkañ"
+  },
+  "del_err_verify": {
+    "other": "Gwiriañ"
+  },
+  "del_exec_canceled": {
+    "other": "Peurgas nullet."
+  },
+  "del_exec_complete": {
+    "other": "Peurgas echu."
+  },
+  "del_exec_not_started": {
+    "other": "N'eo ket bet kroget ar peurgas."
+  },
+  "del_execute": {
+    "other": "peurgas"
+  },
+  "del_executing": {
+    "one": "O peurgas {{.Count}} oberiadenn…",
+    "other": "O peurgas {{.Count}} oberiadenn…"
+  },
+  "del_execution_heading": {
+    "other": "Peurgas"
+  },
+  "del_field_additional_reason": {
+    "other": "Abeg ouzhpenn"
+  },
+  "del_field_category": {
+    "other": "Rummad"
+  },
+  "del_field_creator": {
+    "other": "Krouer"
+  },
+  "del_field_linked_from": {
+    "other": "Pajennoù liammet eus"
+  },
+  "del_field_max_size": {
+    "other": "Ment vrasañ (okted)"
+  },
+  "del_field_min_size": {
+    "other": "Ment vihanañ (okted)"
+  },
+  "del_field_namespace": {
+    "other": "Esaouenn anv"
+  },
+  "del_field_reason": {
+    "other": "Abeg"
+  },
+  "del_field_template": {
+    "other": "Pajennoù a enframm ar patrom"
+  },
+  "del_field_title_prefix": {
+    "other": "Rakger an titl"
+  },
+  "del_final_list": {
+    "other": "Roll diwezhañ"
+  },
+  "del_import": {
+    "other": "Enporzhiañ"
+  },
+  "del_import_file": {
+    "other": "Enporzhiañ ur restr…"
+  },
+  "del_loading_reasons": {
+    "other": "O kargañ an abegoù rakarventennet…"
+  },
+  "del_need_one_page": {
+    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
+  },
+  "del_not_connected": {
+    "other": "N'oc'h ket kevreet ouzh ur wiki."
+  },
+  "del_options_heading": {
+    "other": "Dibarzhioù diverkañ"
+  },
+  "del_pages_in_list": {
+    "one": "{{.Count}} bajenn er roll",
+    "other": "{{.Count}} pajenn er roll"
+  },
+  "del_placeholder_manual": {
+    "other": "Un titl e pep linenn"
+  },
+  "del_preparing": {
+    "other": "O prientiñ an oberoù…"
+  },
+  "del_press_proceed": {
+    "other": "Pouezit war Kenderc'hel evit peurgas an diverkadur."
+  },
+  "del_proceed_options": {
+    "other": "Kenderc'hel d'an dibarzhioù →"
+  },
+  "del_result_bytes": {
+    "one": "{{.Title}} ({{.Count}} okted)",
+    "other": "{{.Title}} ({{.Count}} okted)"
+  },
+  "del_results_count": {
+    "one": "{{.Count}} disoc'h",
+    "other": "{{.Count}} disoc'h"
+  },
+  "del_search": {
+    "other": "Klask"
+  },
+  "del_search_results": {
+    "other": "Disoc'hoù ar c'hlask"
+  },
+  "del_searching": {
+    "other": "O klask pajennoù…"
+  },
+  "del_summary": {
+    "other": "{{.Operations}} ober · {{.Pages}} pajenn a vo diverket."
+  },
+  "del_tab_manual": {
+    "other": "Merkañ dre zorn"
+  },
+  "prefs_language": {
+    "other": "Yezh"
+  },
+  "prefs_theme": {
+    "other": "Tem"
+  },
+  "prefs_title": {
+    "other": "Penndibaboù"
+  },
+  "security_insecure": {
+    "other": "Nann-sur"
+  },
+  "security_secure": {
+    "other": "Sur"
+  },
+  "security_unknown": {
+    "other": "Dianav"
+  },
+  "startup_add_wiki": {
+    "other": "+ Ouzhpennañ ur wiki"
+  },
+  "startup_delete_confirm": {
+    "other": "Dilemel « {{.Name}} » diwar roll ar wikioù ?"
+  },
+  "startup_delete_title": {
+    "other": "Dilemel ar wiki"
+  },
+  "startup_title": {
+    "other": "Dibabit ur wiki"
+  },
+  "welcome_actions": {
+    "other": "Oberoù"
+  },
+  "welcome_no_actions": {
+    "other": "Ober ebet graet c'hoazh en dalc'h-mañ."
+  },
+  "welcome_session_activity": {
+    "other": "Obereriantiz an dalc'h"
+  },
+  "welcome_stat_active_users": {
+    "other": "Implijerien oberiant : {{.Count}}"
+  },
+  "welcome_stat_pages": {
+    "other": "Pajennoù : {{.Count}}"
+  },
+  "wiki_err_bot_password_required": {
+    "other": "Ret eo ar ger-tremen robot."
+  },
+  "wiki_err_name_exists": {
+    "other": "An anv-mañ zo anezhañ dija."
+  },
+  "wiki_err_name_required": {
+    "other": "Ret eo an anv."
+  },
+  "wiki_err_url_invalid": {
+    "other": "Direizh eo URL ar wiki."
+  },
+  "wiki_err_url_required": {
+    "other": "Ret eo URL ar wiki."
+  },
+  "wiki_err_username_required": {
+    "other": "Ret eo an anv implijer."
+  },
+  "wiki_field_bot_password": {
+    "other": "Ger-tremen robot"
+  },
+  "wiki_field_farm": {
+    "other": "Feurm"
+  },
+  "wiki_field_language": {
+    "other": "Yezh"
+  },
+  "wiki_field_mode": {
+    "other": "Mod"
+  },
+  "wiki_field_name": {
+    "other": "Anv"
+  },
+  "wiki_field_project": {
+    "other": "Raktres"
+  },
+  "wiki_field_url": {
+    "other": "URL ar wiki"
+  },
+  "wiki_field_username": {
+    "other": "Anv implijer"
+  },
+  "wiki_field_wiki_name": {
+    "other": "Anv ar wiki"
+  },
+  "wiki_settings_title": {
+    "other": "Arventennoù ar wiki"
+  },
+  "workflow_delete_pages": {
+    "other": "Diverkañ pajennoù"
+  },
+  "workflow_requires_rights": {
+    "other": "{{.Label}} (ezhomm eus {{.Rights}})"
+  },
+  "workflow_step_execution": {
+    "other": "Peurgas"
+  },
+  "workflow_step_indicator": {
+    "other": "Pazenn {{.Current}}/{{.Total}} : {{.Name}}"
+  },
+  "workflow_step_options": {
+    "other": "Dibarzhioù"
+  },
+  "workflow_step_selection": {
+    "other": "Diuzañ"
+  },
+  "workflow_step_verification": {
+    "other": "Gwiriañ"
+  }
+}

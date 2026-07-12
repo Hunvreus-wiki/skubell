@@ -1,0 +1,24 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "allmessages": [
+      {
+        "name": "deletereason-dropdown",
+        "content": "* Common deletion reasons\n** Off-topic: please read the admissibility criteria\n** Test, please use the sandbox\n** No meaningful content\n* Speedy deletion criteria\n** CSD1: empty page or no content\n** CSD2: vandalism"
+      },
+      {
+        "name": "ipbreason-dropdown",
+        "content": "* Common block reasons\n** Vandalism\n** Spamming"
+      },
+      {
+        "name": "protect-dropdown",
+        "content": "* Common protection reasons\n** Vandalism\n** Edit warring"
+      },
+      {
+        "name": "revdelete-reason-dropdown",
+        "content": "* Common revision deletion reasons\n** Grossly insulting or degrading content\n** Attack name"
+      }
+    ]
+  }
+}
+

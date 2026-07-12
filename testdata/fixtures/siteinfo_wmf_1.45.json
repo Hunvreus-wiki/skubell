@@ -1,0 +1,34 @@
+{
+  "batchcomplete": "",
+  "query": {
+    "general": {
+      "mainpage": "Main Page",
+      "base": "https://en.wikipedia.org/wiki/Main_Page",
+      "sitename": "Wikipedia",
+      "logo": "//upload.wikimedia.org/wikipedia/en/b/bc/Wiki.png",
+      "generator": "MediaWiki 1.45.0-wmf.3",
+      "phpversion": "8.2.0",
+      "lang": "en"
+    },
+    "namespaces": {
+      "0": {
+        "id": 0,
+        "case": "first-letter",
+        "content": "",
+        "*": ""
+      },
+      "1": {
+        "id": 1,
+        "case": "first-letter",
+        "subpages": "",
+        "*": "Talk"
+      }
+    },
+    "extensions": [
+      { "name": "Abuse Filter" },
+      { "name": "ConfirmEdit" },
+      { "name": "Nuke" }
+    ]
+  }
+}
+

@@ -1,0 +1,137 @@
+name: Release
+
+# Build downloadable binaries on a version tag and publish them to a GitHub Release.
+# Fyne is a cgo app, so each OS is built on its own native runner (cross-compiling cgo is painful).
+# Tag as vMAJOR.MINOR.PATCH (e.g. v0.1.0); a tag with a suffix (v0.1.0-rc1) publishes a pre-release.
+# workflow_dispatch builds the artifacts without publishing, for testing.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build without leading v (e.g. 0.1.0-rc1)"
+        required: true
+        default: "0.0.0-dev"
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-amd64
+            target: linux
+          - os: windows-latest
+            name: windows-amd64
+            target: windows
+          - os: macos-latest # Apple Silicon (arm64); unsigned/un-notarised
+            name: darwin-arm64
+            target: darwin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Fyne system dependencies (Linux only)
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+
+      - name: Install the fyne packaging tool
+        run: go install fyne.io/tools/cmd/fyne@latest
+
+      - name: Put Go-installed tools on PATH
+        shell: bash
+        run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve version
+        id: ver
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            v="${GITHUB_REF_NAME#v}"
+          else
+            v="${{ inputs.version }}"
+          fi
+          echo "version=$v"          >> "$GITHUB_OUTPUT" # full, e.g. 0.1.0-rc1 (UA/UI string)
+          echo "appver=${v%%-*}"     >> "$GITHUB_OUTPUT" # numeric core, e.g. 0.1.0 (bundle metadata)
+
+      - name: Build and package
+        shell: bash
+        working-directory: cmd/skubell
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          APPVER: ${{ steps.ver.outputs.appver }}
+          TARGET: ${{ matrix.target }}
+          NAME: ${{ matrix.name }}
+        run: |
+          set -euo pipefail
+
+          # Keep the bundle metadata (Info.plist / exe properties) in step with the tag.
+          python3 - "$APPVER" <<'PY'
+          import re, sys
+          p = "FyneApp.toml"
+          s = open(p).read()
+          s = re.sub(r'Version = "[^"]*"', 'Version = "%s"' % sys.argv[1], s)
+          open(p, "w").write(s)
+          PY
+
+          # Pre-build so we can stamp version.Number via ldflags; -H=windowsgui hides the console.
+          LDFLAGS="-s -w -X github.com/Hunvreus-wiki/skubell/internal/version.Number=${VERSION}"
+          BIN=skubell
+          if [ "$TARGET" = "windows" ]; then
+            BIN=skubell.exe
+            LDFLAGS="$LDFLAGS -H=windowsgui"
+          fi
+          go build -ldflags "$LDFLAGS" -o "$BIN" .
+
+          # Wrap the prebuilt binary into a native bundle (reads icon/name/id/version from FyneApp.toml).
+          fyne package -os "$TARGET" --executable "$BIN"
+
+          mkdir -p ../../dist
+          OUT="skubell-${VERSION}-${NAME}"
+          case "$TARGET" in
+            linux)   mv ./*.tar.xz "../../dist/${OUT}.tar.xz" ;;                    # fyne emits Skubell.tar.xz
+            windows) mv "$BIN" "../../dist/${OUT}.exe" ;;                           # icon embedded in place
+            darwin)  ditto -c -k --keepParent ./*.app "../../dist/${OUT}.zip" ;;    # zip the .app bundle
+          esac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') # only real tags publish; dispatch just builds artifacts
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum ./* > SHA256SUMS
+          PRE=""
+          case "${GITHUB_REF_NAME}" in *-*) PRE="--prerelease" ;; esac
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            $PRE \
+            ./*

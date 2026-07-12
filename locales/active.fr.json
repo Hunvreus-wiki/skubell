@@ -1,0 +1,310 @@
+{
+  "common_back": {
+    "other": "← Retour"
+  },
+  "common_cancel": {
+    "other": "Annuler"
+  },
+  "common_connect": {
+    "other": "Connexion"
+  },
+  "common_delete": {
+    "other": "Supprimer"
+  },
+  "common_edit": {
+    "other": "Modifier"
+  },
+  "common_home": {
+    "other": "Accueil"
+  },
+  "common_preferences": {
+    "other": "Préférences"
+  },
+  "common_proceed": {
+    "other": "Continuer"
+  },
+  "common_save": {
+    "other": "Enregistrer"
+  },
+  "del_add_to_list": {
+    "other": "Ajouter à la liste"
+  },
+  "del_category_not_empty": {
+    "one": "  ⚠ catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
+    "other": "  ⚠ catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
+  },
+  "del_check_broken_redirects": {
+    "other": "Redirections brisées"
+  },
+  "del_check_delete_redirects": {
+    "other": "Supprimer aussi les redirections"
+  },
+  "del_check_delete_talk": {
+    "other": "Supprimer aussi les pages de discussion"
+  },
+  "del_check_dry_run": {
+    "other": "Simulation"
+  },
+  "del_check_include_categories": {
+    "other": "Inclure les catégories"
+  },
+  "del_check_recursive": {
+    "other": "Recherche récursive"
+  },
+  "del_check_redirects_only": {
+    "other": "Redirections uniquement"
+  },
+  "del_clear_list": {
+    "other": "Vider la liste"
+  },
+  "del_clear_results": {
+    "other": "Effacer les résultats"
+  },
+  "del_computing": {
+    "other": "Calcul des pages à supprimer…"
+  },
+  "del_download": {
+    "other": "Télécharger"
+  },
+  "del_download_failures": {
+    "other": "Télécharger les échecs"
+  },
+  "del_download_journal": {
+    "other": "Télécharger le journal"
+  },
+  "del_download_successes": {
+    "other": "Télécharger les réussites"
+  },
+  "del_dryrun_complete": {
+    "other": "Simulation terminée."
+  },
+  "del_err_reasons": {
+    "other": "Motifs de suppression"
+  },
+  "del_err_verify": {
+    "other": "Vérifier"
+  },
+  "del_exec_canceled": {
+    "other": "Exécution annulée."
+  },
+  "del_exec_complete": {
+    "other": "Exécution terminée."
+  },
+  "del_exec_not_started": {
+    "other": "Exécution non démarrée."
+  },
+  "del_execute": {
+    "other": "Exécuter"
+  },
+  "del_executing": {
+    "one": "Exécution de {{.Count}} opération…",
+    "other": "Exécution de {{.Count}} opérations…"
+  },
+  "del_execution_heading": {
+    "other": "Exécution"
+  },
+  "del_field_additional_reason": {
+    "other": "Motif complémentaire"
+  },
+  "del_field_category": {
+    "other": "Catégorie"
+  },
+  "del_field_creator": {
+    "other": "Créateur"
+  },
+  "del_field_linked_from": {
+    "other": "Pages liées depuis"
+  },
+  "del_field_max_size": {
+    "other": "Taille max (octets)"
+  },
+  "del_field_min_size": {
+    "other": "Taille min (octets)"
+  },
+  "del_field_namespace": {
+    "other": "Espace de noms"
+  },
+  "del_field_reason": {
+    "other": "Motif"
+  },
+  "del_field_template": {
+    "other": "Pages transcluant le modèle"
+  },
+  "del_field_title_prefix": {
+    "other": "Préfixe de titre"
+  },
+  "del_final_list": {
+    "other": "Liste finale"
+  },
+  "del_import": {
+    "other": "Importer"
+  },
+  "del_import_file": {
+    "other": "Importer un fichier…"
+  },
+  "del_loading_reasons": {
+    "other": "Chargement des motifs prédéfinis…"
+  },
+  "del_need_one_page": {
+    "other": "Ajoutez au moins une page pour continuer."
+  },
+  "del_not_connected": {
+    "other": "Non connecté à un wiki."
+  },
+  "del_options_heading": {
+    "other": "Options de suppression"
+  },
+  "del_pages_in_list": {
+    "one": "{{.Count}} page dans la liste",
+    "other": "{{.Count}} pages dans la liste"
+  },
+  "del_placeholder_manual": {
+    "other": "Un titre par ligne"
+  },
+  "del_preparing": {
+    "other": "Préparation des opérations…"
+  },
+  "del_press_proceed": {
+    "other": "Appuyez sur Continuer pour exécuter la suppression."
+  },
+  "del_proceed_options": {
+    "other": "Continuer vers les options →"
+  },
+  "del_result_bytes": {
+    "one": "{{.Title}} ({{.Count}} octet)",
+    "other": "{{.Title}} ({{.Count}} octets)"
+  },
+  "del_results_count": {
+    "one": "{{.Count}} résultat",
+    "other": "{{.Count}} résultats"
+  },
+  "del_search": {
+    "other": "Rechercher"
+  },
+  "del_search_results": {
+    "other": "Résultats de recherche"
+  },
+  "del_searching": {
+    "other": "Recherche de pages…"
+  },
+  "del_summary": {
+    "other": "{{.Operations}} opérations · {{.Pages}} pages seront supprimées."
+  },
+  "del_tab_manual": {
+    "other": "Saisie manuelle"
+  },
+  "prefs_language": {
+    "other": "Langue"
+  },
+  "prefs_theme": {
+    "other": "Thème"
+  },
+  "prefs_title": {
+    "other": "Préférences"
+  },
+  "security_insecure": {
+    "other": "Non sécurisé"
+  },
+  "security_secure": {
+    "other": "Sécurisé"
+  },
+  "security_unknown": {
+    "other": "Inconnu"
+  },
+  "startup_add_wiki": {
+    "other": "+ Ajouter un wiki"
+  },
+  "startup_delete_confirm": {
+    "other": "Retirer « {{.Name}} » de la liste des wikis ?"
+  },
+  "startup_delete_title": {
+    "other": "Supprimer le wiki"
+  },
+  "startup_title": {
+    "other": "Sélectionnez un wiki"
+  },
+  "welcome_actions": {
+    "other": "Actions"
+  },
+  "welcome_no_actions": {
+    "other": "Aucune action effectuée dans cette session."
+  },
+  "welcome_session_activity": {
+    "other": "Activité de la session"
+  },
+  "welcome_stat_active_users": {
+    "other": "Utilisateurs actifs : {{.Count}}"
+  },
+  "welcome_stat_pages": {
+    "other": "Pages : {{.Count}}"
+  },
+  "wiki_err_bot_password_required": {
+    "other": "Le mot de passe de bot est obligatoire."
+  },
+  "wiki_err_name_exists": {
+    "other": "Ce nom existe déjà."
+  },
+  "wiki_err_name_required": {
+    "other": "Le nom est obligatoire."
+  },
+  "wiki_err_url_invalid": {
+    "other": "L’URL du wiki est invalide."
+  },
+  "wiki_err_url_required": {
+    "other": "L’URL du wiki est obligatoire."
+  },
+  "wiki_err_username_required": {
+    "other": "Le nom d’utilisateur est obligatoire."
+  },
+  "wiki_field_bot_password": {
+    "other": "Mot de passe de bot"
+  },
+  "wiki_field_farm": {
+    "other": "Ferme"
+  },
+  "wiki_field_language": {
+    "other": "Langue"
+  },
+  "wiki_field_mode": {
+    "other": "Mode"
+  },
+  "wiki_field_name": {
+    "other": "Nom"
+  },
+  "wiki_field_project": {
+    "other": "Projet"
+  },
+  "wiki_field_url": {
+    "other": "URL du wiki"
+  },
+  "wiki_field_username": {
+    "other": "Nom d’utilisateur"
+  },
+  "wiki_field_wiki_name": {
+    "other": "Nom du wiki"
+  },
+  "wiki_settings_title": {
+    "other": "Paramètres du wiki"
+  },
+  "workflow_delete_pages": {
+    "other": "Supprimer des pages"
+  },
+  "workflow_requires_rights": {
+    "other": "{{.Label}} (nécessite {{.Rights}})"
+  },
+  "workflow_step_execution": {
+    "other": "Exécution"
+  },
+  "workflow_step_indicator": {
+    "other": "Étape {{.Current}}/{{.Total}} : {{.Name}}"
+  },
+  "workflow_step_options": {
+    "other": "Options"
+  },
+  "workflow_step_selection": {
+    "other": "Sélection"
+  },
+  "workflow_step_verification": {
+    "other": "Vérification"
+  }
+}
