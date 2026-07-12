@@ -1,0 +1,132 @@
+services:
+  mw143-db:
+    image: mariadb:11.4
+    container_name: skubell-mw143-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass143
+      MARIADB_DATABASE: mediawiki
+      MARIADB_USER: wikiuser
+      MARIADB_PASSWORD: wikipass143
+    command: >-
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-file-per-table=1
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-uroot", "-prootpass143"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mw143-db-data:/var/lib/mysql
+
+  mw146-db:
+    image: mariadb:11.4
+    container_name: skubell-mw146-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass146
+      MARIADB_DATABASE: mediawiki
+      MARIADB_USER: wikiuser
+      MARIADB_PASSWORD: wikipass146
+    command: >-
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-file-per-table=1
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-uroot", "-prootpass146"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mw146-db-data:/var/lib/mysql
+
+  # 8081 = minimum supported / current LTS (MediaWiki 1.43, EOL Dec 2027)
+  mw143:
+    image: mediawiki:1.43
+    container_name: skubell-mw143
+    restart: unless-stopped
+    depends_on:
+      mw143-db:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    environment:
+      MW_DB_HOST: mw143-db
+      MW_DB_NAME: mediawiki
+      MW_DB_USER: wikiuser
+      MW_DB_PASSWORD: wikipass143
+      MW_DB_ROOT_PASSWORD: rootpass143
+      MW_SITE_SERVER: http://localhost:8081
+      MW_SITE_NAME: Skubell Test Wiki 1.43
+      MW_ADMIN_USER: WikiSysop
+      MW_ADMIN_PASS: WikiSysopPass143!
+    volumes:
+      - mw143-wiki-data:/var/www/html
+    command: >-
+      bash -lc '
+        set -euo pipefail
+        if [ ! -f /var/www/html/LocalSettings.php ]; then
+          until php /var/www/html/maintenance/install.php \
+            --server "$${MW_SITE_SERVER}" \
+            --scriptpath "" \
+            --dbtype mysql \
+            --dbserver "$${MW_DB_HOST}" \
+            --dbname "$${MW_DB_NAME}" \
+            --dbuser "$${MW_DB_USER}" \
+            --dbpass "$${MW_DB_PASSWORD}" \
+            --pass "$${MW_ADMIN_PASS}" \
+            "$${MW_SITE_NAME}" "$${MW_ADMIN_USER}"; do
+            sleep 3
+          done
+        fi
+        exec apache2-foreground
+      '
+
+  # 8082 = latest stable (MediaWiki 1.46, released 30 June 2026)
+  mw146:
+    image: mediawiki:1.46
+    container_name: skubell-mw146
+    restart: unless-stopped
+    depends_on:
+      mw146-db:
+        condition: service_healthy
+    ports:
+      - "8082:80"
+    environment:
+      MW_DB_HOST: mw146-db
+      MW_DB_NAME: mediawiki
+      MW_DB_USER: wikiuser
+      MW_DB_PASSWORD: wikipass146
+      MW_DB_ROOT_PASSWORD: rootpass146
+      MW_SITE_SERVER: http://localhost:8082
+      MW_SITE_NAME: Skubell Test Wiki 1.46
+      MW_ADMIN_USER: WikiSysop
+      MW_ADMIN_PASS: WikiSysopPass146!
+    volumes:
+      - mw146-wiki-data:/var/www/html
+    command: >-
+      bash -lc '
+        set -euo pipefail
+        if [ ! -f /var/www/html/LocalSettings.php ]; then
+          until php /var/www/html/maintenance/install.php \
+            --server "$${MW_SITE_SERVER}" \
+            --scriptpath "" \
+            --dbtype mysql \
+            --dbserver "$${MW_DB_HOST}" \
+            --dbname "$${MW_DB_NAME}" \
+            --dbuser "$${MW_DB_USER}" \
+            --dbpass "$${MW_DB_PASSWORD}" \
+            --pass "$${MW_ADMIN_PASS}" \
+            "$${MW_SITE_NAME}" "$${MW_ADMIN_USER}"; do
+            sleep 3
+          done
+        fi
+        exec apache2-foreground
+      '
+
+volumes:
+  mw143-db-data:
+  mw146-db-data:
+  mw143-wiki-data:
+  mw146-wiki-data:

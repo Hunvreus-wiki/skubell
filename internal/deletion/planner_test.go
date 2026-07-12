@@ -1,0 +1,255 @@
+package deletion
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/Hunvreus-wiki/skubell/internal/ops"
+)
+
+func itemTitles(plan Plan) []string {
+	titles := make([]string, 0, len(plan.Items))
+	for _, item := range plan.Items {
+		titles = append(titles, item.Title)
+	}
+	return titles
+}
+
+func findItem(t *testing.T, plan Plan, title string) PlanItem {
+	t.Helper()
+	for _, item := range plan.Items {
+		if item.Title == title {
+			return item
+		}
+	}
+	t.Fatalf("item %q not found in %v", title, itemTitles(plan))
+	return PlanItem{}
+}
+
+func TestBuildPlanBasicDeletes(t *testing.T) {
+	t.Parallel()
+
+	plan, err := BuildPlan(nil, []string{"Apple", "Banana", "Carrot"}, PlanOptions{Reason: "Cleanup"})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Banana", "Carrot"}, itemTitles(plan))
+	require.Equal(t, 3, plan.OperationCount())
+	require.Equal(t, 3, plan.PageCount)
+
+	apple := findItem(t, plan, "Apple")
+	require.Equal(t, ops.OpDeletePage, apple.Operation.Type)
+	require.Equal(t, "Cleanup", apple.Operation.Params["reason"])
+	require.False(t, apple.Derived)
+	require.False(t, apple.HasTalkPage)
+	require.NotContains(t, apple.Operation.Params, paramDeleteTalk)
+}
+
+func TestBuildPlanTalkOptionUsesDeletetalkWhenTalkExists(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{
+			"Talk:Apple":  "Apple",
+			"Talk:Banana": "Banana",
+		},
+		TalkPages: map[string]string{
+			"Apple":  "Talk:Apple",
+			"Banana": "Talk:Banana",
+		},
+		ExistingPages: map[string]struct{}{
+			"Talk:Apple": {}, // Talk:Banana intentionally absent → does not exist
+		},
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{IncludeTalk: true})
+	require.NoError(t, err)
+	require.Equal(t, 2, plan.OperationCount())
+	require.Equal(t, 3, plan.PageCount) // Apple + Talk:Apple + Banana (Talk:Banana absent)
+
+	apple := findItem(t, plan, "Apple")
+	require.True(t, apple.HasTalkPage)
+	require.Equal(t, "true", apple.Operation.Params[paramDeleteTalk])
+
+	banana := findItem(t, plan, "Banana")
+	require.False(t, banana.HasTalkPage)
+	require.NotContains(t, banana.Operation.Params, paramDeleteTalk)
+}
+
+func TestBuildPlanRedirectsAreTransitive(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		Redirects: map[string][]string{
+			"Apple":     {"Cider"},
+			"Cider":     {"Old-Apple"}, // transitive: Old-Apple -> Cider -> Apple
+			"Old-Apple": nil,
+		},
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{IncludeRedirect: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Cider", "Old-Apple"}, itemTitles(plan))
+
+	old := findItem(t, plan, "Old-Apple")
+	require.True(t, old.Derived)
+	require.Equal(t, "Apple", old.Root) // ultimate root, not the immediate parent
+	require.Equal(t, "Cider", old.Operation.Params[paramRedirectTarget])
+}
+
+func TestBuildPlanRedirectCycleTerminates(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		Redirects: map[string][]string{
+			"Apple": {"Bravo"},
+			"Bravo": {"Apple"}, // cycle
+		},
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{IncludeRedirect: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Bravo"}, itemTitles(plan))
+}
+
+// A talk page that is itself a redirect, whose subject page is also being deleted, must NOT get a standalone delete —
+// the subject's deletetalk removes it. This is the case that a single-pass planner double-deletes.
+func TestBuildPlanTalkRedirectCoveredByDeletetalk(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{
+			"Talk:Apple":     "Apple",
+			"Talk:Old-Apple": "Old-Apple",
+		},
+		TalkPages: map[string]string{
+			"Apple":     "Talk:Apple",
+			"Old-Apple": "Talk:Old-Apple",
+		},
+		ExistingPages: map[string]struct{}{
+			"Talk:Apple": {}, "Talk:Old-Apple": {},
+		},
+		Redirects: map[string][]string{
+			"Apple":      {"Old-Apple"},      // Old-Apple redirects to Apple
+			"Talk:Apple": {"Talk:Old-Apple"}, // Talk:Old-Apple redirects to Talk:Apple
+		},
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{IncludeTalk: true, IncludeRedirect: true})
+	require.NoError(t, err)
+
+	// Two operations (Apple, Old-Apple), each with deletetalk; four pages total.
+	require.Equal(t, []string{"Apple", "Old-Apple"}, itemTitles(plan))
+	require.Equal(t, 4, plan.PageCount)
+	require.Equal(t, "true", findItem(t, plan, "Apple").Operation.Params[paramDeleteTalk])
+	require.Equal(t, "true", findItem(t, plan, "Old-Apple").Operation.Params[paramDeleteTalk])
+}
+
+// A talk-page redirect whose subject page is NOT being deleted is an orphan and gets its own standalone delete (no
+// deletetalk).
+func TestBuildPlanOrphanTalkRedirect(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{
+			"Talk:Apple": "Apple",
+			"Talk:Pomme": "Pomme", // Pomme is not in the deletion set
+		},
+		TalkPages: map[string]string{
+			"Apple": "Talk:Apple",
+		},
+		ExistingPages: map[string]struct{}{"Talk:Apple": {}},
+		Redirects: map[string][]string{
+			"Talk:Apple": {"Talk:Pomme"}, // Talk:Pomme redirects to Talk:Apple
+		},
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{IncludeTalk: true, IncludeRedirect: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Talk:Pomme"}, itemTitles(plan))
+	require.Equal(t, 3, plan.PageCount) // Apple + Talk:Apple + Talk:Pomme
+
+	pomme := findItem(t, plan, "Talk:Pomme")
+	require.True(t, pomme.TalkPage)
+	require.True(t, pomme.Derived)
+	require.Equal(t, "Apple", pomme.Root)
+	require.Equal(t, "Pomme", pomme.SubjectTitle) // sorts at its subject, not clustered
+	require.NotContains(t, pomme.Operation.Params, paramDeleteTalk)
+}
+
+// Talk pages are resolved by namespace, not a "Talk:" prefix — Category talk, User talk, etc. all pair correctly.
+func TestBuildPlanCrossNamespaceTalkPairs(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{
+			"Category talk:Fruit":   "Category:Fruit",
+			"Category talk:Produce": "Category:Produce",
+		},
+		TalkPages: map[string]string{
+			"Category:Fruit":   "Category talk:Fruit",
+			"Category:Produce": "Category talk:Produce",
+		},
+		ExistingPages: map[string]struct{}{
+			"Category talk:Fruit": {}, // Category talk:Produce absent → no 💬 for Produce
+		},
+		Redirects: map[string][]string{
+			"Category:Fruit": {"Category:Produce"},
+		},
+	}
+
+	plan, err := BuildPlan(
+		provider,
+		[]string{"Category:Fruit"},
+		PlanOptions{IncludeTalk: true, IncludeRedirect: true},
+	)
+	require.NoError(t, err)
+	require.Equal(t, []string{"Category:Fruit", "Category:Produce"}, itemTitles(plan))
+	require.True(t, findItem(t, plan, "Category:Fruit").HasTalkPage)
+	require.False(t, findItem(t, plan, "Category:Produce").HasTalkPage)
+	require.Equal(t, 3, plan.PageCount) // Category:Fruit + its talk + Category:Produce
+}
+
+func TestBuildPlanSortsTalkAfterMainGroupedUnderRoot(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{
+			"Talk:Apple":     "Apple",
+			"Talk:Cider":     "Cider",
+			"Talk:Old-Apple": "Old-Apple",
+			"Talk:Banana":    "Banana",
+			"Talk:Berry":     "Berry", // orphan (Berry not deleted)
+		},
+		TalkPages: map[string]string{
+			"Apple":     "Talk:Apple",
+			"Cider":     "Talk:Cider",
+			"Old-Apple": "Talk:Old-Apple",
+			"Banana":    "Talk:Banana",
+		},
+		ExistingPages: map[string]struct{}{
+			"Talk:Apple": {}, "Talk:Cider": {}, "Talk:Old-Apple": {}, "Talk:Banana": {},
+		},
+		Redirects: map[string][]string{
+			"Apple":      {"Cider"},
+			"Cider":      {"Old-Apple"},
+			"Talk:Apple": {"Talk:Berry"},
+		},
+	}
+
+	plan, err := BuildPlan(
+		provider,
+		[]string{"Banana", "Apple"},
+		PlanOptions{IncludeTalk: true, IncludeRedirect: true},
+	)
+	require.NoError(t, err)
+
+	// Root "Apple" block first (alphabetical), root pinned, derived by subject title (Berry, Cider, Old-Apple); then
+	// root "Banana".
+	require.Equal(t, []string{
+		"Apple",
+		"Talk:Berry",
+		"Cider",
+		"Old-Apple",
+		"Banana",
+	}, itemTitles(plan))
+}

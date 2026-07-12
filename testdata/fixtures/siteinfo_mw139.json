@@ -1,0 +1,24 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "general": {
+      "sitename": "Skubell Test Wiki 1.39",
+      "generator": "MediaWiki 1.39.17"
+    },
+    "namespaces": [
+      {
+        "id": 0,
+        "name": ""
+      },
+      {
+        "id": 1,
+        "name": "Talk"
+      }
+    ],
+    "extensions": [
+      { "name": "Abuse Filter" },
+      { "name": "ConfirmEdit" }
+    ]
+  }
+}
+

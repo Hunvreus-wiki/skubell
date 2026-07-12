@@ -1,0 +1,19 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "userinfo": {
+      "id": 4,
+      "name": "TestEditor",
+      "rights": [
+        "read",
+        "edit"
+      ],
+      "groups": [
+        "*",
+        "user",
+        "autoconfirmed"
+      ]
+    }
+  }
+}
+

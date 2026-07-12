@@ -1,0 +1,310 @@
+{
+  "common_back": {
+    "other": "<- Back"
+  },
+  "common_cancel": {
+    "other": "Cancel"
+  },
+  "common_connect": {
+    "other": "Connect"
+  },
+  "common_delete": {
+    "other": "Delete"
+  },
+  "common_edit": {
+    "other": "Edit"
+  },
+  "common_home": {
+    "other": "Home"
+  },
+  "common_preferences": {
+    "other": "Preferences"
+  },
+  "common_proceed": {
+    "other": "Proceed"
+  },
+  "common_save": {
+    "other": "Save"
+  },
+  "del_add_to_list": {
+    "other": "Add to list"
+  },
+  "del_category_not_empty": {
+    "one": "  ⚠ category not empty ({{.Count}} member remaining) — deletion will fail",
+    "other": "  ⚠ category not empty ({{.Count}} members remaining) — deletion will fail"
+  },
+  "del_check_broken_redirects": {
+    "other": "Broken redirects"
+  },
+  "del_check_delete_redirects": {
+    "other": "Also delete redirects"
+  },
+  "del_check_delete_talk": {
+    "other": "Also delete talk pages"
+  },
+  "del_check_dry_run": {
+    "other": "Dry-run"
+  },
+  "del_check_include_categories": {
+    "other": "Include categories"
+  },
+  "del_check_recursive": {
+    "other": "Recursive search"
+  },
+  "del_check_redirects_only": {
+    "other": "Redirects only"
+  },
+  "del_clear_list": {
+    "other": "Clear list"
+  },
+  "del_clear_results": {
+    "other": "Clear results"
+  },
+  "del_computing": {
+    "other": "Computing pages to delete…"
+  },
+  "del_download": {
+    "other": "Download"
+  },
+  "del_download_failures": {
+    "other": "Download failures"
+  },
+  "del_download_journal": {
+    "other": "Download journal"
+  },
+  "del_download_successes": {
+    "other": "Download successes"
+  },
+  "del_dryrun_complete": {
+    "other": "Dry-run complete."
+  },
+  "del_err_reasons": {
+    "other": "Delete reasons"
+  },
+  "del_err_verify": {
+    "other": "Verify"
+  },
+  "del_exec_canceled": {
+    "other": "Execution canceled."
+  },
+  "del_exec_complete": {
+    "other": "Execution complete."
+  },
+  "del_exec_not_started": {
+    "other": "Execution not started."
+  },
+  "del_execute": {
+    "other": "Execute"
+  },
+  "del_executing": {
+    "one": "Executing {{.Count}} operation…",
+    "other": "Executing {{.Count}} operations…"
+  },
+  "del_execution_heading": {
+    "other": "Execution"
+  },
+  "del_field_additional_reason": {
+    "other": "Additional reason text"
+  },
+  "del_field_category": {
+    "other": "Category"
+  },
+  "del_field_creator": {
+    "other": "Creator"
+  },
+  "del_field_linked_from": {
+    "other": "Pages linked from"
+  },
+  "del_field_max_size": {
+    "other": "Max size (bytes)"
+  },
+  "del_field_min_size": {
+    "other": "Min size (bytes)"
+  },
+  "del_field_namespace": {
+    "other": "Namespace"
+  },
+  "del_field_reason": {
+    "other": "Reason"
+  },
+  "del_field_template": {
+    "other": "Pages transcluding template"
+  },
+  "del_field_title_prefix": {
+    "other": "Title prefix"
+  },
+  "del_final_list": {
+    "other": "Final list"
+  },
+  "del_import": {
+    "other": "Import"
+  },
+  "del_import_file": {
+    "other": "Import file..."
+  },
+  "del_loading_reasons": {
+    "other": "Loading predefined reasons..."
+  },
+  "del_need_one_page": {
+    "other": "Add at least one page to continue."
+  },
+  "del_not_connected": {
+    "other": "Not connected to a wiki."
+  },
+  "del_options_heading": {
+    "other": "Deletion options"
+  },
+  "del_pages_in_list": {
+    "one": "{{.Count}} page in list",
+    "other": "{{.Count}} pages in list"
+  },
+  "del_placeholder_manual": {
+    "other": "One title per line"
+  },
+  "del_preparing": {
+    "other": "Preparing operations..."
+  },
+  "del_press_proceed": {
+    "other": "Press Proceed to execute the deletion workflow."
+  },
+  "del_proceed_options": {
+    "other": "Proceed to options ->"
+  },
+  "del_result_bytes": {
+    "one": "{{.Title}} ({{.Count}} byte)",
+    "other": "{{.Title}} ({{.Count}} bytes)"
+  },
+  "del_results_count": {
+    "one": "{{.Count}} result",
+    "other": "{{.Count}} results"
+  },
+  "del_search": {
+    "other": "Search"
+  },
+  "del_search_results": {
+    "other": "Search results"
+  },
+  "del_searching": {
+    "other": "Searching pages..."
+  },
+  "del_summary": {
+    "other": "{{.Operations}} operations · {{.Pages}} pages will be deleted."
+  },
+  "del_tab_manual": {
+    "other": "Manual entry"
+  },
+  "prefs_language": {
+    "other": "Language"
+  },
+  "prefs_theme": {
+    "other": "Theme"
+  },
+  "prefs_title": {
+    "other": "Preferences"
+  },
+  "security_insecure": {
+    "other": "Insecure"
+  },
+  "security_secure": {
+    "other": "Secure"
+  },
+  "security_unknown": {
+    "other": "Unknown"
+  },
+  "startup_add_wiki": {
+    "other": "+ Add a new wiki"
+  },
+  "startup_delete_confirm": {
+    "other": "Remove \"{{.Name}}\" from the wiki list?"
+  },
+  "startup_delete_title": {
+    "other": "Delete Wiki"
+  },
+  "startup_title": {
+    "other": "Select a wiki"
+  },
+  "welcome_actions": {
+    "other": "Actions"
+  },
+  "welcome_no_actions": {
+    "other": "No actions performed yet this session."
+  },
+  "welcome_session_activity": {
+    "other": "Session activity"
+  },
+  "welcome_stat_active_users": {
+    "other": "Active users: {{.Count}}"
+  },
+  "welcome_stat_pages": {
+    "other": "Pages: {{.Count}}"
+  },
+  "wiki_err_bot_password_required": {
+    "other": "Bot Password is required."
+  },
+  "wiki_err_name_exists": {
+    "other": "Name already exists."
+  },
+  "wiki_err_name_required": {
+    "other": "Name is required."
+  },
+  "wiki_err_url_invalid": {
+    "other": "Wiki URL is invalid."
+  },
+  "wiki_err_url_required": {
+    "other": "Wiki URL is required."
+  },
+  "wiki_err_username_required": {
+    "other": "Username is required."
+  },
+  "wiki_field_bot_password": {
+    "other": "Bot Password"
+  },
+  "wiki_field_farm": {
+    "other": "Farm"
+  },
+  "wiki_field_language": {
+    "other": "Language"
+  },
+  "wiki_field_mode": {
+    "other": "Mode"
+  },
+  "wiki_field_name": {
+    "other": "Name"
+  },
+  "wiki_field_project": {
+    "other": "Project"
+  },
+  "wiki_field_url": {
+    "other": "Wiki URL"
+  },
+  "wiki_field_username": {
+    "other": "Username"
+  },
+  "wiki_field_wiki_name": {
+    "other": "Wiki name"
+  },
+  "wiki_settings_title": {
+    "other": "Wiki Settings"
+  },
+  "workflow_delete_pages": {
+    "other": "Delete pages"
+  },
+  "workflow_requires_rights": {
+    "other": "{{.Label}} (requires {{.Rights}})"
+  },
+  "workflow_step_execution": {
+    "other": "Execution"
+  },
+  "workflow_step_indicator": {
+    "other": "Step {{.Current}}/{{.Total}}: {{.Name}}"
+  },
+  "workflow_step_options": {
+    "other": "Options"
+  },
+  "workflow_step_selection": {
+    "other": "Selection"
+  },
+  "workflow_step_verification": {
+    "other": "Verification"
+  }
+}

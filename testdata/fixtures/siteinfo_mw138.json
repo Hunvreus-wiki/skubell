@@ -1,0 +1,17 @@
+{
+  "batchcomplete": true,
+  "query": {
+    "general": {
+      "sitename": "Legacy Wiki",
+      "generator": "MediaWiki 1.38.4"
+    },
+    "namespaces": [
+      {
+        "id": 0,
+        "name": ""
+      }
+    ],
+    "extensions": []
+  }
+}
+

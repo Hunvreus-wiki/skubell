@@ -1,0 +1,65 @@
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - errorlint
+    - bodyclose
+    - noctx
+    - depguard
+    - containedctx
+    - copyloopvar
+    - fatcontext
+    - canonicalheader
+    - whitespace
+    - nakedret
+    - recvcheck
+    - intrange
+    - unconvert
+    - exptostd
+    - modernize
+    - usestdlibvars
+    - perfsprint
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - testifylint
+    - thelper
+    - usetesting
+    - gocritic
+  settings:
+    depguard:
+      rules:
+        non-test files:
+          files:
+            - "!$test"
+          deny:
+            - pkg: math/rand$
+              desc: Use math/rand/v2 instead.
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - ifElseChain
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/Hunvreus-wiki/skubell)
+    goimports:
+      local-prefixes:
+        - github.com/Hunvreus-wiki/skubell
+    golines:
+      max-len: 120
+      tab-len: 4
+      reformat-tags: false
+  exclusions:
+    generated: lax
