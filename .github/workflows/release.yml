@@ -28,13 +28,13 @@ jobs:
           - os: windows-latest
             name: windows-amd64
             target: windows
-          - os: macos-latest # Apple Silicon (arm64); unsigned/un-notarised
+          - os: macos-15 # Apple Silicon (arm64); pinned — macos-latest is migrating to macOS 26. Unsigned/un-notarised.
             name: darwin-arm64
             target: darwin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -101,7 +101,7 @@ jobs:
             darwin)  ditto -c -k --keepParent ./*.app "../../dist/${OUT}.zip" ;;    # zip the .app bundle
           esac
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}
           path: dist/*
@@ -115,7 +115,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
