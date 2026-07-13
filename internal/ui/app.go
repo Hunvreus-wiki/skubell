@@ -25,6 +25,7 @@ import (
 	"github.com/Hunvreus-wiki/skubell/internal/ops"
 	"github.com/Hunvreus-wiki/skubell/internal/registry"
 	"github.com/Hunvreus-wiki/skubell/internal/security"
+	"github.com/Hunvreus-wiki/skubell/locales"
 )
 
 const (
@@ -174,23 +175,12 @@ func NewApp(app fyne.App, window fyne.Window) (*App, error) {
 	}, nil
 }
 
-// initI18n loads translations from the shipped and per-user locale directories and activates the configured language
-// (falling back to the system locale, then English).
+// initI18n loads translations from the shipped (embedded) locales and the per-user locale directory, then activates the
+// configured language (falling back to the system locale, then English). Users may drop active.<lang>.json files in a
+// "locales" directory next to their config file to add or override translations.
 func initI18n(cfg config.Config, configPath string) {
 	userLocalesDir := filepath.Join(filepath.Dir(configPath), "locales")
-	t.Init(appLocalesDir(), userLocalesDir, resolveLanguage(cfg.Preferences.Language))
-}
-
-// appLocalesDir returns the locales directory shipped next to the executable, falling back to "locales" relative to the
-// working directory (useful during development with `go run` from the repository root).
-func appLocalesDir() string {
-	if exe, err := os.Executable(); err == nil {
-		candidate := filepath.Join(filepath.Dir(exe), "locales")
-		if info, statErr := os.Stat(candidate); statErr == nil && info.IsDir() {
-			return candidate
-		}
-	}
-	return "locales"
+	t.Init(locales.FS, userLocalesDir, resolveLanguage(cfg.Preferences.Language))
 }
 
 // resolveLanguage picks the active language: the preference, else the system locale ($LANG), else English.

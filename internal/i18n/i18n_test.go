@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/Hunvreus-wiki/skubell/locales"
 )
 
 func TestHelpersFallBackToEnglishWithoutFiles(t *testing.T) {
-	Init("", "", "fr") // no locale files loaded
+	Init(nil, "", "fr") // no locale files loaded
 
 	require.Equal(t, "Delete", T("delete_button", "Delete"))
 	require.Equal(t, "Connected to frwiki as Bot", Td("connected_to",
@@ -30,7 +32,7 @@ func TestTranslationsLoadAndSwitch(t *testing.T) {
 		"del": {"one": "Supprimer {{.Count}} page", "other": "Supprimer {{.Count}} pages"}
 	}`)
 
-	Init(dir, "", "fr")
+	Init(os.DirFS(dir), "", "fr")
 
 	require.Equal(t, "Supprimer", T("delete_button", "Delete"))
 	require.Equal(t, "Connecté à frwiki en tant que Bot", Td("connected_to",
@@ -55,15 +57,15 @@ func TestUserDirOverridesShippedFile(t *testing.T) {
 	writeLocale(t, appDir, "active.fr.json", `{"delete_button": {"other": "Supprimer"}}`)
 	writeLocale(t, userDir, "active.fr.json", `{"delete_button": {"other": "Effacer"}}`)
 
-	Init(appDir, userDir, "fr")
+	Init(os.DirFS(appDir), userDir, "fr")
 	require.Equal(t, "Effacer", T("delete_button", "Delete"), "user locale must override the shipped one")
 }
 
-// TestShippedLocalesLoad loads the real repository locales/ directory and verifies the fr and br files translate. It
-// asserts the mechanism (a non-English, non-empty result; no English leak on a "few"-category count) rather than
-// specific vocabulary, so it stays green while the translations are still being reviewed/edited.
+// TestShippedLocalesLoad loads the real embedded locales and verifies the fr and br files translate. It asserts the
+// mechanism (a non-English, non-empty result; no English leak on a "few"-category count) rather than specific
+// vocabulary, so it stays green while the translations are still being reviewed/edited.
 func TestShippedLocalesLoad(t *testing.T) {
-	Init(filepath.Join("..", "..", "locales"), "", "fr")
+	Init(locales.FS, "", "fr")
 	for _, lang := range []string{"fr", "br"} {
 		require.Contains(t, AvailableLanguages(), lang)
 		SetLanguage(lang)

@@ -14,7 +14,7 @@ func TestPluralMissingFormFallsBackToTranslationOther(t *testing.T) {
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "active.br.json"),
 		[]byte(`{"probe":{"one":"UNAN {{.Count}}","other":"LIES {{.Count}}"}}`), 0o644))
-	Init(dir, "", "br")
+	Init(os.DirFS(dir), "", "br")
 
 	require.Equal(t, "UNAN 1", Tp("probe", "{{.Count}} one", "{{.Count}} other", 1)) // one
 	require.Equal(t, "LIES 2", Tp("probe", "{{.Count}} one", "{{.Count}} other", 2)) // two -> other
