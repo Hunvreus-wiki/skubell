@@ -17,6 +17,11 @@ func TestNormalizeManualTitle(t *testing.T) {
 		{input: "# Baz", want: "Baz"},
 		{input: "[[Talk:Apple]]", want: "Talk:Apple"},
 		{input: "  ", want: ""},
+		// Title case is preserved verbatim: on a case-sensitive wiki ($wgCapitalLinks=false, e.g. Wiktionary) "dog"
+		// and "Dog" are different pages, so we must never capitalize client-side — MediaWiki applies its own rule.
+		{input: "dog", want: "dog"},
+		{input: "Dog", want: "Dog"},
+		{input: "iPhone", want: "iPhone"},
 	}
 
 	for _, tc := range cases {
