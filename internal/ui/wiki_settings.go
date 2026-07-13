@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -68,6 +69,8 @@ type WikiSettingsScreen struct {
 	projectField  fyne.CanvasObject
 	languageField fyne.CanvasObject
 	wikiIDField   fyne.CanvasObject
+
+	saveButton *widget.Button
 }
 
 // NewWikiSettingsScreen creates a new wiki settings form.
@@ -117,34 +120,46 @@ func (s *WikiSettingsScreen) build() fyne.CanvasObject {
 
 	s.nameEntry = widget.NewEntry()
 	s.nameEntry.SetText(s.state.name)
+	s.nameEntry.Validator = func(value string) error {
+		name := strings.TrimSpace(value)
+		if name == "" {
+			return errors.New(t.T("wiki_err_name_required", "Name is required."))
+		}
+		if s.nameExists(name) {
+			return errors.New(t.T("wiki_err_name_exists", "Name already exists."))
+		}
+		return nil
+	}
 	s.nameEntry.OnChanged = func(value string) {
 		s.state.name = value
-		if s.suggestingName {
-			return
+		if !s.suggestingName {
+			s.state.nameEdited = strings.TrimSpace(value) != ""
 		}
-		if strings.TrimSpace(value) == "" {
-			s.state.nameEdited = false
-			return
-		}
-		s.state.nameEdited = true
+		s.validateForm()
 	}
 	s.userEntry = widget.NewEntry()
 	s.userEntry.SetText(s.state.username)
 	s.userEntry.SetPlaceHolder("Admin@BotName")
+	s.userEntry.Validator = requiredValidator(t.T("wiki_err_username_required", "Username is required."))
+	s.userEntry.OnChanged = func(string) { s.validateForm() }
 
 	s.credentialEnt = widget.NewPasswordEntry()
 	s.credentialEnt.SetText(s.state.credential)
-	s.credentialEnt.OnChanged = func(value string) {
+	s.credentialEnt.Validator = requiredValidator(t.T("wiki_err_bot_password_required", "Bot Password is required."))
+	s.credentialEnt.OnChanged = func(string) {
 		s.state.credentialDirty = true
+		s.validateForm()
 	}
 
 	s.urlEntry = newFocusEntry()
 	s.urlEntry.SetText(s.state.customURL)
+	s.urlEntry.Validator = s.validateURL
 	s.urlEntry.onFocusLost = func() {
 		s.handleAutoDetect(strings.TrimSpace(s.urlEntry.Text))
 	}
 	s.urlEntry.OnChanged = func(value string) {
 		s.state.customURL = value
+		s.validateForm()
 	}
 
 	s.modeRadio = widget.NewRadioGroup(
@@ -158,6 +173,7 @@ func (s *WikiSettingsScreen) build() fyne.CanvasObject {
 				s.state.selectedFarm = farmCustom
 			}
 			s.updateFarmFields()
+			s.validateForm() // the URL field is required only in Custom mode
 		})
 	s.farmSelect = widget.NewSelect([]string{"Wikimedia", "Fandom", "Miraheze", "wiki.gg"}, func(value string) {
 		switch value {
@@ -220,15 +236,61 @@ func (s *WikiSettingsScreen) build() fyne.CanvasObject {
 
 	s.updateFarmFields()
 
-	save := widget.NewButton(t.T("common_save", "Save"), func() {
+	s.saveButton = widget.NewButton(t.T("common_save", "Save"), func() {
 		s.handleSave()
 	})
 	cancel := widget.NewButton(t.T("common_cancel", "Cancel"), func() {
 		s.app.startup()
 	})
+	s.validateForm() // disable Save until the required fields are filled in
 
-	footer := container.NewHBox(layout.NewSpacer(), cancel, save)
+	footer := container.NewHBox(layout.NewSpacer(), cancel, s.saveButton)
 	return container.NewBorder(container.NewVBox(title, widget.NewSeparator()), footer, nil, nil, form)
+}
+
+// requiredValidator returns a validator that rejects blank input with msg.
+func requiredValidator(msg string) fyne.StringValidator {
+	return func(value string) error {
+		if strings.TrimSpace(value) == "" {
+			return errors.New(msg)
+		}
+		return nil
+	}
+}
+
+// validateURL checks the Wiki URL field. In well-known mode the URL is derived, so nothing is required from the user.
+func (s *WikiSettingsScreen) validateURL(value string) error {
+	if s.state.selectedFarm != farmCustom {
+		return nil
+	}
+	url := strings.TrimSpace(value)
+	if url == "" {
+		return errors.New(t.T("wiki_err_url_required", "Wiki URL is required."))
+	}
+	if (registry.WikiEntry{Farm: farmCustom, CustomAPIURL: url}).APIURL() == "" {
+		return errors.New(t.T("wiki_err_url_invalid", "Wiki URL is invalid."))
+	}
+	return nil
+}
+
+// formValid reports whether every required field passes its validator, without triggering the inline error display.
+func (s *WikiSettingsScreen) formValid() bool {
+	return s.nameEntry.Validator(s.nameEntry.Text) == nil &&
+		s.userEntry.Validator(s.userEntry.Text) == nil &&
+		s.credentialEnt.Validator(s.credentialEnt.Text) == nil &&
+		s.urlEntry.Validator(s.urlEntry.Text) == nil
+}
+
+// validateForm enables Save only when the whole form is valid; Fyne shows per-field errors inline as the user edits.
+func (s *WikiSettingsScreen) validateForm() {
+	if s.saveButton == nil {
+		return
+	}
+	if s.formValid() {
+		s.saveButton.Enable()
+	} else {
+		s.saveButton.Disable()
+	}
 }
 
 func (s *WikiSettingsScreen) labeledField(label string, obj fyne.CanvasObject) fyne.CanvasObject {
