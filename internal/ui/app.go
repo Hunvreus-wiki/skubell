@@ -232,10 +232,8 @@ func (a *App) findWiki(name string) (config.WikiEntry, bool) {
 
 func (a *App) startup() {
 	a.reloadConfig()
-	if a.startupScreen == nil {
-		a.startupScreen = NewStartupScreen(a)
-	}
-	a.startupScreen.RefreshList()
+	// Rebuild fresh so static labels pick up the active language (and the latest wiki list); the screen is not cached.
+	a.startupScreen = NewStartupScreen(a)
 	a.window.SetContent(a.startupScreen.Canvas())
 }
 

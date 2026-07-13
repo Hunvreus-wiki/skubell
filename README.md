@@ -1,6 +1,6 @@
 # Skubell
 
-> *skubell* [/sky.bɛl/] — "broom" in Breton. A cleanup tool for MediaWiki administrators.
+> *skubell* [/'sky:bɛl/] — "broom" in Breton. A cleanup tool for MediaWiki administrators.
 
 Skubell is a cross-platform desktop application for MediaWiki administrators. It focuses on the
 tasks that require administrator (sysop) rights and that existing tools handle poorly at scale.

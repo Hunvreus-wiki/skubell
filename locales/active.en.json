@@ -199,6 +199,15 @@
   "prefs_theme": {
     "other": "Theme"
   },
+  "prefs_theme_dark": {
+    "other": "Dark"
+  },
+  "prefs_theme_light": {
+    "other": "Light"
+  },
+  "prefs_theme_system": {
+    "other": "System"
+  },
   "prefs_title": {
     "other": "Preferences"
   },

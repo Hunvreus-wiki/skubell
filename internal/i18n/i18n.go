@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	bundle    *goi18n.Bundle
-	localizer *goi18n.Localizer
+	bundle      *goi18n.Bundle
+	localizer   *goi18n.Localizer
+	currentLang string
 )
 
 // Init builds the message bundle from the shipped (embedded) locales and the user locale directory, then activates
@@ -35,6 +36,15 @@ func SetLanguage(lang string) {
 		bundle = newBundle()
 	}
 	localizer = goi18n.NewLocalizer(bundle, lang, "en")
+	currentLang = lang
+}
+
+// CurrentLanguage returns the language code most recently activated via Init/SetLanguage, or "en" if none was set.
+func CurrentLanguage() string {
+	if currentLang == "" {
+		return "en"
+	}
+	return currentLang
 }
 
 // AvailableLanguages returns the sorted ISO codes of the loaded translation files, always including "en".
