@@ -51,9 +51,20 @@ type expiryInput struct {
 	number     *widget.Entry
 	unit       *widget.Select
 	date       *widget.DateEntry
+	hour       *widget.Select // 00–23 (UTC)
+	minute     *widget.Select // 00–59 (UTC)
 	root       fyne.CanvasObject
 
 	optPreset, optCustom, optDate string
+}
+
+// twoDigitRange returns "00".."<n-1>" zero-padded, for the hour/minute dropdowns (index == value).
+func twoDigitRange(n int) []string {
+	out := make([]string, n)
+	for i := range out {
+		out[i] = fmt.Sprintf("%02d", i)
+	}
+	return out
 }
 
 func newExpiryInput(presets []string) *expiryInput {
@@ -71,16 +82,23 @@ func newExpiryInput(presets []string) *expiryInput {
 	e.unit = widget.NewSelect(expiryUnitLabels(), nil)
 	e.unit.SetSelectedIndex(1) // days
 	e.date = widget.NewDateEntry()
+	e.hour = widget.NewSelect(twoDigitRange(24), nil)
+	e.hour.SetSelectedIndex(0)
+	e.minute = widget.NewSelect(twoDigitRange(60), nil)
+	e.minute.SetSelectedIndex(0)
 
 	e.method = widget.NewRadioGroup([]string{e.optPreset, e.optCustom, e.optDate}, func(string) { e.apply() })
 	e.method.Horizontal = true
 	e.method.SetSelected(e.optPreset)
 
+	// The time is interpreted as UTC (MediaWiki stores timestamps in UTC), shown next to the hour:minute dropdowns.
+	utcLabel := widget.NewLabel(t.T("protect_utc", "UTC"))
+	dateRow := container.NewHBox(e.date, e.hour, widget.NewLabel(":"), e.minute, utcLabel)
 	e.root = container.NewVBox(
 		e.method,
 		e.predefined,
 		container.NewBorder(nil, nil, e.number, nil, e.unit),
-		e.date,
+		dateRow,
 	)
 	e.apply()
 	return e
@@ -88,29 +106,34 @@ func newExpiryInput(presets []string) *expiryInput {
 
 // apply enables only the selected method's controls.
 func (e *expiryInput) apply() {
-	e.predefined.Disable()
-	e.number.Disable()
-	e.unit.Disable()
-	e.date.Disable()
+	e.disableAll()
 	switch e.method.Selected {
 	case e.optCustom:
 		e.number.Enable()
 		e.unit.Enable()
 	case e.optDate:
 		e.date.Enable()
+		e.hour.Enable()
+		e.minute.Enable()
 	default:
 		e.predefined.Enable()
 	}
+}
+
+func (e *expiryInput) disableAll() {
+	e.predefined.Disable()
+	e.number.Disable()
+	e.unit.Disable()
+	e.date.Disable()
+	e.hour.Disable()
+	e.minute.Disable()
 }
 
 // setEnabled disables the whole control (used when a tab mirrors Edit) or re-applies per-method enabling.
 func (e *expiryInput) setEnabled(on bool) {
 	if !on {
 		e.method.Disable()
-		e.predefined.Disable()
-		e.number.Disable()
-		e.unit.Disable()
-		e.date.Disable()
+		e.disableAll()
 		return
 	}
 	e.method.Enable()
@@ -132,10 +155,14 @@ func (e *expiryInput) value() (string, error) {
 		if e.date.Date == nil {
 			return "", errors.New(t.T("protect_err_no_date", "Pick a date for the expiry."))
 		}
-		if !e.date.Date.After(time.Now()) {
+		// Combine the picked calendar day with the chosen hour:minute, interpreted as UTC.
+		year, month, day := e.date.Date.Date()
+		hh, mm := max(0, e.hour.SelectedIndex()), max(0, e.minute.SelectedIndex())
+		ts := time.Date(year, month, day, hh, mm, 0, 0, time.UTC)
+		if !ts.After(time.Now()) {
 			return "", errors.New(t.T("protect_err_past_date", "The expiry date must be in the future."))
 		}
-		return e.date.Date.UTC().Format(time.RFC3339), nil
+		return ts.Format(time.RFC3339), nil
 	default:
 		return e.predefined.Selected, nil
 	}

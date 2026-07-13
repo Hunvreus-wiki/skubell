@@ -496,6 +496,9 @@
   "protect_unknown_failure": {
     "other": "c'hwitadenn dianav"
   },
+  "protect_utc": {
+    "other": "UTC"
+  },
   "security_insecure": {
     "other": "Nann-sur"
   },
