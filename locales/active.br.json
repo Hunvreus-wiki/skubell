@@ -199,6 +199,15 @@
   "prefs_theme": {
     "other": "Tem"
   },
+  "prefs_theme_dark": {
+    "other": "Teñval"
+  },
+  "prefs_theme_light": {
+    "other": "Sklaer"
+  },
+  "prefs_theme_system": {
+    "other": "Reizhiad"
+  },
   "prefs_title": {
     "other": "Penndibaboù"
   },

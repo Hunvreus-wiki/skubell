@@ -4,6 +4,7 @@ package i18n
 
 import (
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,15 +15,17 @@ import (
 )
 
 var (
-	bundle    *goi18n.Bundle
-	localizer *goi18n.Localizer
+	bundle      *goi18n.Bundle
+	localizer   *goi18n.Localizer
+	currentLang string
 )
 
-// Init builds the message bundle from the shipped and user locale directories and activates lang. It tolerates empty,
-// missing, or unreadable directories: any message without a translation falls back to its English default.
-func Init(appLocalesDir, userLocalesDir, lang string) {
+// Init builds the message bundle from the shipped (embedded) locales and the user locale directory, then activates
+// lang. It tolerates a nil FS or an empty/missing/unreadable user directory: any message without a translation falls
+// back to its English default.
+func Init(shipped fs.FS, userLocalesDir, lang string) {
 	bundle = newBundle()
-	loadDir(appLocalesDir)  // shipped files first
+	loadFS(shipped)         // shipped files first, embedded in the binary
 	loadDir(userLocalesDir) // user files override or complete them
 	SetLanguage(lang)
 }
@@ -33,6 +36,15 @@ func SetLanguage(lang string) {
 		bundle = newBundle()
 	}
 	localizer = goi18n.NewLocalizer(bundle, lang, "en")
+	currentLang = lang
+}
+
+// CurrentLanguage returns the language code most recently activated via Init/SetLanguage, or "en" if none was set.
+func CurrentLanguage() string {
+	if currentLang == "" {
+		return "en"
+	}
+	return currentLang
 }
 
 // AvailableLanguages returns the sorted ISO codes of the loaded translation files, always including "en".
@@ -57,6 +69,23 @@ func newBundle() *goi18n.Bundle {
 	return b
 }
 
+// loadFS loads the active.<lang>.json files from an fs.FS (typically the embedded shipped locales). A nil or
+// unreadable FS is a no-op, leaving the affected messages to fall back to English.
+func loadFS(fsys fs.FS) {
+	if fsys == nil {
+		return
+	}
+	entries, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if name := entry.Name(); !entry.IsDir() && isLocaleFile(name) {
+			_, _ = bundle.LoadMessageFileFS(fsys, name)
+		}
+	}
+}
+
 func loadDir(dir string) {
 	if strings.TrimSpace(dir) == "" {
 		return
@@ -66,12 +95,14 @@ func loadDir(dir string) {
 		return
 	}
 	for _, entry := range entries {
-		name := entry.Name()
-		if entry.IsDir() || !strings.HasPrefix(name, "active.") || !strings.HasSuffix(name, ".json") {
-			continue
+		if name := entry.Name(); !entry.IsDir() && isLocaleFile(name) {
+			_, _ = bundle.LoadMessageFile(filepath.Join(dir, name))
 		}
-		_, _ = bundle.LoadMessageFile(filepath.Join(dir, name))
 	}
+}
+
+func isLocaleFile(name string) bool {
+	return strings.HasPrefix(name, "active.") && strings.HasSuffix(name, ".json")
 }
 
 // active returns the current localizer, lazily creating an English-only one when Init/SetLanguage were never called.

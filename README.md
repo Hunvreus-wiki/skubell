@@ -1,6 +1,6 @@
 # Skubell
 
-> *skubell* [/sky.bɛl/] — "broom" in Breton. A cleanup tool for MediaWiki administrators.
+> *skubell* [/'sky:bɛl/] — "broom" in Breton. A cleanup tool for MediaWiki administrators.
 
 Skubell is a cross-platform desktop application for MediaWiki administrators. It focuses on the
 tasks that require administrator (sysop) rights and that existing tools handle poorly at scale.
@@ -46,8 +46,9 @@ and verified end-to-end against live MediaWiki:
   your operating system's credential store, never in the config file.
 - **Known-wiki registry** — pick a Wikimedia project + language, a farm slug (Fandom, Miraheze,
   wiki.gg), or enter a custom URL; the API endpoint is inferred for you.
-- **Internationalized** — English, French, and Breton are shipped, and any language can be added by
-  dropping a JSON file next to the app, with no recompilation. Switchable at runtime in Preferences.
+- **Internationalized** — English, French, and Breton are built into the app; any language can be added
+  or overridden at runtime, without recompiling, by dropping a JSON file next to your config file.
+  Switchable in Preferences.
 
 ---
 
@@ -131,7 +132,7 @@ shasum -a 256 -c SHA256SUMS    # macOS
 # Build the binary to ./bin/skubell
 make build
 
-# Run it (from the repo root, so the locales/ folder is found alongside the app)
+# Run it (translations are embedded, so it runs from any directory)
 make run
 ```
 
@@ -173,6 +174,11 @@ they live in the OS credential store.
 
 Per-wiki activity journals are written as append-only JSONL under the platform data directory
 (Linux: `~/.local/share/skubell/journal/`), one subdirectory per wiki.
+
+To add a language or override a shipped one, drop an `active.<lang>.json` file into a `locales/`
+folder next to your config file (e.g. `~/.config/skubell/locales/` on Linux). These files are loaded
+on top of the built-in translations, so you only need to include the keys you want to change. See
+[`locales/README.md`](locales/README.md) for the format.
 
 ---
 
@@ -220,7 +226,7 @@ internal/
   i18n/           go-i18n wrapper (T/Td/Tp/Tpd helpers)
   integration/    Live-wiki integration suite (build tag: integration)
   merge/ blocking/ protect/ revdel/ augeas/   Scaffolded — future workflows
-locales/          Shipped translations (en, fr, br) + translator guide
+locales/          Translations (en, fr, br) embedded into the binary + translator guide
 ```
 
 Contributor guidance lives in [`CLAUDE.md`](CLAUDE.md) and [`guidelines.md`](guidelines.md);
