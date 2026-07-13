@@ -11,6 +11,9 @@
   "common_delete": {
     "other": "Delete"
   },
+  "common_done": {
+    "other": "Done"
+  },
   "common_edit": {
     "other": "Edit"
   },
@@ -25,6 +28,12 @@
   },
   "common_save": {
     "other": "Save"
+  },
+  "connect_contacting": {
+    "other": "Contacting the wiki..."
+  },
+  "connect_title": {
+    "other": "Connecting"
   },
   "del_add_to_list": {
     "other": "Add to list"
@@ -63,6 +72,12 @@
   "del_computing": {
     "other": "Computing pages to delete…"
   },
+  "del_detail_category_not_empty": {
+    "other": "Category is not empty; not deleted."
+  },
+  "del_detail_unknown_failure": {
+    "other": "unknown failure"
+  },
   "del_download": {
     "other": "Download"
   },
@@ -77,6 +92,12 @@
   },
   "del_dryrun_complete": {
     "other": "Dry-run complete."
+  },
+  "del_err_need_criterion": {
+    "other": "enter at least one search criterion"
+  },
+  "del_err_reason_text_required": {
+    "other": "additional reason text is required when {{.None}} is selected"
   },
   "del_err_reasons": {
     "other": "Delete reasons"
@@ -145,6 +166,12 @@
   "del_loading_reasons": {
     "other": "Loading predefined reasons..."
   },
+  "del_namespace_any": {
+    "other": "(any)"
+  },
+  "del_namespace_main": {
+    "other": "(Main)"
+  },
   "del_need_one_page": {
     "other": "Add at least one page to continue."
   },
@@ -167,8 +194,17 @@
   "del_press_proceed": {
     "other": "Press Proceed to execute the deletion workflow."
   },
+  "del_preview_legend": {
+    "other": "💬 talk page also deleted   ·   ↳ redirect to a selected page"
+  },
   "del_proceed_options": {
     "other": "Proceed to options ->"
+  },
+  "del_reason_loading": {
+    "other": "(loading...)"
+  },
+  "del_reason_none": {
+    "other": "(none)"
   },
   "del_result_bytes": {
     "one": "{{.Title}} ({{.Count}} byte)",
@@ -190,8 +226,32 @@
   "del_summary": {
     "other": "{{.Operations}} operations · {{.Pages}} pages will be deleted."
   },
+  "del_summary_dry_run": {
+    "other": "Dry-run mode"
+  },
+  "del_summary_includes_redirects": {
+    "other": "Includes redirects"
+  },
+  "del_summary_includes_talk": {
+    "other": "Includes talk pages"
+  },
+  "del_summary_none": {
+    "other": "No additional options."
+  },
+  "del_summary_reason": {
+    "other": "Reason: {{.Reason}}"
+  },
   "del_tab_manual": {
     "other": "Manual entry"
+  },
+  "journal_action_fallback": {
+    "other": "(action)"
+  },
+  "journal_delete_page": {
+    "other": "Delete page \"{{.Title}}\""
+  },
+  "journal_delete_page_talk": {
+    "other": "Delete page \"{{.Title}}\" and its talk page"
   },
   "prefs_language": {
     "other": "Language"
@@ -292,11 +352,20 @@
   "wiki_field_wiki_name": {
     "other": "Wiki name"
   },
+  "wiki_mode_custom": {
+    "other": "Custom URL"
+  },
+  "wiki_mode_wellknown": {
+    "other": "Well-known host"
+  },
   "wiki_settings_title": {
     "other": "Wiki Settings"
   },
   "workflow_delete_pages": {
     "other": "Delete pages"
+  },
+  "workflow_missing_sitewide_block": {
+    "other": "sitewide block"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (requires {{.Rights}})"

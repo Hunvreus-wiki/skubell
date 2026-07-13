@@ -301,12 +301,16 @@ func (a *App) connectAndOpenWelcome(wiki config.WikiEntry) {
 	ctx, cancel := context.WithCancel(context.Background())
 	progressBar := widget.NewProgressBarInfinite()
 	progressBar.Start()
-	cancelButton := widget.NewButton("Cancel", func() {
+	cancelButton := widget.NewButton(t.T("common_cancel", "Cancel"), func() {
 		cancel()
 	})
 	progress := dialog.NewCustomWithoutButtons(
-		"Connecting",
-		container.NewVBox(widget.NewLabel("Contacting the wiki..."), progressBar, container.NewHBox(cancelButton)),
+		t.T("connect_title", "Connecting"),
+		container.NewVBox(
+			widget.NewLabel(t.T("connect_contacting", "Contacting the wiki...")),
+			progressBar,
+			container.NewHBox(cancelButton),
+		),
 		a.window,
 	)
 	progress.SetOnClosed(func() {

@@ -11,6 +11,9 @@
   "common_delete": {
     "other": "Supprimer"
   },
+  "common_done": {
+    "other": "Terminé"
+  },
   "common_edit": {
     "other": "Modifier"
   },
@@ -25,6 +28,12 @@
   },
   "common_save": {
     "other": "Enregistrer"
+  },
+  "connect_contacting": {
+    "other": "Connexion au wiki en cours..."
+  },
+  "connect_title": {
+    "other": "Connexion en cours"
   },
   "del_add_to_list": {
     "other": "Ajouter à la liste"
@@ -63,6 +72,12 @@
   "del_computing": {
     "other": "Calcul des pages à supprimer…"
   },
+  "del_detail_category_not_empty": {
+    "other": "La catégorie n'est pas vide ; non supprimée."
+  },
+  "del_detail_unknown_failure": {
+    "other": "échec inconnu"
+  },
   "del_download": {
     "other": "Télécharger"
   },
@@ -77,6 +92,12 @@
   },
   "del_dryrun_complete": {
     "other": "Simulation terminée."
+  },
+  "del_err_need_criterion": {
+    "other": "saisissez au moins un critère de recherche"
+  },
+  "del_err_reason_text_required": {
+    "other": "un motif complémentaire est requis lorsque {{.None}} est sélectionné"
   },
   "del_err_reasons": {
     "other": "Motifs de suppression"
@@ -145,6 +166,12 @@
   "del_loading_reasons": {
     "other": "Chargement des motifs prédéfinis…"
   },
+  "del_namespace_any": {
+    "other": "(tous)"
+  },
+  "del_namespace_main": {
+    "other": "(Principal)"
+  },
   "del_need_one_page": {
     "other": "Ajoutez au moins une page pour continuer."
   },
@@ -167,8 +194,17 @@
   "del_press_proceed": {
     "other": "Appuyez sur Continuer pour exécuter la suppression."
   },
+  "del_preview_legend": {
+    "other": "💬 page de discussion aussi supprimée   ·   ↳ redirection vers une page sélectionnée"
+  },
   "del_proceed_options": {
     "other": "Continuer vers les options →"
+  },
+  "del_reason_loading": {
+    "other": "(chargement...)"
+  },
+  "del_reason_none": {
+    "other": "(aucun)"
   },
   "del_result_bytes": {
     "one": "{{.Title}} ({{.Count}} octet)",
@@ -190,8 +226,32 @@
   "del_summary": {
     "other": "{{.Operations}} opérations · {{.Pages}} pages seront supprimées."
   },
+  "del_summary_dry_run": {
+    "other": "Mode simulation"
+  },
+  "del_summary_includes_redirects": {
+    "other": "Inclut les redirections"
+  },
+  "del_summary_includes_talk": {
+    "other": "Inclut les pages de discussion"
+  },
+  "del_summary_none": {
+    "other": "Aucune option supplémentaire."
+  },
+  "del_summary_reason": {
+    "other": "Motif : {{.Reason}}"
+  },
   "del_tab_manual": {
     "other": "Saisie manuelle"
+  },
+  "journal_action_fallback": {
+    "other": "(action)"
+  },
+  "journal_delete_page": {
+    "other": "Supprimer la page « {{.Title}} »"
+  },
+  "journal_delete_page_talk": {
+    "other": "Supprimer la page « {{.Title}} » et sa page de discussion"
   },
   "prefs_language": {
     "other": "Langue"
@@ -292,11 +352,20 @@
   "wiki_field_wiki_name": {
     "other": "Nom du wiki"
   },
+  "wiki_mode_custom": {
+    "other": "URL personnalisée"
+  },
+  "wiki_mode_wellknown": {
+    "other": "Hôte connu"
+  },
   "wiki_settings_title": {
     "other": "Paramètres du wiki"
   },
   "workflow_delete_pages": {
     "other": "Supprimer des pages"
+  },
+  "workflow_missing_sitewide_block": {
+    "other": "blocage sur tout le site"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (nécessite {{.Rights}})"

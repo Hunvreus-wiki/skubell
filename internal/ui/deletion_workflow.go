@@ -268,7 +268,7 @@ func (s *deleteWorkflowScreen) showSelectionStep() {
 		HomeEnabled:    true,
 		CancelEnabled:  false,
 		ProceedEnabled: len(s.selectedTitles) > 0,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 	s.wf.SetContent(s.buildSelectionContent())
 }
@@ -281,7 +281,7 @@ func (s *deleteWorkflowScreen) showOptionsStep() {
 		HomeEnabled:    true,
 		CancelEnabled:  false,
 		ProceedEnabled: true,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 	s.wf.SetContent(s.buildOptionsContent())
 	s.loadReasonsIfNeeded()
@@ -298,7 +298,7 @@ func (s *deleteWorkflowScreen) showVerificationStep() {
 		HomeEnabled:    false,
 		CancelEnabled:  true,
 		ProceedEnabled: false,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 	s.computePreview()
 }
@@ -445,7 +445,7 @@ func (s *deleteWorkflowScreen) showExecutionStep() {
 		HomeEnabled:    true,
 		CancelEnabled:  false,
 		ProceedEnabled: true,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 	s.wf.SetContent(s.buildExecutionContent())
 }
@@ -489,7 +489,7 @@ func (s *deleteWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 
 	s.searchPrefixEntry = widget.NewEntry()
 	s.searchNamespaceSelect = widget.NewSelect(s.namespaceOptions(), nil)
-	s.searchNamespaceSelect.SetSelected("(any)")
+	s.searchNamespaceSelect.SetSelected(t.T("del_namespace_any", "(any)"))
 	s.searchCategoryEntry = widget.NewEntry()
 	s.searchCategoryRecurChk = widget.NewCheck(t.T("del_check_recursive", "Recursive search"), nil)
 	s.searchCategoryInclChk = widget.NewCheck(t.T("del_check_include_categories", "Include categories"), nil)
@@ -576,8 +576,9 @@ func (s *deleteWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 		container.NewHBox(manualAddBtn, importBtn),
 	)
 
+	// Scroll the (tall) search form so the Selection step doesn't force the window taller than a small screen.
 	left := container.NewAppTabs(
-		container.NewTabItem(t.T("del_search", "Search"), searchForm),
+		container.NewTabItem(t.T("del_search", "Search"), container.NewVScroll(searchForm)),
 		container.NewTabItem(t.T("del_tab_manual", "Manual entry"), manualTab),
 	)
 
@@ -720,9 +721,14 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 		},
 	)
 
+	legend := widget.NewLabelWithStyle(
+		t.T("del_preview_legend", "💬 talk page also deleted   ·   ↳ redirect to a selected page"),
+		fyne.TextAlignLeading,
+		fyne.TextStyle{Italic: true},
+	)
 	return container.NewBorder(
 		container.NewVBox(s.verificationInfo, detail, widget.NewSeparator()),
-		nil,
+		container.NewVBox(widget.NewSeparator(), legend),
 		nil,
 		nil,
 		container.NewVScroll(s.verificationList),
@@ -791,19 +797,19 @@ func (s *deleteWorkflowScreen) captureOptions() {
 func (s *deleteWorkflowScreen) optionSummary() string {
 	parts := []string{}
 	if reason := s.combinedReason(); reason != "" {
-		parts = append(parts, "Reason: "+reason)
+		parts = append(parts, t.Td("del_summary_reason", "Reason: {{.Reason}}", map[string]any{"Reason": reason}))
 	}
 	if s.optionIncludeTalk {
-		parts = append(parts, "Includes talk pages")
+		parts = append(parts, t.T("del_summary_includes_talk", "Includes talk pages"))
 	}
 	if s.optionIncludeRedir {
-		parts = append(parts, "Includes redirects")
+		parts = append(parts, t.T("del_summary_includes_redirects", "Includes redirects"))
 	}
 	if s.optionDryRun {
-		parts = append(parts, "Dry-run mode")
+		parts = append(parts, t.T("del_summary_dry_run", "Dry-run mode"))
 	}
 	if len(parts) == 0 {
-		return "No additional options."
+		return t.T("del_summary_none", "No additional options.")
 	}
 	return strings.Join(parts, " | ")
 }
@@ -838,7 +844,7 @@ func (s *deleteWorkflowScreen) refreshSelectionPanel() {
 			HomeEnabled:    true,
 			CancelEnabled:  false,
 			ProceedEnabled: len(s.selectedTitles) > 0,
-			ProceedLabel:   "Proceed",
+			ProceedLabel:   t.T("common_proceed", "Proceed"),
 		})
 	}
 }
@@ -905,7 +911,7 @@ func (s *deleteWorkflowScreen) finalTitles() []string {
 }
 
 func (s *deleteWorkflowScreen) namespaceOptions() []string {
-	labels := []string{"(any)"}
+	labels := []string{t.T("del_namespace_any", "(any)")}
 	if len(s.app.currentCaps.Namespaces) == 0 {
 		return labels
 	}
@@ -917,7 +923,7 @@ func (s *deleteWorkflowScreen) namespaceOptions() []string {
 	for _, id := range keys {
 		name := strings.TrimSpace(s.app.currentCaps.Namespaces[id])
 		if name == "" {
-			name = "(Main)"
+			name = t.T("del_namespace_main", "(Main)")
 		}
 		labels = append(labels, fmt.Sprintf("%d: %s", id, name))
 	}
@@ -929,7 +935,7 @@ func (s *deleteWorkflowScreen) parseNamespaceSelection() (int, bool) {
 		return 0, false
 	}
 	selected := strings.TrimSpace(s.searchNamespaceSelect.Selected)
-	if selected == "" || selected == "(any)" {
+	if selected == "" || selected == t.T("del_namespace_any", "(any)") {
 		return 0, false
 	}
 	parts := strings.SplitN(selected, ":", 2)
@@ -1005,7 +1011,7 @@ func (c searchCriteria) validate() error {
 	if c.prefix == "" && c.category == "" && c.creator == "" && c.linkedFrom == "" && c.template == "" &&
 		!c.redirectsOnly && !c.brokenRedirects && !c.namespaceSet &&
 		c.minSizeText == "" && c.maxSizeText == "" {
-		return errors.New("enter at least one search criterion")
+		return errors.New(t.T("del_err_need_criterion", "enter at least one search criterion"))
 	}
 	if searchNeedsAllPages(c.category, c.creator, c.linkedFrom, c.template, c.brokenRedirects) {
 		return errSearchCriteriaTooBroad
@@ -1578,7 +1584,7 @@ func (s *deleteWorkflowScreen) loadReasonsIfNeeded() {
 		cancel()
 	})
 	progress := dialog.NewCustomWithoutButtons(
-		"Delete reasons",
+		t.T("del_err_reasons", "Delete reasons"),
 		container.NewVBox(
 			widget.NewLabel(t.T("del_loading_reasons", "Loading predefined reasons...")),
 			progressBar,
@@ -1637,23 +1643,26 @@ func (s *deleteWorkflowScreen) loadReasonsIfNeeded() {
 }
 
 func (s *deleteWorkflowScreen) reasonSelectOptions() []string {
-	options := []string{"(none)"}
+	none := t.T("del_reason_none", "(none)")
+	options := []string{none}
 	for _, reason := range s.reasons {
 		reason = strings.TrimSpace(reason)
-		if reason == "" || reason == "(none)" {
+		if reason == "" || reason == none {
 			continue
 		}
 		options = append(options, reason)
 	}
 	if len(options) == 1 && len(s.reasons) == 0 {
-		options = append(options, "(loading...)")
+		options = append(options, t.T("del_reason_loading", "(loading...)"))
 	}
 	return options
 }
 
 func (s *deleteWorkflowScreen) validateOptions() error {
-	if strings.TrimSpace(s.optionReasonChoice) == "(none)" && strings.TrimSpace(s.optionReasonFreeText) == "" {
-		return errors.New("additional reason text is required when '(none)' is selected")
+	none := t.T("del_reason_none", "(none)")
+	if strings.TrimSpace(s.optionReasonChoice) == none && strings.TrimSpace(s.optionReasonFreeText) == "" {
+		return errors.New(t.Td("del_err_reason_text_required",
+			"additional reason text is required when {{.None}} is selected", map[string]any{"None": none}))
 	}
 	return nil
 }
@@ -1681,7 +1690,7 @@ func (s *deleteWorkflowScreen) restoreExecutionButtons() {
 		HomeEnabled:    true,
 		CancelEnabled:  false,
 		ProceedEnabled: true,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 }
 
@@ -1715,7 +1724,7 @@ func (s *deleteWorkflowScreen) startExecution() {
 		HomeEnabled:    false,
 		CancelEnabled:  true,
 		ProceedEnabled: false,
-		ProceedLabel:   "Proceed",
+		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
 	s.executionInfo.SetText(t.T("del_preparing", "Preparing operations..."))
 
@@ -1788,7 +1797,7 @@ func (s *deleteWorkflowScreen) startExecution() {
 					HomeEnabled:    false,
 					CancelEnabled:  false,
 					ProceedEnabled: true,
-					ProceedLabel:   "Done",
+					ProceedLabel:   t.T("common_done", "Done"),
 				})
 			})
 			return
@@ -1845,7 +1854,7 @@ func (s *deleteWorkflowScreen) startExecution() {
 					// A category can become non-empty mid-workflow (e.g. a page added
 					// after the preview, or a member that failed to delete). Report it
 					// and move on — it is not a fatal error.
-					detail := "Category is not empty; not deleted."
+					detail := t.T("del_detail_category_not_empty", "Category is not empty; not deleted.")
 					entry := ops.JournalEntry{
 						Timestamp:   time.Now().UTC(),
 						Module:      "deletion",
@@ -1914,7 +1923,7 @@ func (s *deleteWorkflowScreen) startExecution() {
 			errorCode := ""
 			if len(results) == 0 || !results[0].Success {
 				result = "error"
-				detail = "unknown failure"
+				detail = t.T("del_detail_unknown_failure", "unknown failure")
 				if len(results) > 0 && results[0].Error != nil {
 					detail = api.FriendlyErrorMessage(results[0].Error)
 					errorCode = results[0].Error.Code
@@ -1958,7 +1967,7 @@ func (s *deleteWorkflowScreen) startExecution() {
 				HomeEnabled:    false,
 				CancelEnabled:  false,
 				ProceedEnabled: true,
-				ProceedLabel:   "Done",
+				ProceedLabel:   t.T("common_done", "Done"),
 			})
 		})
 	}()
@@ -1986,7 +1995,7 @@ func (s *deleteWorkflowScreen) categoryHasMembers(ctx context.Context, title str
 
 func (s *deleteWorkflowScreen) combinedReason() string {
 	reason := strings.TrimSpace(s.optionReasonChoice)
-	if reason == "(loading...)" || reason == "(none)" {
+	if reason == t.T("del_reason_loading", "(loading...)") || reason == t.T("del_reason_none", "(none)") {
 		reason = ""
 	}
 	extra := strings.TrimSpace(s.optionReasonFreeText)
