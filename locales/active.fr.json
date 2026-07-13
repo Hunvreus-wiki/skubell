@@ -373,6 +373,18 @@
   "protect_final_list": {
     "other": "Pages sélectionnées"
   },
+  "protect_grant_mediawiki_namespace": {
+    "other": "Skubell ne peut pas protéger de pages dans l’espace de noms MediaWiki avec cette session : il lui manque le droit « editinterface ». Dans Special:BotPasswords, activez le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editinterface »), puis reconnectez Skubell."
+  },
+  "protect_grant_site_css": {
+    "other": "Skubell ne peut pas protéger les pages CSS du site (MediaWiki:*.css) avec cette session : il lui manque le droit « editsitecss ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "protect_grant_site_js": {
+    "other": "Skubell ne peut pas protéger les pages JavaScript du site (MediaWiki:*.js) avec cette session : il lui manque le droit « editsitejs ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "protect_grant_site_json": {
+    "other": "Skubell ne peut pas protéger les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
+  },
   "protect_legend": {
     "other": "✎ niveau  ·  ⏱ expiration  ·  ⊘ inchangé  ·  ⚠ inapplicable"
   },

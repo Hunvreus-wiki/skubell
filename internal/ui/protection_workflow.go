@@ -153,9 +153,17 @@ func (s *protectionWorkflowScreen) onProceed() {
 		s.showOptionsStep()
 	case workflowStepOptions:
 		s.captureOptions()
+		if msg := s.validateNamespaceProtectAccess(); msg != "" {
+			s.app.showMessage(s.title(), msg)
+			return
+		}
 		s.showVerificationStep()
 	case workflowStepVerification:
 		if s.previewComputing {
+			return
+		}
+		if msg := s.validateNamespaceProtectAccess(); msg != "" {
+			s.app.showMessage(s.title(), msg)
 			return
 		}
 		if s.plan.Change == 0 {
@@ -677,6 +685,20 @@ func (s *protectionWorkflowScreen) captureOptions() {
 		Reason:  strings.TrimSpace(s.reasonEntry.Text),
 	}
 	s.dryRun = s.dryRunCheck.Checked
+}
+
+// validateNamespaceProtectAccess returns a message if any selected page needs a MediaWiki-namespace/site-config right
+// (editinterface, editsite*) the session lacks, or "" when all pages can be protected. Skipped in dry-run (no writes).
+func (s *protectionWorkflowScreen) validateNamespaceProtectAccess() string {
+	if s.dryRun {
+		return ""
+	}
+	for _, title := range s.finalTitles() {
+		if msg := api.ProtectAccessMessage(s.app.currentCaps, title); msg != "" {
+			return msg
+		}
+	}
+	return ""
 }
 
 func (s *protectionWorkflowScreen) typeSetting(typ string) protect.TypeSetting {

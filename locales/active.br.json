@@ -373,6 +373,18 @@
   "protect_final_list": {
     "other": "Pajennoù dibabet"
   },
+  "protect_grant_mediawiki_namespace": {
+    "other": "Ne c’hall ket Skubell gwareziñ pajennoù en esaouenn anv MediaWiki gant an dalc’h-mañ : n’he deus ket ar gwir « editinterface ». E Special:BotPasswords, gweredekait an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editinterface »), ha kevreit en-dro gant Skubell."
+  },
+  "protect_grant_site_css": {
+    "other": "Ne c’hall ket Skubell gwareziñ pajennoù CSS al lec’hienn (MediaWiki:*.css) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitecss ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d’ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec’hienn hag an implijerien », ha kevreit en-dro gant Skubell."
+  },
+  "protect_grant_site_js": {
+    "other": "Ne c’hall ket Skubell gwareziñ pajennoù JavaScript al lec’hienn (MediaWiki:*.js) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejs ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d’ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec’hienn hag an implijerien », ha kevreit en-dro gant Skubell."
+  },
+  "protect_grant_site_json": {
+    "other": "Ne c’hall ket Skubell gwareziñ pajennoù JSON al lec’hienn (MediaWiki:*.json) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit en-dro gant Skubell."
+  },
   "protect_legend": {
     "other": "✎ live  ·  ⏱ termen  ·  ⊘ digemm  ·  ⚠ n'haller ket arloañ"
   },
