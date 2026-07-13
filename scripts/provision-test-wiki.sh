@@ -125,7 +125,7 @@ create_or_update_botpassword() {
   local username="$1"
   local botpassword="$2"
   local appid="${3:-${BOT_NAME}}"
-  local grants="${4:-basic,highvolume,delete}"
+  local grants="${4:-basic,highvolume,delete,protect,createeditmovepage}"
 
   # Fail loudly on a bot password MediaWiki would silently reject at login.
   # (BotPassword::canonicalizeLoginData requires ^[0-9a-w]{32,}$.)

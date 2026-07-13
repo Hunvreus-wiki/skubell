@@ -39,10 +39,10 @@ wikis (`8081`/`8082`) except where a per-wiki value is shown.
 
 | Login | Password | Grants |
 | --- | --- | --- |
-| `TestAdmin@SkubellTest` | `ovgj07dt13opeuti773d17i96hamrg7g` (8081) / `r7elmkikmc1mqehngiqo8rrqcs2kktpu` (8082) | `basic`, `highvolume`, `delete` |
-| `TestEditor@SkubellTest` | `testeditor00botpass00skubell0002` | `basic`, `highvolume`, `delete` |
-| `TestBlocked@SkubellTest` | `testblocked0botpass00skubell0003` | `basic`, `highvolume`, `delete` |
-| `TestPartial@SkubellTest` | `testpartial0botpass00skubell0004` | `basic`, `highvolume`, `delete` |
+| `TestAdmin@SkubellTest` | `ovgj07dt13opeuti773d17i96hamrg7g` (8081) / `r7elmkikmc1mqehngiqo8rrqcs2kktpu` (8082) | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
+| `TestEditor@SkubellTest` | `testeditor00botpass00skubell0002` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
+| `TestBlocked@SkubellTest` | `testblocked0botpass00skubell0003` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
+| `TestPartial@SkubellTest` | `testpartial0botpass00skubell0004` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
 | `TestAdmin@SkubellIface` | `iface0edit0grant0testadmin0mw143` (8081) / `iface0edit0grant0testadmin0mw146` (8082) | `basic`, `highvolume`, `delete`, `editinterface`, `editsiteconfig` |
 
 `TestAdmin@SkubellIface` is the interface-edit bot password: it can edit/delete `MediaWiki:`
