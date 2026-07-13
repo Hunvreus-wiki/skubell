@@ -298,6 +298,15 @@
   "protect_dry_run_ok": {
     "other": "(dry-run)"
   },
+  "protect_err_bad_duration": {
+    "other": "Enter a positive whole number for the custom duration."
+  },
+  "protect_err_no_date": {
+    "other": "Pick a date for the expiry."
+  },
+  "protect_err_past_date": {
+    "other": "The expiry date must be in the future."
+  },
   "protect_exec_canceled": {
     "other": "Execution canceled."
   },
@@ -307,11 +316,23 @@
   "protect_executing": {
     "other": "Applying protection changes…"
   },
+  "protect_expiry_custom": {
+    "other": "Custom duration"
+  },
+  "protect_expiry_date": {
+    "other": "Until a date"
+  },
   "protect_expiry_permanent": {
     "other": "permanent"
   },
+  "protect_expiry_preset": {
+    "other": "Preset duration"
+  },
   "protect_expiry_temporary": {
     "other": "temporary"
+  },
+  "protect_field_additional_reason": {
+    "other": "Additional reason text"
   },
   "protect_field_cur_cascade": {
     "other": "Cascade"
@@ -379,8 +400,14 @@
   "protect_press_proceed_dry": {
     "other": "Dry-run: press Proceed to simulate (no changes are written)."
   },
+  "protect_reason_loading": {
+    "other": "(loading...)"
+  },
+  "protect_reason_none": {
+    "other": "(none)"
+  },
   "protect_reason_placeholder": {
-    "other": "Reason"
+    "other": "Additional reason"
   },
   "protect_same_as_edit": {
     "other": "Same as Edit"
@@ -408,6 +435,21 @@
   },
   "protect_title": {
     "other": "Change page protection"
+  },
+  "protect_unit_days": {
+    "other": "days"
+  },
+  "protect_unit_hours": {
+    "other": "hours"
+  },
+  "protect_unit_months": {
+    "other": "months"
+  },
+  "protect_unit_weeks": {
+    "other": "weeks"
+  },
+  "protect_unit_years": {
+    "other": "years"
   },
   "protect_unknown_failure": {
     "other": "unknown failure"

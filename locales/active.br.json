@@ -298,6 +298,15 @@
   "protect_dry_run_ok": {
     "other": "(darvanañ)"
   },
+  "protect_err_bad_duration": {
+    "other": "Enankit un niver anterin pozitivel evit ar badelezh."
+  },
+  "protect_err_no_date": {
+    "other": "Dibabit un deiziad termen."
+  },
+  "protect_err_past_date": {
+    "other": "Ret eo d'an deiziad termen bezañ en dazont."
+  },
   "protect_exec_canceled": {
     "other": "Peurgas nullet."
   },
@@ -307,11 +316,23 @@
   "protect_executing": {
     "other": "Oc'h arloañ kemmoù ar gwarez…"
   },
+  "protect_expiry_custom": {
+    "other": "Padelezh personelaet"
+  },
+  "protect_expiry_date": {
+    "other": "Betek un deiziad"
+  },
   "protect_expiry_permanent": {
     "other": "peurbadus"
   },
+  "protect_expiry_preset": {
+    "other": "Padelezh raktermenet"
+  },
   "protect_expiry_temporary": {
     "other": "padennek"
+  },
+  "protect_field_additional_reason": {
+    "other": "Testenn abeg ouzhpenn"
   },
   "protect_field_cur_cascade": {
     "other": "Diri"
@@ -379,8 +400,14 @@
   "protect_press_proceed_dry": {
     "other": "Darvanañ : pouezit war Kenderc'hel evit darvanañ (kemm ebet skrivet)."
   },
+  "protect_reason_loading": {
+    "other": "(o kargañ...)"
+  },
+  "protect_reason_none": {
+    "other": "(hini ebet)"
+  },
   "protect_reason_placeholder": {
-    "other": "Abeg"
+    "other": "Abeg ouzhpenn"
   },
   "protect_same_as_edit": {
     "other": "Evel Kemmañ"
@@ -408,6 +435,21 @@
   },
   "protect_title": {
     "other": "Kemmañ gwarez ar pajennoù"
+  },
+  "protect_unit_days": {
+    "other": "devezhioù"
+  },
+  "protect_unit_hours": {
+    "other": "eurioù"
+  },
+  "protect_unit_months": {
+    "other": "mizioù"
+  },
+  "protect_unit_weeks": {
+    "other": "sizhunioù"
+  },
+  "protect_unit_years": {
+    "other": "bloavezhioù"
   },
   "protect_unknown_failure": {
     "other": "c'hwitadenn dianav"
