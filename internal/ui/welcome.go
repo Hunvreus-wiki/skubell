@@ -70,8 +70,24 @@ func (w *WelcomeScreen) build() fyne.CanvasObject {
 // sessionJournalFooterCount is how many recent session actions the footer shows.
 const sessionJournalFooterCount = 8
 
+// sessionLogMinHeight caps the session-log area so a full log scrolls instead of forcing the window taller than a
+// small screen can show.
+const sessionLogMinHeight = 104
+
 // buildFooter renders the welcome-screen footer: the current session's recent actions plus basic wiki statistics.
 func (w *WelcomeScreen) buildFooter() fyne.CanvasObject {
+	logBox := container.NewVBox()
+	entries := w.app.sessionJournalTail(sessionJournalFooterCount)
+	if len(entries) == 0 {
+		logBox.Add(widget.NewLabel(t.T("welcome_no_actions", "No actions performed yet this session.")))
+	} else {
+		for _, entry := range entries {
+			logBox.Add(widget.NewLabel(formatJournalLine(entry)))
+		}
+	}
+	logScroll := container.NewVScroll(logBox)
+	logScroll.SetMinSize(fyne.NewSize(0, sessionLogMinHeight))
+
 	footer := container.NewVBox(
 		widget.NewSeparator(),
 		widget.NewLabelWithStyle(
@@ -79,16 +95,8 @@ func (w *WelcomeScreen) buildFooter() fyne.CanvasObject {
 			fyne.TextAlignLeading,
 			fyne.TextStyle{Bold: true},
 		),
+		logScroll,
 	)
-
-	entries := w.app.sessionJournalTail(sessionJournalFooterCount)
-	if len(entries) == 0 {
-		footer.Add(widget.NewLabel(t.T("welcome_no_actions", "No actions performed yet this session.")))
-	} else {
-		for _, entry := range entries {
-			footer.Add(widget.NewLabel(formatJournalLine(entry)))
-		}
-	}
 
 	if stats := w.statsSummary(); stats != "" {
 		footer.Add(widget.NewSeparator())
@@ -113,19 +121,35 @@ func (w *WelcomeScreen) statsSummary() string {
 
 // formatJournalLine renders one session-journal entry for the footer: local time, result glyph, and action summary.
 func formatJournalLine(entry ops.JournalEntry) string {
-	summary := strings.TrimSpace(entry.Operation.Description)
-	if summary == "" {
-		summary = strings.TrimSpace(entry.Module)
-	}
-	if summary == "" {
-		summary = "(action)"
-	}
 	return fmt.Sprintf(
 		"%s  %s  %s",
 		entry.Timestamp.Local().Format("15:04:05"),
 		journalResultGlyph(entry.Result),
-		summary,
+		journalActionSummary(entry),
 	)
+}
+
+// journalActionSummary describes an entry's operation in the active language. Known operation types are formatted from
+// their structured params, so the line follows the current language and stays correct for already-persisted entries;
+// anything else falls back to the operation's stored description, then the module name.
+func journalActionSummary(entry ops.JournalEntry) string {
+	op := entry.Operation
+	if op.Type == ops.OpDeletePage {
+		if title := strings.TrimSpace(op.Params["title"]); title != "" {
+			if op.Params["delete_talk"] == "true" {
+				return t.Td("journal_delete_page_talk", `Delete page "{{.Title}}" and its talk page`,
+					map[string]any{"Title": title})
+			}
+			return t.Td("journal_delete_page", `Delete page "{{.Title}}"`, map[string]any{"Title": title})
+		}
+	}
+	if d := strings.TrimSpace(op.Description); d != "" {
+		return d
+	}
+	if m := strings.TrimSpace(entry.Module); m != "" {
+		return m
+	}
+	return t.T("journal_action_fallback", "(action)")
 }
 
 // journalResultGlyph maps a JournalEntry result to a compact status glyph.
@@ -152,7 +176,7 @@ func (w *WelcomeScreen) workflowButton(label, workflow string, onTap func()) fyn
 	}
 	if w.app.currentCaps.SitewideBlock {
 		available = false
-		missing = []string{"sitewide block"}
+		missing = []string{t.T("workflow_missing_sitewide_block", "sitewide block")}
 	}
 	if !available {
 		button.Disable()

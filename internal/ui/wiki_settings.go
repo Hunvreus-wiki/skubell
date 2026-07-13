@@ -147,16 +147,18 @@ func (s *WikiSettingsScreen) build() fyne.CanvasObject {
 		s.state.customURL = value
 	}
 
-	s.modeRadio = widget.NewRadioGroup([]string{"Custom URL", "Well-known host"}, func(value string) {
-		if value == "Well-known host" {
-			if s.state.selectedFarm == farmCustom {
-				s.state.selectedFarm = farmWikimedia
+	s.modeRadio = widget.NewRadioGroup(
+		[]string{t.T("wiki_mode_custom", "Custom URL"), t.T("wiki_mode_wellknown", "Well-known host")},
+		func(value string) {
+			if value == t.T("wiki_mode_wellknown", "Well-known host") {
+				if s.state.selectedFarm == farmCustom {
+					s.state.selectedFarm = farmWikimedia
+				}
+			} else {
+				s.state.selectedFarm = farmCustom
 			}
-		} else {
-			s.state.selectedFarm = farmCustom
-		}
-		s.updateFarmFields()
-	})
+			s.updateFarmFields()
+		})
 	s.farmSelect = widget.NewSelect([]string{"Wikimedia", "Fandom", "Miraheze", "wiki.gg"}, func(value string) {
 		switch value {
 		case "Wikimedia":
@@ -193,9 +195,9 @@ func (s *WikiSettingsScreen) build() fyne.CanvasObject {
 
 	s.applyStateToSelectors()
 	if s.state.selectedFarm == farmCustom {
-		s.modeRadio.Selected = "Custom URL"
+		s.modeRadio.Selected = t.T("wiki_mode_custom", "Custom URL")
 	} else {
-		s.modeRadio.Selected = "Well-known host"
+		s.modeRadio.Selected = t.T("wiki_mode_wellknown", "Well-known host")
 	}
 	s.modeRadio.Refresh()
 
@@ -434,7 +436,7 @@ func (s *WikiSettingsScreen) handleAutoDetect(value string) {
 	s.state.projectFamily = detected.Family
 	s.state.language = detected.Language
 	s.state.wikiID = detected.WikiID
-	s.modeRadio.SetSelected("Well-known host")
+	s.modeRadio.SetSelected(t.T("wiki_mode_wellknown", "Well-known host"))
 	s.applyStateToSelectors()
 	s.updateFarmFields()
 }

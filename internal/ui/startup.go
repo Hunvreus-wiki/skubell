@@ -62,7 +62,7 @@ func (s *StartupScreen) build() fyne.CanvasObject {
 	scrollContent := container.NewBorder(nil, nil, nil, scrollContentPad, s.list)
 
 	scroll := container.NewVScroll(scrollContent)
-	scroll.SetMinSize(fyne.NewSize(0, 300))
+	scroll.SetMinSize(fyne.NewSize(0, 200))
 
 	outerPadWidth := theme.Padding() * 0.5
 	leftPad := canvas.NewRectangle(color.Transparent)

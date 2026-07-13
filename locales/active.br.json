@@ -11,6 +11,9 @@
   "common_delete": {
     "other": "Diverkañ"
   },
+  "common_done": {
+    "other": "Graet"
+  },
   "common_edit": {
     "other": "Kemmañ"
   },
@@ -25,6 +28,12 @@
   },
   "common_save": {
     "other": "Enrollañ"
+  },
+  "connect_contacting": {
+    "other": "O kevreañ ouzh ar wiki..."
+  },
+  "connect_title": {
+    "other": "O kevreañ"
   },
   "del_add_to_list": {
     "other": "Ouzhpennañ d'ar roll"
@@ -46,7 +55,7 @@
     "other": "Darvanañ"
   },
   "del_check_include_categories": {
-    "other": "Enklozañ ar rummadoù"
+    "other": "Enlakaat ar rummadoù"
   },
   "del_check_recursive": {
     "other": "Klask askizat"
@@ -63,6 +72,12 @@
   "del_computing": {
     "other": "O jediñ ar pajennoù da ziverkañ…"
   },
+  "del_detail_category_not_empty": {
+    "other": "N'eo ket goullo ar rummad ; n'eo ket bet dilamet."
+  },
+  "del_detail_unknown_failure": {
+    "other": "c'hwitadenn dianav"
+  },
   "del_download": {
     "other": "Pellgargañ"
   },
@@ -76,7 +91,13 @@
     "other": "Pellgargañ an enmontoù aet da benn mat"
   },
   "del_dryrun_complete": {
-    "other": "Darvanañ echu."
+    "other": "Darvanerezh echu."
+  },
+  "del_err_need_criterion": {
+    "other": "merkit un dezverk klask da nebeutañ"
+  },
+  "del_err_reason_text_required": {
+    "other": "ret eo reiñ un abeg ouzhpenn pa vez dibabet {{.None}}"
   },
   "del_err_reasons": {
     "other": "Abegoù diverkañ"
@@ -145,6 +166,12 @@
   "del_loading_reasons": {
     "other": "O kargañ an abegoù rakarventennet…"
   },
+  "del_namespace_any": {
+    "other": "(an holl)"
+  },
+  "del_namespace_main": {
+    "other": "(Pennañ)"
+  },
   "del_need_one_page": {
     "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
   },
@@ -167,8 +194,17 @@
   "del_press_proceed": {
     "other": "Pouezit war Kenderc'hel evit peurgas an diverkadur."
   },
+  "del_preview_legend": {
+    "other": "💬 dilamet e vo ar bajenn gaozeal ivez   ·   ↳ adkas war-du ur bajenn dibabet"
+  },
   "del_proceed_options": {
     "other": "Kenderc'hel d'an dibarzhioù →"
+  },
+  "del_reason_loading": {
+    "other": "(o kargañ...)"
+  },
+  "del_reason_none": {
+    "other": "(hini ebet)"
   },
   "del_result_bytes": {
     "one": "{{.Title}} ({{.Count}} okted)",
@@ -190,8 +226,32 @@
   "del_summary": {
     "other": "{{.Operations}} ober · {{.Pages}} pajenn a vo diverket."
   },
+  "del_summary_dry_run": {
+    "other": "Arvanarezh"
+  },
+  "del_summary_includes_redirects": {
+    "other": "Enlakaat an adkasoù"
+  },
+  "del_summary_includes_talk": {
+    "other": "Enlakaat ar pajennoù kaozeal"
+  },
+  "del_summary_none": {
+    "other": "Dibarzh ouzhpenn ebet."
+  },
+  "del_summary_reason": {
+    "other": "Abeg : {{.Reason}}"
+  },
   "del_tab_manual": {
     "other": "Merkañ dre zorn"
+  },
+  "journal_action_fallback": {
+    "other": "(ober)"
+  },
+  "journal_delete_page": {
+    "other": "Diverkañ ar bajenn « {{.Title}} »"
+  },
+  "journal_delete_page_talk": {
+    "other": "Diverkañ ar bajenn « {{.Title}} » hag he fajenn gaozeal"
   },
   "prefs_language": {
     "other": "Yezh"
@@ -292,11 +352,20 @@
   "wiki_field_wiki_name": {
     "other": "Anv ar wiki"
   },
+  "wiki_mode_custom": {
+    "other": "URL personelaet"
+  },
+  "wiki_mode_wellknown": {
+    "other": "Ostiz anavezet"
+  },
   "wiki_settings_title": {
     "other": "Arventennoù ar wiki"
   },
   "workflow_delete_pages": {
     "other": "Diverkañ pajennoù"
+  },
+  "workflow_missing_sitewide_block": {
+    "other": "stankadenn war al lec'hienn a-bezh"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (ezhomm eus {{.Rights}})"

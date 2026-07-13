@@ -14,7 +14,7 @@ func main() {
 	a.SetIcon(appIcon)
 	w := a.NewWindow("Skubell")
 	w.SetIcon(appIcon)
-	w.Resize(fyne.NewSize(800, 600))
+	w.Resize(fyne.NewSize(800, 520))
 
 	if err := security.EnsureStartupCredentialStoreAvailability(); err != nil {
 		errorDialog := dialog.NewError(err, w)
