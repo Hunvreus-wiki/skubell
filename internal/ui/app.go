@@ -258,6 +258,11 @@ func (a *App) openDeletionWorkflow() {
 	a.window.SetContent(screen.Canvas())
 }
 
+func (a *App) openProtectionWorkflow() {
+	screen := NewProtectionWorkflowScreen(a)
+	a.window.SetContent(screen.Canvas())
+}
+
 func (a *App) openPreferences() {
 	screen := NewPreferencesScreen(a, a.preferencesReturn)
 	a.window.SetContent(screen.Canvas())
