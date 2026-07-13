@@ -56,6 +56,9 @@ func (w *WelcomeScreen) build() fyne.CanvasObject {
 		w.workflowButton(t.T("workflow_delete_pages", "Delete pages"), api.WorkflowDeletion, func() {
 			w.app.openDeletionWorkflow()
 		}),
+		w.workflowButton(t.T("workflow_protection", "Change page protection"), api.WorkflowProtection, func() {
+			w.app.openProtectionWorkflow()
+		}),
 	}
 	grid := container.NewGridWithColumns(2, buttons...)
 
