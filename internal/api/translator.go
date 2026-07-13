@@ -25,6 +25,13 @@ type WikiCapabilities struct {
 	BlockExpiry      string
 	PageCount        int // total pages, from siteinfo statistics (0 when unavailable)
 	ActiveUsers      int // recently-active users, from siteinfo statistics (0 when unavailable)
+
+	// Protection: what the wiki offers, from siteinfo restrictions. RestrictionLevels keeps the "" entry ("" = no
+	// restriction / everyone). CascadingLevels are the levels that permit cascade protection (normally just "sysop").
+	RestrictionTypes    []string
+	RestrictionLevels   []string
+	CascadingLevels     []string
+	SemiProtectedLevels []string
 }
 
 // Translator converts semantic operations into API calls.

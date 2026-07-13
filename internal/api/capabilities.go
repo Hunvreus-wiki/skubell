@@ -38,7 +38,7 @@ func FetchSiteInfoContext(ctx context.Context, client *Client, apiURL string) (W
 	response, err := client.GetContext(ctx, apiURL, map[string]string{
 		"action":        "query",
 		"meta":          "siteinfo",
-		"siprop":        "general|namespaces|namespacealiases|extensions|statistics",
+		"siprop":        "general|namespaces|namespacealiases|extensions|statistics|restrictions",
 		"formatversion": "2",
 	})
 	if err != nil {
@@ -148,15 +148,47 @@ func parseSiteInfoResponse(response map[string]any) (WikiCapabilities, error) {
 		activeUsers = statInt(stats["activeusers"])
 	}
 
+	restrictionTypes, restrictionLevels, cascadingLevels, semiLevels := parseRestrictions(query["restrictions"])
+
 	return WikiCapabilities{
-		Version:          version,
-		VersionMajMin:    majMin,
-		Namespaces:       namespaces,
-		NamespaceAliases: namespaceAliases,
-		Extensions:       extensions,
-		PageCount:        pageCount,
-		ActiveUsers:      activeUsers,
+		Version:             version,
+		VersionMajMin:       majMin,
+		Namespaces:          namespaces,
+		NamespaceAliases:    namespaceAliases,
+		Extensions:          extensions,
+		PageCount:           pageCount,
+		ActiveUsers:         activeUsers,
+		RestrictionTypes:    restrictionTypes,
+		RestrictionLevels:   restrictionLevels,
+		CascadingLevels:     cascadingLevels,
+		SemiProtectedLevels: semiLevels,
 	}, nil
+}
+
+// parseRestrictions reads the siteinfo "restrictions" block: the protection types, levels, cascading levels, and
+// semi-protected levels the wiki offers. Levels preserve the "" entry (no restriction); the others never contain "".
+func parseRestrictions(raw any) (types, levels, cascading, semi []string) {
+	block, ok := raw.(map[string]any)
+	if !ok {
+		return nil, nil, nil, nil
+	}
+	return parseStringList(block["types"]), parseLevelList(block["levels"]),
+		parseStringList(block["cascadinglevels"]), parseStringList(block["semiprotectedlevels"])
+}
+
+// parseLevelList is parseStringList that keeps the "" entry, since "" is a meaningful protection level (no restriction).
+func parseLevelList(raw any) []string {
+	values := []string{}
+	list, ok := raw.([]any)
+	if !ok {
+		return values
+	}
+	for _, entry := range list {
+		if value, ok := entry.(string); ok {
+			values = append(values, value)
+		}
+	}
+	return values
 }
 
 // statInt reads a numeric siteinfo statistics value, tolerating the JSON number types the API may use.
