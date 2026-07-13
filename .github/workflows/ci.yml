@@ -14,7 +14,10 @@ jobs:
 
       # Fyne needs a C toolchain and OpenGL/X11 headers to compile the GUI packages.
       - name: Install Fyne system dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+        # Fyne v2.8 builds the X11 and Wayland backends (glfw v3.4), so the Wayland/EGL/GLES headers are needed too.
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libwayland-dev libxkbcommon-dev xorg-dev
 
       - uses: actions/setup-go@v6
         with:

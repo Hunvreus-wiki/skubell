@@ -40,7 +40,10 @@ jobs:
 
       - name: Install Fyne system dependencies (Linux only)
         if: matrix.target == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+        # Fyne v2.8 builds the X11 and Wayland backends (glfw v3.4), so the Wayland/EGL/GLES headers are needed too.
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          gcc libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libwayland-dev libxkbcommon-dev xorg-dev
 
       - name: Install the fyne packaging tool
         run: go install fyne.io/tools/cmd/fyne@latest

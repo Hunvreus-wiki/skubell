@@ -120,9 +120,10 @@ shasum -a 256 -c SHA256SUMS    # macOS
 **To build:**
 
 - **Go 1.26+**.
-- A **C compiler** and the usual Fyne system dependencies (OpenGL / X11 headers). See the
+- A **C compiler** and the usual Fyne system dependencies (OpenGL / X11 / Wayland headers). See the
   [Fyne Getting Started](https://docs.fyne.io/started/) guide for the packages required on your
-  platform (e.g. `gcc libgl1-mesa-dev xorg-dev` on Debian/Ubuntu).
+  platform (on Debian/Ubuntu:
+  `gcc libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libwayland-dev libxkbcommon-dev xorg-dev`).
 
 ---
 
