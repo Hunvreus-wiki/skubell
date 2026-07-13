@@ -328,6 +328,15 @@
   "protect_dry_run_ok": {
     "other": "(simulation)"
   },
+  "protect_err_bad_duration": {
+    "other": "Saisissez un nombre entier positif pour la durée personnalisée."
+  },
+  "protect_err_no_date": {
+    "other": "Choisissez une date d'expiration."
+  },
+  "protect_err_past_date": {
+    "other": "La date d'expiration doit être dans le futur."
+  },
   "protect_exec_canceled": {
     "other": "Exécution annulée."
   },
@@ -337,11 +346,23 @@
   "protect_executing": {
     "other": "Application des modifications de protection…"
   },
+  "protect_expiry_custom": {
+    "other": "Durée personnalisée"
+  },
+  "protect_expiry_date": {
+    "other": "Jusqu'à une date"
+  },
   "protect_expiry_permanent": {
     "other": "permanent"
   },
+  "protect_expiry_preset": {
+    "other": "Durée prédéfinie"
+  },
   "protect_expiry_temporary": {
     "other": "temporaire"
+  },
+  "protect_field_additional_reason": {
+    "other": "Motif complémentaire"
   },
   "protect_field_cur_cascade": {
     "other": "Cascade"
@@ -421,8 +442,14 @@
   "protect_press_proceed_dry": {
     "other": "Simulation : appuyez sur Continuer pour simuler (aucune modification écrite)."
   },
+  "protect_reason_loading": {
+    "other": "(chargement...)"
+  },
+  "protect_reason_none": {
+    "other": "(aucun)"
+  },
   "protect_reason_placeholder": {
-    "other": "Motif"
+    "other": "Motif complémentaire"
   },
   "protect_same_as_edit": {
     "other": "Comme Modifier"
@@ -450,6 +477,21 @@
   },
   "protect_title": {
     "other": "Modifier la protection des pages"
+  },
+  "protect_unit_days": {
+    "other": "jours"
+  },
+  "protect_unit_hours": {
+    "other": "heures"
+  },
+  "protect_unit_months": {
+    "other": "mois"
+  },
+  "protect_unit_weeks": {
+    "other": "semaines"
+  },
+  "protect_unit_years": {
+    "other": "années"
   },
   "protect_unknown_failure": {
     "other": "échec inconnu"

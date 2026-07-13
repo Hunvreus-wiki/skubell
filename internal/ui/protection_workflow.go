@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -30,6 +31,116 @@ const noChangeLevel = "(no change)"
 // removeLevel is the menu label for removing protection (API level "all").
 const removeLevel = "(none)"
 
+// expiryUnitValues are the strtotime units MediaWiki accepts, in the display order of the unit dropdown. The value sent
+// to the API is always the English word; only the dropdown label is translated (index-mapped, see expiryInput.value).
+var expiryUnitValues = []string{"hours", "days", "weeks", "months", "years"}
+
+func expiryUnitLabels() []string {
+	return []string{
+		t.T("protect_unit_hours", "hours"), t.T("protect_unit_days", "days"), t.T("protect_unit_weeks", "weeks"),
+		t.T("protect_unit_months", "months"), t.T("protect_unit_years", "years"),
+	}
+}
+
+// expiryInput lets the user set an expiry three ways, chosen by a radio (default: preset duration): a predefined
+// duration, a custom number+unit relative duration, or a specific future date (widget.DateEntry). Only the selected
+// method's controls are enabled; value() returns the API-ready expiry string or a validation error.
+type expiryInput struct {
+	method     *widget.RadioGroup
+	predefined *widget.Select
+	number     *widget.Entry
+	unit       *widget.Select
+	date       *widget.DateEntry
+	root       fyne.CanvasObject
+
+	optPreset, optCustom, optDate string
+}
+
+func newExpiryInput(presets []string) *expiryInput {
+	e := &expiryInput{
+		optPreset: t.T("protect_expiry_preset", "Preset duration"),
+		optCustom: t.T("protect_expiry_custom", "Custom duration"),
+		optDate:   t.T("protect_expiry_date", "Until a date"),
+	}
+	e.predefined = widget.NewSelect(presets, nil)
+	if len(presets) > 0 {
+		e.predefined.SetSelectedIndex(0)
+	}
+	e.number = widget.NewEntry()
+	e.number.SetPlaceHolder("1")
+	e.unit = widget.NewSelect(expiryUnitLabels(), nil)
+	e.unit.SetSelectedIndex(1) // days
+	e.date = widget.NewDateEntry()
+
+	e.method = widget.NewRadioGroup([]string{e.optPreset, e.optCustom, e.optDate}, func(string) { e.apply() })
+	e.method.Horizontal = true
+	e.method.SetSelected(e.optPreset)
+
+	e.root = container.NewVBox(
+		e.method,
+		e.predefined,
+		container.NewBorder(nil, nil, e.number, nil, e.unit),
+		e.date,
+	)
+	e.apply()
+	return e
+}
+
+// apply enables only the selected method's controls.
+func (e *expiryInput) apply() {
+	e.predefined.Disable()
+	e.number.Disable()
+	e.unit.Disable()
+	e.date.Disable()
+	switch e.method.Selected {
+	case e.optCustom:
+		e.number.Enable()
+		e.unit.Enable()
+	case e.optDate:
+		e.date.Enable()
+	default:
+		e.predefined.Enable()
+	}
+}
+
+// setEnabled disables the whole control (used when a tab mirrors Edit) or re-applies per-method enabling.
+func (e *expiryInput) setEnabled(on bool) {
+	if !on {
+		e.method.Disable()
+		e.predefined.Disable()
+		e.number.Disable()
+		e.unit.Disable()
+		e.date.Disable()
+		return
+	}
+	e.method.Enable()
+	e.apply()
+}
+
+// value returns the API-ready expiry string for the selected method, or a validation error.
+func (e *expiryInput) value() (string, error) {
+	switch e.method.Selected {
+	case e.optCustom:
+		num, err := strconv.Atoi(strings.TrimSpace(e.number.Text))
+		if err != nil || num <= 0 {
+			return "", errors.New(t.T("protect_err_bad_duration",
+				"Enter a positive whole number for the custom duration."))
+		}
+		unit := expiryUnitValues[max(0, e.unit.SelectedIndex())]
+		return fmt.Sprintf("%d %s", num, unit), nil
+	case e.optDate:
+		if e.date.Date == nil {
+			return "", errors.New(t.T("protect_err_no_date", "Pick a date for the expiry."))
+		}
+		if !e.date.Date.After(time.Now()) {
+			return "", errors.New(t.T("protect_err_past_date", "The expiry date must be in the future."))
+		}
+		return e.date.Date.UTC().Format(time.RFC3339), nil
+	default:
+		return e.predefined.Selected, nil
+	}
+}
+
 // protectionWorkflowScreen renders the bulk "Change page protection" workflow.
 type protectionWorkflowScreen struct {
 	app  *App
@@ -53,13 +164,16 @@ type protectionWorkflowScreen struct {
 	searchResults   []string
 
 	// Options widgets, per type.
-	levelSelects  map[string]*widget.Select
-	expirySelects map[string]*widget.Select
-	sameAsEdit    map[string]*widget.Check
-	cascadeCheck  *widget.Check
-	reasonEntry   *widget.Entry
-	dryRunCheck   *widget.Check
-	expiryOptions []string
+	levelSelects   map[string]*widget.Select
+	expiryInputs   map[string]*expiryInput
+	sameAsEdit     map[string]*widget.Check
+	cascadeCheck   *widget.Check
+	reasonSelect   *widget.Select
+	reasonEntry    *widget.Entry
+	dryRunCheck    *widget.Check
+	expiryOptions  []string
+	reasons        []string
+	reasonsLoading bool
 
 	// Captured target + plan.
 	settings protect.Settings
@@ -88,7 +202,7 @@ func NewProtectionWorkflowScreen(app *App) *protectionWorkflowScreen {
 		app:            app,
 		selected:       map[string]struct{}{},
 		levelSelects:   map[string]*widget.Select{},
-		expirySelects:  map[string]*widget.Select{},
+		expiryInputs:   map[string]*expiryInput{},
 		sameAsEdit:     map[string]*widget.Check{},
 		dryRun:         app.config.Preferences.DryRunByDefault,
 		journalEntries: []ops.JournalEntry{},
@@ -152,7 +266,10 @@ func (s *protectionWorkflowScreen) onProceed() {
 		}
 		s.showOptionsStep()
 	case workflowStepOptions:
-		s.captureOptions()
+		if msg := s.captureOptions(); msg != "" {
+			s.app.showMessage(s.title(), msg)
+			return
+		}
 		if msg := s.validateNamespaceProtectAccess(); msg != "" {
 			s.app.showMessage(s.title(), msg)
 			return
@@ -520,6 +637,82 @@ func (s *protectionWorkflowScreen) showOptionsStep() {
 	})
 	s.wf.SetContent(s.buildOptionsContent())
 	s.loadExpiryOptions()
+	s.loadProtectReasonsIfNeeded()
+}
+
+// reasonSelectOptions lists "(none)" plus the wiki's predefined protection reasons, showing "(loading…)" while they load.
+func (s *protectionWorkflowScreen) reasonSelectOptions() []string {
+	none := t.T("protect_reason_none", "(none)")
+	options := []string{none}
+	for _, r := range s.reasons {
+		if r = strings.TrimSpace(r); r != "" && r != none {
+			options = append(options, r)
+		}
+	}
+	if len(s.reasons) == 0 && s.reasonsLoading {
+		options = append(options, t.T("protect_reason_loading", "(loading...)"))
+	}
+	return options
+}
+
+// combinedReason joins the selected predefined reason and the free-text addition, mirroring the deletion workflow.
+func (s *protectionWorkflowScreen) combinedReason() string {
+	reason := strings.TrimSpace(s.reasonSelect.Selected)
+	if reason == t.T("protect_reason_none", "(none)") || reason == t.T("protect_reason_loading", "(loading...)") {
+		reason = ""
+	}
+	extra := strings.TrimSpace(s.reasonEntry.Text)
+	switch {
+	case reason == "":
+		return extra
+	case extra == "":
+		return reason
+	default:
+		return reason + ": " + extra
+	}
+}
+
+// loadProtectReasonsIfNeeded lazily fetches the wiki's Protect-dropdown reasons and repopulates the reason Select.
+func (s *protectionWorkflowScreen) loadProtectReasonsIfNeeded() {
+	if len(s.reasons) > 0 || s.reasonsLoading || s.app.client == nil {
+		return
+	}
+	s.reasonsLoading = true
+	if s.reasonSelect != nil {
+		s.reasonSelect.Options = s.reasonSelectOptions()
+		s.reasonSelect.Refresh()
+	}
+	go func() {
+		dropdowns, err := api.FetchReasonDropdownsContext(
+			context.Background(), s.app.client, s.app.apiURL, s.app.currentWiki.AdminLanguage)
+		reasons := []string{}
+		if err == nil {
+			if protectReasons, ok := dropdowns["protect"]; ok {
+				for _, category := range protectReasons.Categories {
+					for _, reason := range category.Reasons {
+						if strings.TrimSpace(reason) != "" {
+							reasons = append(reasons, reason)
+						}
+					}
+				}
+			}
+		}
+		sort.Strings(reasons)
+		fyne.Do(func() {
+			s.reasonsLoading = false
+			s.reasons = reasons
+			if s.reasonSelect != nil {
+				previous := s.reasonSelect.Selected
+				s.reasonSelect.Options = s.reasonSelectOptions()
+				s.reasonSelect.Refresh()
+				if previous != "" && previous != t.T("protect_reason_loading", "(loading...)") {
+					s.reasonSelect.SetSelected(previous)
+				} else {
+					s.reasonSelect.SetSelectedIndex(0)
+				}
+			}
+		})
+	}()
 }
 
 func (s *protectionWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
@@ -530,8 +723,10 @@ func (s *protectionWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
 
 	s.cascadeCheck = widget.NewCheck(t.T("protect_cascade", "Cascade (protect transcluded pages)"), nil)
 	s.cascadeCheck.SetChecked(true)
+	s.reasonSelect = widget.NewSelect(s.reasonSelectOptions(), nil)
+	s.reasonSelect.SetSelectedIndex(0)
 	s.reasonEntry = widget.NewEntry()
-	s.reasonEntry.SetPlaceHolder(t.T("protect_reason_placeholder", "Reason"))
+	s.reasonEntry.SetPlaceHolder(t.T("protect_reason_placeholder", "Additional reason"))
 	s.dryRunCheck = widget.NewCheck(t.T("protect_dry_run", "Dry-run"), nil)
 	s.dryRunCheck.SetChecked(s.dryRun)
 
@@ -540,7 +735,8 @@ func (s *protectionWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
 		tabs,
 		widget.NewSeparator(),
 		s.cascadeCheck,
-		labeled(t.T("protect_field_reason", "Reason"), s.reasonEntry),
+		labeled(t.T("protect_field_reason", "Reason"), s.reasonSelect),
+		labeled(t.T("protect_field_additional_reason", "Additional reason text"), s.reasonEntry),
 		s.dryRunCheck,
 	)
 	return container.NewVScroll(form)
@@ -563,9 +759,8 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 	level.SetSelectedIndex(0) // "(no change)"
 	s.levelSelects[typ] = level
 
-	expiry := widget.NewSelect(s.expiryMenu(), nil)
-	expiry.SetSelectedIndex(0)
-	s.expirySelects[typ] = expiry
+	expiry := newExpiryInput(s.expiryMenu())
+	s.expiryInputs[typ] = expiry
 
 	// The applicability note, per the spec: edit/move apply to existing pages, create to nonexistent ones.
 	note := s.applicabilityNote(typ)
@@ -573,7 +768,7 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 	body := container.NewVBox(
 		widget.NewLabel(note),
 		labeled(t.T("protect_field_level", "Level"), level),
-		labeled(t.T("protect_field_expiry", "Expiry"), expiry),
+		labeled(t.T("protect_field_expiry", "Expiry"), expiry.root),
 	)
 
 	if typ == "edit" {
@@ -602,10 +797,10 @@ func (s *protectionWorkflowScreen) applyTypeEnabled(typ string) {
 	}
 	if same.Checked {
 		s.levelSelects[typ].Disable()
-		s.expirySelects[typ].Disable()
+		s.expiryInputs[typ].setEnabled(false)
 	} else {
 		s.levelSelects[typ].Enable()
-		s.expirySelects[typ].Enable()
+		s.expiryInputs[typ].setEnabled(true)
 	}
 }
 
@@ -635,9 +830,10 @@ func (s *protectionWorkflowScreen) loadExpiryOptions() {
 		}
 		fyne.Do(func() {
 			s.expiryOptions = options
-			for _, sel := range s.expirySelects {
-				sel.Options = options
-				sel.Refresh()
+			for _, in := range s.expiryInputs {
+				in.predefined.Options = options
+				in.predefined.SetSelectedIndex(0)
+				in.predefined.Refresh()
 			}
 		})
 	}()
@@ -669,22 +865,27 @@ func parseExpiryOptions(payload map[string]any) []string {
 	return out
 }
 
-// captureOptions reads the Options widgets into protect.Settings.
-func (s *protectionWorkflowScreen) captureOptions() {
+// captureOptions reads the Options widgets into protect.Settings, returning a validation message (or "" when valid).
+func (s *protectionWorkflowScreen) captureOptions() string {
 	byType := map[string]protect.TypeSetting{}
 	for _, typ := range protectionTabTypes {
 		src := typ
 		if same, ok := s.sameAsEdit[typ]; ok && same.Checked {
 			src = "edit" // mirror edit's level+expiry
 		}
-		byType[typ] = s.typeSetting(src)
+		setting, msg := s.typeSetting(src)
+		if msg != "" {
+			return msg
+		}
+		byType[typ] = setting
 	}
 	s.settings = protect.Settings{
 		ByType:  byType,
 		Cascade: s.cascadeCheck.Checked,
-		Reason:  strings.TrimSpace(s.reasonEntry.Text),
+		Reason:  s.combinedReason(),
 	}
 	s.dryRun = s.dryRunCheck.Checked
+	return ""
 }
 
 // validateNamespaceProtectAccess returns a message if any selected page needs a MediaWiki-namespace/site-config right
@@ -701,16 +902,20 @@ func (s *protectionWorkflowScreen) validateNamespaceProtectAccess() string {
 	return ""
 }
 
-func (s *protectionWorkflowScreen) typeSetting(typ string) protect.TypeSetting {
+// typeSetting builds the target for one restriction type, returning a validation message when its expiry is invalid.
+func (s *protectionWorkflowScreen) typeSetting(typ string) (protect.TypeSetting, string) {
 	levelSel := strings.TrimSpace(s.levelSelects[typ].Selected)
 	if levelSel == noChangeLevel || levelSel == "" {
-		return protect.TypeSetting{KeepLevel: true, KeepExpiry: true}
+		return protect.TypeSetting{KeepLevel: true, KeepExpiry: true}, "" // leave this type unchanged
 	}
-	level := levelSel
-	if level == removeLevel {
-		level = "" // remove protection
+	if levelSel == removeLevel {
+		return protect.TypeSetting{Level: ""}, "" // remove protection; expiry is irrelevant
 	}
-	return protect.TypeSetting{Level: level, Expiry: strings.TrimSpace(s.expirySelects[typ].Selected)}
+	expiry, err := s.expiryInputs[typ].value()
+	if err != nil {
+		return protect.TypeSetting{}, err.Error()
+	}
+	return protect.TypeSetting{Level: levelSel, Expiry: expiry}, ""
 }
 
 // ---- verification (read phase) ----
