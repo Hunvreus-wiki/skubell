@@ -301,6 +301,147 @@
   "prefs_title": {
     "other": "Preferences"
   },
+  "protect_add_results": {
+    "other": "Add results to list"
+  },
+  "protect_any": {
+    "other": "(any)"
+  },
+  "protect_cascade": {
+    "other": "Cascade (protect transcluded pages)"
+  },
+  "protect_cascade_only": {
+    "other": "cascading"
+  },
+  "protect_clear_list": {
+    "other": "Clear list"
+  },
+  "protect_computing": {
+    "other": "Computing changes…"
+  },
+  "protect_download_journal": {
+    "other": "Download journal"
+  },
+  "protect_dry_run": {
+    "other": "Dry-run"
+  },
+  "protect_dry_run_ok": {
+    "other": "(dry-run)"
+  },
+  "protect_exec_canceled": {
+    "other": "Execution canceled."
+  },
+  "protect_exec_complete": {
+    "other": "Execution complete."
+  },
+  "protect_executing": {
+    "other": "Applying protection changes…"
+  },
+  "protect_expiry_permanent": {
+    "other": "permanent"
+  },
+  "protect_expiry_temporary": {
+    "other": "temporary"
+  },
+  "protect_field_cur_cascade": {
+    "other": "Cascade"
+  },
+  "protect_field_cur_expiry": {
+    "other": "Current expiry"
+  },
+  "protect_field_cur_level": {
+    "other": "Current level"
+  },
+  "protect_field_expiry": {
+    "other": "Expiry"
+  },
+  "protect_field_level": {
+    "other": "Level"
+  },
+  "protect_field_min_links": {
+    "other": "Min. incoming links/transclusions"
+  },
+  "protect_field_namespace": {
+    "other": "Namespace"
+  },
+  "protect_field_prefix": {
+    "other": "Title prefix"
+  },
+  "protect_field_reason": {
+    "other": "Reason"
+  },
+  "protect_final_list": {
+    "other": "Selected pages"
+  },
+  "protect_legend": {
+    "other": "✎ level  ·  ⏱ expiry  ·  ⊘ unchanged  ·  ⚠ can't apply"
+  },
+  "protect_need_one_page": {
+    "other": "Add at least one page to continue."
+  },
+  "protect_noncascade": {
+    "other": "non-cascading"
+  },
+  "protect_note_create": {
+    "other": "Applies only to pages that don't exist yet."
+  },
+  "protect_note_existing": {
+    "other": "Applies only to pages that already exist."
+  },
+  "protect_nothing_to_change": {
+    "other": "No pages would change; adjust the settings or selection."
+  },
+  "protect_ns_any": {
+    "other": "(any)"
+  },
+  "protect_ns_main": {
+    "other": "(Main)"
+  },
+  "protect_options_heading": {
+    "other": "Protection settings"
+  },
+  "protect_placeholder_manual": {
+    "other": "One title per line"
+  },
+  "protect_press_proceed": {
+    "other": "Press Proceed to apply the protection changes."
+  },
+  "protect_press_proceed_dry": {
+    "other": "Dry-run: press Proceed to simulate (no changes are written)."
+  },
+  "protect_reason_placeholder": {
+    "other": "Reason"
+  },
+  "protect_same_as_edit": {
+    "other": "Same as Edit"
+  },
+  "protect_search": {
+    "other": "Search"
+  },
+  "protect_search_results": {
+    "other": "Search results"
+  },
+  "protect_selected_count": {
+    "other": "{{.Count}} selected"
+  },
+  "protect_tab_create": {
+    "other": "Create"
+  },
+  "protect_tab_edit": {
+    "other": "Edit"
+  },
+  "protect_tab_manual": {
+    "other": "Manual entry"
+  },
+  "protect_tab_move": {
+    "other": "Move"
+  },
+  "protect_title": {
+    "other": "Change page protection"
+  },
+  "protect_unknown_failure": {
+    "other": "unknown failure"
+  },
   "security_insecure": {
     "other": "Insecure"
   },
@@ -396,6 +537,9 @@
   },
   "workflow_missing_sitewide_block": {
     "other": "sitewide block"
+  },
+  "workflow_protection": {
+    "other": "Change page protection"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (requires {{.Rights}})"
