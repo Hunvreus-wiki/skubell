@@ -5,6 +5,7 @@
 package protect
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -36,9 +37,10 @@ type PageProtection struct {
 	Protections map[string]TypeProtection // restriction type -> current protection (only protected types present)
 }
 
-// Reader reads current protection + existence for a batch of titles.
+// Reader reads current protection + existence for a batch of titles. It takes a context so the read phase can be
+// cancelled (it runs off the UI goroutine).
 type Reader interface {
-	PageProtections(titles []string) (map[string]PageProtection, error)
+	PageProtections(ctx context.Context, titles []string) (map[string]PageProtection, error)
 }
 
 // TypeSetting is the user's target for one restriction type. Keep* preserve the page's current value (used e.g. to make
@@ -87,8 +89,10 @@ type Plan struct {
 
 // BuildPlan computes the protection plan. cascadingLevels are the wiki's levels that permit cascade (siteinfo
 // restrictions.cascadinglevels).
-func BuildPlan(reader Reader, titles []string, settings Settings, cascadingLevels []string) (Plan, error) {
-	current, err := reader.PageProtections(titles)
+func BuildPlan(
+	ctx context.Context, reader Reader, titles []string, settings Settings, cascadingLevels []string,
+) (Plan, error) {
+	current, err := reader.PageProtections(ctx, titles)
 	if err != nil {
 		return Plan{}, fmt.Errorf("read current protection: %w", err)
 	}

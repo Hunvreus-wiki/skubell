@@ -1,6 +1,7 @@
 package protect
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,7 +11,7 @@ import (
 
 type fakeReader struct{ data map[string]PageProtection }
 
-func (f fakeReader) PageProtections(titles []string) (map[string]PageProtection, error) {
+func (f fakeReader) PageProtections(_ context.Context, titles []string) (map[string]PageProtection, error) {
 	out := map[string]PageProtection{}
 	for _, t := range titles {
 		if p, ok := f.data[t]; ok {
@@ -46,7 +47,7 @@ func TestBuildPlanFiltersTypesByExistence(t *testing.T) {
 		"create": {Level: "sysop"},
 	}}
 
-	plan, err := BuildPlan(reader, []string{"Foo", "Bar"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo", "Bar"}, settings, []string{"sysop"})
 	require.NoError(t, err)
 
 	foo := itemFor(t, plan, "Foo").Op.Params
@@ -74,7 +75,7 @@ func TestBuildPlanMakePermanent(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true}, // preserve (currently none)
 	}}
 
-	plan, err := BuildPlan(reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
 	require.NoError(t, err)
 	require.Equal(t, 1, plan.Change)
 	op := itemFor(t, plan, "Foo").Op.Params
@@ -96,7 +97,7 @@ func TestBuildPlanNoOp(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true},
 	}}
 
-	plan, err := BuildPlan(reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
 	require.NoError(t, err)
 	require.Equal(t, 0, plan.Change)
 	require.Equal(t, 1, plan.Unchanged)
@@ -118,7 +119,7 @@ func TestBuildPlanUnprotect(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true},
 	}}
 
-	plan, err := BuildPlan(reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
 	require.NoError(t, err)
 	require.Equal(t, 1, plan.Change)
 	require.Empty(t, itemFor(t, plan, "Foo").Op.Params["protect_edit"])
@@ -134,14 +135,14 @@ func TestBuildPlanCascadeValidity(t *testing.T) {
 	}}
 	cascading := []string{"sysop"}
 
-	invalid, err := BuildPlan(reader, []string{"Foo"},
+	invalid, err := BuildPlan(context.Background(), reader, []string{"Foo"},
 		Settings{Cascade: true, ByType: map[string]TypeSetting{"edit": {Level: "autoconfirmed"}}}, cascading)
 	require.NoError(t, err)
 	require.Equal(t, 1, invalid.Invalid)
 	require.True(t, itemFor(t, invalid, "Foo").Invalid)
 	require.Equal(t, ops.Operation{}, itemFor(t, invalid, "Foo").Op)
 
-	valid, err := BuildPlan(reader, []string{"Foo"}, Settings{
+	valid, err := BuildPlan(context.Background(), reader, []string{"Foo"}, Settings{
 		Cascade: true,
 		ByType:  map[string]TypeSetting{"edit": {Level: "sysop"}, "move": {Level: "sysop"}},
 	}, cascading)
