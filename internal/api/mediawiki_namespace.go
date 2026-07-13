@@ -13,6 +13,11 @@ const (
 	SiteCSSDeleteGrantMessage            = "Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the \"editsitecss\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
 	SiteJSDeleteGrantMessage             = "Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the \"editsitejs\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
 	SiteJSONDeleteGrantMessage           = "Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's JSON grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
+
+	MediaWikiNamespaceProtectGrantMessage = "Skubell cannot protect pages in the MediaWiki namespace with this session: it lacks the \"editinterface\" right. In Special:BotPasswords, enable \"Edit the MediaWiki namespace and sitewide/user JSON\" (and ensure your account holds it), then reconnect Skubell."
+	SiteCSSProtectGrantMessage            = "Skubell cannot protect sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the \"editsitecss\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
+	SiteJSProtectGrantMessage             = "Skubell cannot protect sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the \"editsitejs\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
+	SiteJSONProtectGrantMessage           = "Skubell cannot protect sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's JSON grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
 )
 
 // HasRight reports whether the connected user session has an effective right.
@@ -30,15 +35,13 @@ func CanDeleteMediaWikiNamespace(caps WikiCapabilities) bool {
 	return HasRight(caps, RightEditInterface)
 }
 
-// RequiredDeleteRights returns the rights, beyond the base "delete" right, that MediaWiki requires to delete the page at
-// title, derived from its namespace and content-model suffix.
-//
-// Only sitewide config pages (the MediaWiki namespace) gate deletion: every MediaWiki-namespace page needs
-// "editinterface" ($wgNamespaceProtection), and .css/.js/.json pages also need editsitecss/editsitejs/editsitejson
-// (PermissionManager::checkSiteConfigPermissions). User-space .css/.js/.json pages are deliberately not gated on delete
-// (checkUserConfigPermissions is skipped for that action), and .css/.js elsewhere (e.g. User_talk) is plain wikitext, so
-// both are omitted here.
-func RequiredDeleteRights(caps WikiCapabilities, title string) []string {
+// RequiredMediaWikiNamespaceRights returns the rights, beyond the base action right, that MediaWiki requires to act on
+// the page at title, derived from its namespace and content-model suffix. The same rights gate both **deleting** and
+// **protecting** a page: every MediaWiki-namespace page needs "editinterface" ($wgNamespaceProtection), and .css/.js/
+// .json pages additionally need editsitecss/editsitejs/editsitejson (PermissionManager::checkSiteConfigPermissions).
+// User-space .css/.js/.json pages are deliberately not gated for these actions (checkUserConfigPermissions is skipped),
+// and .css/.js elsewhere (e.g. User_talk) is plain wikitext, so both are omitted here.
+func RequiredMediaWikiNamespaceRights(caps WikiCapabilities, title string) []string {
 	if !IsMediaWikiNamespaceTitle(caps, title) {
 		return nil
 	}
@@ -54,10 +57,14 @@ func RequiredDeleteRights(caps WikiCapabilities, title string) []string {
 	return rights
 }
 
-// MissingDeleteRight returns the first right RequiredDeleteRights reports for title that the session lacks, or "" when
-// the session can delete it.
-func MissingDeleteRight(caps WikiCapabilities, title string) string {
-	for _, right := range RequiredDeleteRights(caps, title) {
+// RequiredDeleteRights is RequiredMediaWikiNamespaceRights for the delete action.
+func RequiredDeleteRights(caps WikiCapabilities, title string) []string {
+	return RequiredMediaWikiNamespaceRights(caps, title)
+}
+
+// firstMissingRight returns the first of rights the session lacks, or "" when it holds them all.
+func firstMissingRight(caps WikiCapabilities, rights []string) string {
+	for _, right := range rights {
 		if !HasRight(caps, right) {
 			return right
 		}
@@ -65,9 +72,26 @@ func MissingDeleteRight(caps WikiCapabilities, title string) string {
 	return ""
 }
 
+// MissingDeleteRight returns the first right needed to delete title that the session lacks, or "".
+func MissingDeleteRight(caps WikiCapabilities, title string) string {
+	return firstMissingRight(caps, RequiredMediaWikiNamespaceRights(caps, title))
+}
+
+// MissingProtectRight returns the first right needed to protect title that the session lacks, or "". Protecting a page
+// requires the same MediaWiki-namespace/site-config rights as deleting it (you must be able to edit the page to protect
+// it), so the two share RequiredMediaWikiNamespaceRights.
+func MissingProtectRight(caps WikiCapabilities, title string) string {
+	return firstMissingRight(caps, RequiredMediaWikiNamespaceRights(caps, title))
+}
+
 // DeleteAccessMessage returns a user-facing message explaining why this session cannot delete title, or "" when it can.
 func DeleteAccessMessage(caps WikiCapabilities, title string) string {
 	return deleteRightMessage(MissingDeleteRight(caps, title))
+}
+
+// ProtectAccessMessage returns a user-facing message explaining why this session cannot protect title, or "" when it can.
+func ProtectAccessMessage(caps WikiCapabilities, title string) string {
+	return protectRightMessage(MissingProtectRight(caps, title))
 }
 
 // deleteRightMessage maps a missing delete right to its user-facing message; unknown or empty yields "".
@@ -81,6 +105,22 @@ func deleteRightMessage(right string) string {
 		return SiteJSDeleteGrantMessage
 	case RightEditSiteJSON:
 		return SiteJSONDeleteGrantMessage
+	default:
+		return ""
+	}
+}
+
+// protectRightMessage maps a missing protect right to its user-facing message; unknown or empty yields "".
+func protectRightMessage(right string) string {
+	switch right {
+	case RightEditInterface:
+		return MediaWikiNamespaceProtectGrantMessage
+	case RightEditSiteCSS:
+		return SiteCSSProtectGrantMessage
+	case RightEditSiteJS:
+		return SiteJSProtectGrantMessage
+	case RightEditSiteJSON:
+		return SiteJSONProtectGrantMessage
 	default:
 		return ""
 	}
