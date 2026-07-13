@@ -271,6 +271,147 @@
   "prefs_title": {
     "other": "Penndibaboù"
   },
+  "protect_add_results": {
+    "other": "Ouzhpennañ an disoc'hoù d'ar roll"
+  },
+  "protect_any": {
+    "other": "(an holl)"
+  },
+  "protect_cascade": {
+    "other": "Diri (gwareziñ ar pajennoù enframmet)"
+  },
+  "protect_cascade_only": {
+    "other": "en diri"
+  },
+  "protect_clear_list": {
+    "other": "Goullonderiñ ar roll"
+  },
+  "protect_computing": {
+    "other": "O jediñ ar c'hemmoù…"
+  },
+  "protect_download_journal": {
+    "other": "Pellgargañ ar marilh"
+  },
+  "protect_dry_run": {
+    "other": "Darvanañ"
+  },
+  "protect_dry_run_ok": {
+    "other": "(darvanañ)"
+  },
+  "protect_exec_canceled": {
+    "other": "Peurgas nullet."
+  },
+  "protect_exec_complete": {
+    "other": "Peurgas echu."
+  },
+  "protect_executing": {
+    "other": "Oc'h arloañ kemmoù ar gwarez…"
+  },
+  "protect_expiry_permanent": {
+    "other": "peurbadus"
+  },
+  "protect_expiry_temporary": {
+    "other": "padennek"
+  },
+  "protect_field_cur_cascade": {
+    "other": "Diri"
+  },
+  "protect_field_cur_expiry": {
+    "other": "Termen a-vremañ"
+  },
+  "protect_field_cur_level": {
+    "other": "Live a-vremañ"
+  },
+  "protect_field_expiry": {
+    "other": "Termen"
+  },
+  "protect_field_level": {
+    "other": "Live"
+  },
+  "protect_field_min_links": {
+    "other": "Liammoù/enframmadurioù o tont (izek)"
+  },
+  "protect_field_namespace": {
+    "other": "Esaouenn anv"
+  },
+  "protect_field_prefix": {
+    "other": "Rakger an titl"
+  },
+  "protect_field_reason": {
+    "other": "Abeg"
+  },
+  "protect_final_list": {
+    "other": "Pajennoù dibabet"
+  },
+  "protect_legend": {
+    "other": "✎ live  ·  ⏱ termen  ·  ⊘ digemm  ·  ⚠ n'haller ket arloañ"
+  },
+  "protect_need_one_page": {
+    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
+  },
+  "protect_noncascade": {
+    "other": "hep diri"
+  },
+  "protect_note_create": {
+    "other": "Ne sell nemet ouzh ar pajennoù n'int ket krouet c'hoazh."
+  },
+  "protect_note_existing": {
+    "other": "Ne sell nemet ouzh ar pajennoù a zo dija."
+  },
+  "protect_nothing_to_change": {
+    "other": "Ne gemmfe pajenn ebet ; kemmit an arventennoù pe an diuzadenn."
+  },
+  "protect_ns_any": {
+    "other": "(an holl)"
+  },
+  "protect_ns_main": {
+    "other": "(Pennañ)"
+  },
+  "protect_options_heading": {
+    "other": "Arventennoù gwarez"
+  },
+  "protect_placeholder_manual": {
+    "other": "Un titl e pep linenn"
+  },
+  "protect_press_proceed": {
+    "other": "Pouezit war Kenderc'hel evit arloañ kemmoù ar gwarez."
+  },
+  "protect_press_proceed_dry": {
+    "other": "Darvanañ : pouezit war Kenderc'hel evit darvanañ (kemm ebet skrivet)."
+  },
+  "protect_reason_placeholder": {
+    "other": "Abeg"
+  },
+  "protect_same_as_edit": {
+    "other": "Evel Kemmañ"
+  },
+  "protect_search": {
+    "other": "Klask"
+  },
+  "protect_search_results": {
+    "other": "Disoc'hoù ar c'hlask"
+  },
+  "protect_selected_count": {
+    "other": "{{.Count}} dibabet"
+  },
+  "protect_tab_create": {
+    "other": "Krouiñ"
+  },
+  "protect_tab_edit": {
+    "other": "Kemmañ"
+  },
+  "protect_tab_manual": {
+    "other": "Merkañ dre zorn"
+  },
+  "protect_tab_move": {
+    "other": "Adenvel"
+  },
+  "protect_title": {
+    "other": "Kemmañ gwarez ar pajennoù"
+  },
+  "protect_unknown_failure": {
+    "other": "c'hwitadenn dianav"
+  },
   "security_insecure": {
     "other": "Nann-sur"
   },
@@ -366,6 +507,9 @@
   },
   "workflow_missing_sitewide_block": {
     "other": "stankadenn war al lec'hienn a-bezh"
+  },
+  "workflow_protection": {
+    "other": "Kemmañ gwarez ar pajennoù"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (ezhomm eus {{.Rights}})"

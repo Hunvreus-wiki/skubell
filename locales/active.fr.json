@@ -271,6 +271,147 @@
   "prefs_title": {
     "other": "Préférences"
   },
+  "protect_add_results": {
+    "other": "Ajouter les résultats à la liste"
+  },
+  "protect_any": {
+    "other": "(tous)"
+  },
+  "protect_cascade": {
+    "other": "Cascade (protéger les pages transcluses)"
+  },
+  "protect_cascade_only": {
+    "other": "en cascade"
+  },
+  "protect_clear_list": {
+    "other": "Vider la liste"
+  },
+  "protect_computing": {
+    "other": "Calcul des modifications…"
+  },
+  "protect_download_journal": {
+    "other": "Télécharger le journal"
+  },
+  "protect_dry_run": {
+    "other": "Simulation"
+  },
+  "protect_dry_run_ok": {
+    "other": "(simulation)"
+  },
+  "protect_exec_canceled": {
+    "other": "Exécution annulée."
+  },
+  "protect_exec_complete": {
+    "other": "Exécution terminée."
+  },
+  "protect_executing": {
+    "other": "Application des modifications de protection…"
+  },
+  "protect_expiry_permanent": {
+    "other": "permanent"
+  },
+  "protect_expiry_temporary": {
+    "other": "temporaire"
+  },
+  "protect_field_cur_cascade": {
+    "other": "Cascade"
+  },
+  "protect_field_cur_expiry": {
+    "other": "Expiration actuelle"
+  },
+  "protect_field_cur_level": {
+    "other": "Niveau actuel"
+  },
+  "protect_field_expiry": {
+    "other": "Expiration"
+  },
+  "protect_field_level": {
+    "other": "Niveau"
+  },
+  "protect_field_min_links": {
+    "other": "Liens/transclusions entrants min."
+  },
+  "protect_field_namespace": {
+    "other": "Espace de noms"
+  },
+  "protect_field_prefix": {
+    "other": "Préfixe de titre"
+  },
+  "protect_field_reason": {
+    "other": "Motif"
+  },
+  "protect_final_list": {
+    "other": "Pages sélectionnées"
+  },
+  "protect_legend": {
+    "other": "✎ niveau  ·  ⏱ expiration  ·  ⊘ inchangé  ·  ⚠ inapplicable"
+  },
+  "protect_need_one_page": {
+    "other": "Ajoutez au moins une page pour continuer."
+  },
+  "protect_noncascade": {
+    "other": "sans cascade"
+  },
+  "protect_note_create": {
+    "other": "S'applique uniquement aux pages qui n'existent pas encore."
+  },
+  "protect_note_existing": {
+    "other": "S'applique uniquement aux pages qui existent déjà."
+  },
+  "protect_nothing_to_change": {
+    "other": "Aucune page ne changerait ; ajustez les réglages ou la sélection."
+  },
+  "protect_ns_any": {
+    "other": "(tous)"
+  },
+  "protect_ns_main": {
+    "other": "(Principal)"
+  },
+  "protect_options_heading": {
+    "other": "Réglages de protection"
+  },
+  "protect_placeholder_manual": {
+    "other": "Un titre par ligne"
+  },
+  "protect_press_proceed": {
+    "other": "Appuyez sur Continuer pour appliquer les modifications de protection."
+  },
+  "protect_press_proceed_dry": {
+    "other": "Simulation : appuyez sur Continuer pour simuler (aucune modification écrite)."
+  },
+  "protect_reason_placeholder": {
+    "other": "Motif"
+  },
+  "protect_same_as_edit": {
+    "other": "Comme Modifier"
+  },
+  "protect_search": {
+    "other": "Rechercher"
+  },
+  "protect_search_results": {
+    "other": "Résultats de recherche"
+  },
+  "protect_selected_count": {
+    "other": "{{.Count}} sélectionnée(s)"
+  },
+  "protect_tab_create": {
+    "other": "Créer"
+  },
+  "protect_tab_edit": {
+    "other": "Modifier"
+  },
+  "protect_tab_manual": {
+    "other": "Saisie manuelle"
+  },
+  "protect_tab_move": {
+    "other": "Renommer"
+  },
+  "protect_title": {
+    "other": "Modifier la protection des pages"
+  },
+  "protect_unknown_failure": {
+    "other": "échec inconnu"
+  },
   "security_insecure": {
     "other": "Non sécurisé"
   },
@@ -366,6 +507,9 @@
   },
   "workflow_missing_sitewide_block": {
     "other": "blocage sur tout le site"
+  },
+  "workflow_protection": {
+    "other": "Modifier la protection des pages"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (nécessite {{.Rights}})"
