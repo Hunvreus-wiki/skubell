@@ -305,9 +305,14 @@ func (s *deleteWorkflowScreen) showVerificationStep() {
 	s.computePreview()
 }
 
-// computePreview runs the deletion read phase off the main goroutine: it expands
-// the selected pages into the full plan (redirects, talk pages, category
-// emptiness) and populates the verification list. Canceling returns to options.
+// progressThrottle bounds how often the verification screen repaints while the list is being calculated, so a long
+// (thousands of pages) read phase does not flood the main goroutine with updates.
+const progressThrottle = 120 * time.Millisecond
+
+// computePreview runs the deletion read phase off the main goroutine and streams progress to the verification screen.
+// Phase 1 (BuildPlan) expands the selection (redirects, talk pages) and reports "Calculating… N% (M found)"; once the
+// list exists it is shown immediately, then phase 2 annotates categories (emptiness checks) with a percentage over the
+// known total. Canceling (workflow Cancel button) cancels the context and returns to Options.
 func (s *deleteWorkflowScreen) computePreview() {
 	if s.app.client == nil {
 		s.verificationInfo.SetText(t.T("del_not_connected", "Not connected to a wiki."))
@@ -336,23 +341,49 @@ func (s *deleteWorkflowScreen) computePreview() {
 
 	go func() {
 		defer cancel()
-		plan, err := deletion.BuildPlan(provider, titles, planOptions)
-		var rows []previewRow
-		if err == nil {
-			rows, err = s.buildPreviewRows(ctx, plan)
-		}
-		fyne.Do(func() {
-			s.previewComputing = false
-			s.previewCancel = nil
-			if err != nil {
-				if ctx.Err() != nil || errors.Is(err, context.Canceled) {
-					s.showOptionsStep()
-					return
-				}
-				s.showOptionsStep()
-				s.app.showError(t.T("del_err_verify", "Verify"), err)
+
+		var lastPush time.Time
+		throttled := func(update func()) {
+			if time.Since(lastPush) < progressThrottle {
 				return
 			}
+			lastPush = time.Now()
+			fyne.Do(update)
+		}
+
+		// Phase 1: discovery. found grows as redirects/talk pages surface, so this is a live count, not a fraction of
+		// a known total.
+		planOptions.OnProgress = func(processed, found int) {
+			throttled(func() { s.verificationInfo.SetText(calcProgressLabel(processed, found)) })
+		}
+		plan, err := deletion.BuildPlan(provider, titles, planOptions)
+		if err != nil {
+			fyne.Do(func() { s.finishPreviewWithError(ctx, err) })
+			return
+		}
+
+		// The list is now available: show every row immediately (final order), then annotate categories.
+		base := make([]previewRow, len(plan.Items))
+		for i, item := range plan.Items {
+			base[i] = previewRow{item: item}
+		}
+		fyne.Do(func() {
+			s.previewRows = base
+			s.verificationList.Refresh()
+			s.verificationInfo.SetText(finalizeProgressLabel(0, len(base)))
+		})
+
+		// Phase 2: category-emptiness checks over the known total, so this is a real percentage.
+		rows, err := s.buildPreviewRows(ctx, plan, func(done, total int) {
+			throttled(func() { s.verificationInfo.SetText(finalizeProgressLabel(done, total)) })
+		})
+		fyne.Do(func() {
+			if err != nil {
+				s.finishPreviewWithError(ctx, err)
+				return
+			}
+			s.previewComputing = false
+			s.previewCancel = nil
 			s.previewPlan = plan
 			s.previewRows = rows
 			s.verificationInfo.SetText(t.Td(
@@ -366,16 +397,57 @@ func (s *deleteWorkflowScreen) computePreview() {
 	}()
 }
 
-// buildPreviewRows wraps plan items with UI annotations. For each category it
-// checks how many members would remain (not in the deletion set), since
-// MediaWiki refuses to delete a non-empty category.
-func (s *deleteWorkflowScreen) buildPreviewRows(ctx context.Context, plan deletion.Plan) ([]previewRow, error) {
+// finishPreviewWithError returns to Options after a failed/canceled read phase, surfacing an error dialog only when the
+// failure is not a cancellation.
+func (s *deleteWorkflowScreen) finishPreviewWithError(ctx context.Context, err error) {
+	s.previewComputing = false
+	s.previewCancel = nil
+	s.showOptionsStep()
+	if ctx.Err() == nil && !errors.Is(err, context.Canceled) {
+		s.app.showError(t.T("del_err_verify", "Verify"), err)
+	}
+}
+
+// deletionPercent is a clamped integer percentage; total <= 0 yields 0 (unknown).
+func deletionPercent(done, total int) int {
+	if total <= 0 {
+		return 0
+	}
+	return min(100, max(0, done*100/total))
+}
+
+// calcProgressLabel is the phase-1 (discovery) status line: a live percentage of processed-so-far plus the running
+// count of pages found.
+func calcProgressLabel(processed, found int) string {
+	return t.Td(
+		"del_calculating",
+		"Calculating… {{.Percent}}% ({{.Count}} pages found)",
+		map[string]any{"Percent": deletionPercent(processed, found), "Count": found},
+	)
+}
+
+// finalizeProgressLabel is the phase-2 (category checks) status line: a real percentage over the known total.
+func finalizeProgressLabel(done, total int) string {
+	return t.Td(
+		"del_finalizing",
+		"Finalizing… {{.Percent}}%",
+		map[string]any{"Percent": deletionPercent(done, total)},
+	)
+}
+
+// buildPreviewRows wraps plan items with UI annotations. For each category it checks how many members would remain
+// (not in the deletion set), since MediaWiki refuses to delete a non-empty category. onProgress, when set, is called
+// after each item with the count done and the total, for the finalize-phase percentage.
+func (s *deleteWorkflowScreen) buildPreviewRows(
+	ctx context.Context, plan deletion.Plan, onProgress func(done, total int),
+) ([]previewRow, error) {
 	deleted := make(map[string]struct{}, len(plan.Items))
 	for _, item := range plan.Items {
 		deleted[item.Title] = struct{}{}
 	}
-	rows := make([]previewRow, 0, len(plan.Items))
-	for _, item := range plan.Items {
+	total := len(plan.Items)
+	rows := make([]previewRow, 0, total)
+	for i, item := range plan.Items {
 		row := previewRow{item: item}
 		if s.isCategoryTitle(item.Title) {
 			remaining, err := s.categoryMembersOutsideSet(ctx, item.Title, deleted)
@@ -388,6 +460,9 @@ func (s *deleteWorkflowScreen) buildPreviewRows(ctx context.Context, plan deleti
 			}
 		}
 		rows = append(rows, row)
+		if onProgress != nil {
+			onProgress(i+1, total)
+		}
 	}
 	return rows, nil
 }

@@ -69,6 +69,12 @@
   "del_clear_results": {
     "other": "Clear results"
   },
+  "del_calculating": {
+    "other": "Calculating… {{.Percent}}% ({{.Count}} pages found)"
+  },
+  "del_finalizing": {
+    "other": "Finalizing… {{.Percent}}%"
+  },
   "del_computing": {
     "other": "Computing pages to delete…"
   },

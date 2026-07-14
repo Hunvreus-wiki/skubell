@@ -19,6 +19,10 @@ type PlanOptions struct {
 	Reason          string
 	IncludeTalk     bool
 	IncludeRedirect bool
+	// OnProgress, when set, is called during discovery (pass 1) once per page handled, with the number of pages
+	// processed so far and the total discovered (found grows as redirects/talk pages are enqueued). It runs on
+	// BuildPlan's own goroutine; the caller is responsible for marshaling any UI work.
+	OnProgress func(processed, found int)
 }
 
 // PlanItem is one deletion row plus the metadata the UI needs to group, sort, and annotate it. A subject page and its
@@ -176,9 +180,11 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 		return subject, nil
 	}
 
+	processed := 0
 	for len(queue) > 0 {
 		title := queue[0]
 		queue = queue[1:]
+		processed++
 		itemRoot := root[title]
 
 		if options.IncludeRedirect {
@@ -205,6 +211,10 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 				}
 				enqueue(talk, "", itemRoot)
 			}
+		}
+
+		if options.OnProgress != nil {
+			options.OnProgress(processed, len(root))
 		}
 	}
 
