@@ -96,7 +96,15 @@ jobs:
           mkdir -p ../../dist
           OUT="skubell-${VERSION}-${NAME}"
           case "$TARGET" in
-            linux)   mv ./*.tar.xz "../../dist/${OUT}.tar.xz" ;;                    # fyne emits Skubell.tar.xz
+            linux)
+              # fyne's tar.xz bundles a top-level install Makefile we don't ship; strip it, keep usr/local/*.
+              tmp=$(mktemp -d)
+              tar -xJf ./*.tar.xz -C "$tmp"
+              rm -f "$tmp"/*/Makefile
+              top=$(ls "$tmp")                                                      # single top dir (skubell/)
+              tar -cJf "../../dist/${OUT}.tar.xz" -C "$tmp" "$top"
+              rm -rf "$tmp"
+              ;;
             windows) mv "$BIN" "../../dist/${OUT}.exe" ;;                           # icon embedded in place
             darwin)  ditto -c -k --keepParent ./*.app "../../dist/${OUT}.zip" ;;    # zip the .app bundle
           esac
