@@ -648,9 +648,14 @@ func (s *deleteWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 		d.Show()
 	})
 
-	manualTab := container.NewVBox(
-		s.manualEntry,
+	// Border (not VBox) so the multi-line entry fills the tab's full height, with the buttons pinned at the bottom —
+	// there is nothing below it, so the whole vertical space is used.
+	manualTab := container.NewBorder(
+		nil,
 		container.NewHBox(manualAddBtn, importBtn),
+		nil,
+		nil,
+		s.manualEntry,
 	)
 
 	// Scroll the (tall) search form so the Selection step doesn't force the window taller than a small screen.
