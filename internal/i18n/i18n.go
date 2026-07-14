@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	goi18n "github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -18,6 +19,9 @@ var (
 	bundle      *goi18n.Bundle
 	localizer   *goi18n.Localizer
 	currentLang string
+	// mu guards localizer/currentLang and serializes Localize calls: go-i18n's Localizer is not safe for concurrent
+	// use, and Skubell translates from multiple goroutines (UI thread + workflow workers).
+	mu sync.Mutex
 )
 
 // Init builds the message bundle from the shipped (embedded) locales and the user locale directory, then activates
@@ -32,6 +36,8 @@ func Init(shipped fs.FS, userLocalesDir, lang string) {
 
 // SetLanguage switches the active language at runtime; an unknown language falls back to English per message.
 func SetLanguage(lang string) {
+	mu.Lock()
+	defer mu.Unlock()
 	if bundle == nil {
 		bundle = newBundle()
 	}
@@ -41,6 +47,8 @@ func SetLanguage(lang string) {
 
 // CurrentLanguage returns the language code most recently activated via Init/SetLanguage, or "en" if none was set.
 func CurrentLanguage() string {
+	mu.Lock()
+	defer mu.Unlock()
 	if currentLang == "" {
 		return "en"
 	}
@@ -105,10 +113,15 @@ func isLocaleFile(name string) bool {
 	return strings.HasPrefix(name, "active.") && strings.HasSuffix(name, ".json")
 }
 
-// active returns the current localizer, lazily creating an English-only one when Init/SetLanguage were never called.
-func active() *goi18n.Localizer {
+// activeLocked returns the current localizer, lazily creating an English-only one when Init/SetLanguage were never
+// called. Callers must hold mu (it does not call the locking SetLanguage, which would deadlock).
+func activeLocked() *goi18n.Localizer {
 	if localizer == nil {
-		SetLanguage("en")
+		if bundle == nil {
+			bundle = newBundle()
+		}
+		localizer = goi18n.NewLocalizer(bundle, "en", "en")
+		currentLang = "en"
 	}
 	return localizer
 }

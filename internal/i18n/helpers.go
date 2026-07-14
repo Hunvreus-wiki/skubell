@@ -44,7 +44,9 @@ func Tpd(id, one, other string, count int, data map[string]any) string {
 // forms when a file provides only one/other), it falls back to the translation's "other" form rather than leaking the
 // English default; only a total miss returns the pre-rendered English fallback.
 func localize(msg *goi18n.Message, count int, data map[string]any, fallback string) string {
-	loc := active()
+	mu.Lock()
+	defer mu.Unlock()
+	loc := activeLocked()
 	if msg.One == "" {
 		if translated, err := loc.Localize(
 			&goi18n.LocalizeConfig{DefaultMessage: msg, TemplateData: data},
