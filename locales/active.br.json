@@ -124,8 +124,8 @@
     "other": "peurgas"
   },
   "del_executing": {
-    "one": "O peurgas {{.Count}} oberiadenn…",
-    "other": "O peurgas {{.Count}} oberiadenn…"
+    "one": "O peurgas {{.Count}} ober…",
+    "other": "O peurgas {{.Count}} ober…"
   },
   "del_execution_heading": {
     "other": "Peurgas"
