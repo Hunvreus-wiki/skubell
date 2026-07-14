@@ -223,6 +223,9 @@
   "del_searching": {
     "other": "O klask pajennoù…"
   },
+  "del_verify_empty": {
+    "other": "Pajenn ebet ken — distroit evit kemmañ an dibab."
+  },
   "del_summary": {
     "other": "{{.Operations}} ober · {{.Pages}} pajenn a vo diverket."
   },

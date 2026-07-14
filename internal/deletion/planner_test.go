@@ -111,6 +111,67 @@ func TestBuildPlanRedirectCycleTerminates(t *testing.T) {
 	require.Equal(t, []string{"Apple", "Bravo"}, itemTitles(plan))
 }
 
+func TestPlanRemoveMainEntryDropsWholeGroup(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		Redirects: map[string][]string{
+			"Apple": {"Cider"}, "Cider": {"Old-Apple"}, "Old-Apple": nil, // Old-Apple -> Cider -> Apple
+			"Banana": nil,
+		},
+	}
+	plan, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{IncludeRedirect: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Cider", "Old-Apple", "Banana"}, itemTitles(plan))
+
+	got := plan.RemoveWithDependents("Apple") // main entry: drops its whole redirect group, keeps Banana
+	require.Equal(t, []string{"Banana"}, itemTitles(got))
+	require.Equal(t, 1, got.PageCount)
+	require.Equal(t, []string{"Apple", "Cider", "Old-Apple", "Banana"}, itemTitles(plan)) // original untouched
+}
+
+func TestPlanRemoveDerivedEntryDropsOnlyItsSubtree(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		Redirects: map[string][]string{
+			"Apple": {"Cider"}, "Cider": {"Old-Apple"}, "Old-Apple": nil,
+		},
+	}
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{IncludeRedirect: true})
+	require.NoError(t, err)
+
+	// Cider is derived: dropping it also drops Old-Apple (which redirects to Cider), but keeps the selected Apple.
+	require.Equal(t, []string{"Apple"}, itemTitles(plan.RemoveWithDependents("Cider")))
+	// The leaf Old-Apple drops only itself.
+	require.Equal(t, []string{"Apple", "Cider"}, itemTitles(plan.RemoveWithDependents("Old-Apple")))
+}
+
+func TestPlanRemoveRecomputesTalkPageCount(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages:  map[string]string{"Talk:Apple": "Apple", "Talk:Banana": "Banana"},
+		TalkPages:     map[string]string{"Apple": "Talk:Apple", "Banana": "Talk:Banana"},
+		ExistingPages: map[string]struct{}{"Talk:Apple": {}, "Talk:Banana": {}},
+	}
+	plan, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{IncludeTalk: true})
+	require.NoError(t, err)
+	require.Equal(t, 4, plan.PageCount) // Apple+Talk:Apple, Banana+Talk:Banana
+
+	got := plan.RemoveWithDependents("Apple")
+	require.Equal(t, []string{"Banana"}, itemTitles(got))
+	require.Equal(t, 2, got.PageCount) // Banana + its riding-along talk page
+}
+
+func TestPlanRemoveUnknownTitleIsNoop(t *testing.T) {
+	t.Parallel()
+
+	plan, err := BuildPlan(nil, []string{"Apple", "Banana"}, PlanOptions{})
+	require.NoError(t, err)
+	require.Equal(t, []string{"Apple", "Banana"}, itemTitles(plan.RemoveWithDependents("Nope")))
+}
+
 // A talk page that is itself a redirect, whose subject page is also being deleted, must NOT get a standalone delete —
 // the subject's deletetalk removes it. This is the case that a single-pass planner double-deletes.
 func TestBuildPlanTalkRedirectCoveredByDeletetalk(t *testing.T) {

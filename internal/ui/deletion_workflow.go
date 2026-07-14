@@ -118,12 +118,13 @@ type deleteWorkflowScreen struct {
 	optionIncludeRedirCheck *widget.Check
 	optionDryRunCheck       *widget.Check
 
-	previewPlan      deletion.Plan
-	previewRows      []previewRow
-	previewComputing bool
-	previewCancel    context.CancelFunc
-	verificationInfo *widget.Label
-	verificationList *widget.List
+	previewPlan          deletion.Plan
+	previewRows          []previewRow
+	previewComputing     bool
+	previewCancel        context.CancelFunc
+	verificationInfo     *widget.Label
+	verificationList     *deletableList
+	selectedPreviewIndex int
 
 	executionRows     []executionRow
 	executionList     *widget.List
@@ -169,14 +170,15 @@ func previewRowText(row previewRow) string {
 // NewDeletionWorkflowScreen creates the Delete pages workflow screen.
 func NewDeletionWorkflowScreen(app *App) *deleteWorkflowScreen {
 	s := &deleteWorkflowScreen{
-		app:                 app,
-		selectedTitles:      map[string]struct{}{},
-		categoryParents:     map[string]map[string]struct{}{},
-		searchResults:       []searchResult{},
-		journalEntries:      []ops.JournalEntry{},
-		optionDryRun:        app.config.Preferences.DryRunByDefault,
-		selectedSearchIndex: -1,
-		selectedFinalIndex:  -1,
+		app:                  app,
+		selectedTitles:       map[string]struct{}{},
+		categoryParents:      map[string]map[string]struct{}{},
+		searchResults:        []searchResult{},
+		journalEntries:       []ops.JournalEntry{},
+		optionDryRun:         app.config.Preferences.DryRunByDefault,
+		selectedSearchIndex:  -1,
+		selectedFinalIndex:   -1,
+		selectedPreviewIndex: -1,
 	}
 	s.wf = newWorkflowController(app, s.onBack, s.onHome, s.onCancel, s.onProceed)
 	s.root = s.wf.Canvas()
@@ -709,7 +711,7 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 	detail := widget.NewLabel(s.optionSummary())
 	s.previewRows = nil
 
-	s.verificationList = widget.NewList(
+	s.verificationList = newDeletableList(
 		func() int { return len(s.previewRows) },
 		func() fyne.CanvasObject { return widget.NewLabel("") },
 		func(id widget.ListItemID, obj fyne.CanvasObject) {
@@ -719,7 +721,14 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 			}
 			obj.(*widget.Label).SetText(previewRowText(s.previewRows[id]))
 		},
+		func() { s.deleteSelectedPreviewItem() },
 	)
+	s.verificationList.OnSelected = func(id widget.ListItemID) {
+		s.selectedPreviewIndex = id
+	}
+	s.verificationList.OnUnselected = func(widget.ListItemID) {
+		s.selectedPreviewIndex = -1
+	}
 
 	legend := widget.NewLabelWithStyle(
 		t.T("del_preview_legend", "💬 talk page also deleted   ·   ↳ redirect to a selected page"),
@@ -733,6 +742,63 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 		nil,
 		container.NewVScroll(s.verificationList),
 	)
+}
+
+// deleteSelectedPreviewItem drops the highlighted page (and its dependents) from the verification list via the
+// Delete/Backspace key — the same affordance as the Selection step's lists — since keeping some pages after all is part
+// of verifying. Removing a selected page also removes its talk page and redirects; removing a redirect removes only the
+// redirects that point at it. A row is re-selected afterwards so repeated Delete keeps pruning.
+func (s *deleteWorkflowScreen) deleteSelectedPreviewItem() {
+	if s.previewComputing || s.selectedPreviewIndex < 0 || s.selectedPreviewIndex >= len(s.previewRows) {
+		return
+	}
+	s.previewPlan = s.previewPlan.RemoveWithDependents(s.previewRows[s.selectedPreviewIndex].item.Title)
+
+	remaining := make(map[string]struct{}, len(s.previewPlan.Items))
+	for _, item := range s.previewPlan.Items {
+		remaining[item.Title] = struct{}{}
+	}
+	kept := s.previewRows[:0]
+	for _, row := range s.previewRows {
+		if _, ok := remaining[row.item.Title]; ok {
+			kept = append(kept, row)
+		}
+	}
+	s.previewRows = kept
+
+	next := s.selectedPreviewIndex
+	if next >= len(s.previewRows) {
+		next = len(s.previewRows) - 1
+	}
+	s.selectedPreviewIndex = next
+	s.verificationList.Refresh()
+	s.updateVerificationSummary()
+	s.verificationList.UnselectAll()
+	if next >= 0 {
+		s.verificationList.Select(next)
+	}
+}
+
+// updateVerificationSummary refreshes the count line and the Proceed button after a removal; an emptied list cannot
+// proceed.
+func (s *deleteWorkflowScreen) updateVerificationSummary() {
+	if len(s.previewPlan.Items) == 0 {
+		s.verificationInfo.SetText(t.T("del_verify_empty", "No pages left — go Back to change the selection."))
+		s.wf.SetButtons(workflowButtonState{
+			BackEnabled:    true,
+			HomeEnabled:    true,
+			CancelEnabled:  false,
+			ProceedEnabled: false,
+			ProceedLabel:   t.T("common_proceed", "Proceed"),
+		})
+		return
+	}
+	s.verificationInfo.SetText(t.Td(
+		"del_summary",
+		"{{.Operations}} operations · {{.Pages}} pages will be deleted.",
+		map[string]any{"Operations": s.previewPlan.OperationCount(), "Pages": s.previewPlan.PageCount},
+	))
+	s.restoreExecutionButtons()
 }
 
 func (s *deleteWorkflowScreen) buildExecutionContent() fyne.CanvasObject {

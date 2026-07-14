@@ -52,6 +52,79 @@ func (p Plan) ExecutionPlan() ops.ExecutionPlan {
 	return ops.ExecutionPlan{Module: "deletion", Operations: operations, ReadPhase: -1}
 }
 
+// RemoveWithDependents returns a copy of the plan without title and everything that depends on it, with PageCount
+// recomputed and display order preserved. Removing a selected (non-derived) page drops its whole group — every
+// discovered redirect and talk page tracing back to it. Removing a derived page drops only that page and the redirects
+// that point at it (transitively), leaving the rest of its group intact. An unknown title is a no-op.
+func (p Plan) RemoveWithDependents(title string) Plan {
+	target, ok := p.itemByTitle(title)
+	if !ok {
+		return p
+	}
+	remove := p.dependents(target)
+	remove[target.Title] = struct{}{}
+	kept := make([]PlanItem, 0, len(p.Items))
+	for _, item := range p.Items {
+		if _, drop := remove[item.Title]; !drop {
+			kept = append(kept, item)
+		}
+	}
+	return Plan{Items: kept, PageCount: pageCountOf(kept)}
+}
+
+func (p Plan) itemByTitle(title string) (PlanItem, bool) {
+	for _, item := range p.Items {
+		if item.Title == title {
+			return item, true
+		}
+	}
+	return PlanItem{}, false
+}
+
+// dependents returns the titles that must go when target goes, excluding target itself.
+func (p Plan) dependents(target PlanItem) map[string]struct{} {
+	remove := map[string]struct{}{}
+	if !target.Derived {
+		// Selected page: its whole root group (every discovered redirect/talk page tracing back to it).
+		for _, item := range p.Items {
+			if item.Title != target.Title && item.Root == target.Root {
+				remove[item.Title] = struct{}{}
+			}
+		}
+		return remove
+	}
+	// Derived page: the redirects that point at it, transitively (redirect_target records what a page redirects to).
+	children := map[string][]string{}
+	for _, item := range p.Items {
+		if parent := item.Operation.Params[paramRedirectTarget]; parent != "" {
+			children[parent] = append(children[parent], item.Title)
+		}
+	}
+	queue := append([]string(nil), children[target.Title]...)
+	for len(queue) > 0 {
+		title := queue[0]
+		queue = queue[1:]
+		if _, seen := remove[title]; seen {
+			continue
+		}
+		remove[title] = struct{}{}
+		queue = append(queue, children[title]...)
+	}
+	return remove
+}
+
+// pageCountOf counts the pages a set of items removes: one per item, plus one for each item's riding-along talk page.
+func pageCountOf(items []PlanItem) int {
+	count := 0
+	for _, item := range items {
+		count++
+		if item.HasTalkPage {
+			count++
+		}
+	}
+	return count
+}
+
 // BuildPlan computes the full set of pages a deletion will remove: the selected pages, their associated talk pages
 // (deleted via deletetalk on the same call), and — when redirects are included — the transitive closure of redirects
 // that point at any of those pages (and at their talk pages). It returns display-ordered items and an accurate page
