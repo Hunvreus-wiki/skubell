@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -495,28 +496,6 @@ func (s *WikiSettingsScreen) handleSave() {
 		updated.APIURL = normalized
 	}
 
-	cfg := s.app.config
-	if s.state.mode == WikiSettingsModeCreate {
-		cfg.Wikis = append(cfg.Wikis, updated)
-	} else {
-		found := false
-		for idx := range cfg.Wikis {
-			if cfg.Wikis[idx].Name == s.state.originalName {
-				cfg.Wikis[idx] = updated
-				found = true
-				break
-			}
-		}
-		if !found {
-			cfg.Wikis = append(cfg.Wikis, updated)
-		}
-	}
-
-	if err := s.app.saveConfig(cfg); err != nil {
-		s.app.showError(t.T("common_save", "Save"), err)
-		return
-	}
-
 	credential := strings.TrimSpace(s.credentialEnt.Text)
 	if credential == "" {
 		s.app.showMessage(
@@ -526,14 +505,49 @@ func (s *WikiSettingsScreen) handleSave() {
 		return
 	}
 
-	if s.state.mode == WikiSettingsModeCreate || s.state.credentialDirty || credential != "" {
-		if err := s.app.store.Store(name, []byte(credential)); err != nil {
-			s.app.showError("Save", fmt.Errorf("store credential: %w", err))
-			return
-		}
+	if err := s.app.persistWiki(updated, credential, s.state.mode, s.state.originalName); err != nil {
+		s.app.showError(t.T("common_save", "Save"), err)
+		return
 	}
 
 	s.app.startup()
+}
+
+// persistWiki writes the credential to the OS keyring FIRST, then saves the config — so a canceled or failed keyring
+// write aborts the whole save and the configuration is not created, letting the user try again. If the config write
+// then fails, a newly-created keyring entry is rolled back so no orphaned credential is left behind.
+func (a *App) persistWiki(
+	updated config.WikiEntry, credential string, mode WikiSettingsMode, originalName string,
+) error {
+	if err := a.store.Store(updated.Name, []byte(credential)); err != nil {
+		return fmt.Errorf("store credential: %w", err)
+	}
+
+	cfg := a.config
+	cfg.Wikis = slices.Clone(a.config.Wikis) // don't mutate a.config until the write succeeds
+	if mode == WikiSettingsModeCreate {
+		cfg.Wikis = append(cfg.Wikis, updated)
+	} else {
+		replaced := false
+		for idx := range cfg.Wikis {
+			if cfg.Wikis[idx].Name == originalName {
+				cfg.Wikis[idx] = updated
+				replaced = true
+				break
+			}
+		}
+		if !replaced {
+			cfg.Wikis = append(cfg.Wikis, updated)
+		}
+	}
+
+	if err := a.saveConfig(cfg); err != nil {
+		if mode == WikiSettingsModeCreate {
+			_ = a.store.Delete(updated.Name) // avoid leaving an orphaned credential behind
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *WikiSettingsScreen) nameExists(name string) bool {
