@@ -41,6 +41,9 @@
   "del_add_to_list": {
     "other": "Ouzhpennañ d’ar roll"
   },
+  "del_calculating": {
+    "other": "O jediñ… {{.Percent}} % ({{.Count}} pajenn kavet)"
+  },
   "del_category_not_empty": {
     "one": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur",
     "other": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur"
@@ -105,6 +108,9 @@
   "del_err_reason_text_required": {
     "other": "ret eo reiñ un abeg ouzhpenn pa vez dibabet {{.None}}"
   },
+  "del_err_reasons": {
+    "other": "Abegoù diverkañ"
+  },
   "del_err_verify": {
     "other": "Gwiriañ"
   },
@@ -160,6 +166,9 @@
   "del_final_list": {
     "other": "Roll diwezhañ"
   },
+  "del_finalizing": {
+    "other": "O peurechuiñ… {{.Percent}} %"
+  },
   "del_grant_mediawiki_namespace": {
     "other": "Ne c’hall ket Skubell diverkañ pajennoù en esaouenn anv MediaWiki gant ar ger-tremen robot-mañ. E Special:BotPasswords, gweredekait « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien », ha kevreit en-dro gant Skubell."
   },
@@ -183,6 +192,9 @@
   },
   "del_legend_talk": {
     "other": "dilamet e vo ar bajenn gaozeal ivez"
+  },
+  "del_loading_reasons": {
+    "other": "O kargañ an abegoù rakarventennet…"
   },
   "del_namespace_any": {
     "other": "(an holl)"
@@ -212,8 +224,14 @@
   "del_press_proceed": {
     "other": "Pouezit war Kenderc’hel evit peurgas an diverkadur."
   },
+  "del_preview_legend": {
+    "other": "💬 dilamet e vo ar bajenn gaozeal ivez   ·   ↳ adkas war-du ur bajenn dibabet"
+  },
   "del_proceed_options": {
     "other": "Kenderc’hel d’an dibarzhioù"
+  },
+  "del_reason_loading": {
+    "other": "(o kargañ...)"
   },
   "del_reason_none": {
     "other": "(hini ebet)"
@@ -308,10 +326,10 @@
     "other": "(an holl)"
   },
   "protect_cascade": {
-    "other": "Diri (gwareziñ ar pajennoù enframmet)"
+    "other": "Dre skalier (gwareziñ ar pajennoù enframmet)"
   },
   "protect_cascade_only": {
-    "other": "en diri"
+    "other": "dre skalier"
   },
   "protect_clear_list": {
     "other": "Goullonderiñ ar roll"
@@ -365,7 +383,7 @@
     "other": "Testenn abeg ouzhpenn"
   },
   "protect_field_cur_cascade": {
-    "other": "Diri"
+    "other": "Skalier"
   },
   "protect_field_cur_expiry": {
     "other": "Termen a-vremañ"
@@ -378,6 +396,12 @@
   },
   "protect_field_level": {
     "other": "Live"
+  },
+  "protect_field_metric": {
+    "other": "Doare kontañ"
+  },
+  "protect_field_min_count": {
+    "other": "Niver izek"
   },
   "protect_field_min_links": {
     "other": "Liammoù/enframmadurioù o tont (izek)"
@@ -407,13 +431,25 @@
     "other": "Ne c’hall ket Skubell gwareziñ pajennoù JSON al lec’hienn (MediaWiki:*.json) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit en-dro gant Skubell."
   },
   "protect_legend": {
-    "other": "✎ live  ·  ⏱ termen  ·  ⊘ digemm  ·  ⚠ n'haller ket arloañ"
+    "other": "✎ live  ·  ⏱ termen  ·  ⊘ digemm  ·  ⚠ n'haller ket kemmañ"
+  },
+  "protect_level_no_change": {
+    "other": "(hep kemm)"
+  },
+  "protect_level_none": {
+    "other": "(hini ebet)"
+  },
+  "protect_metric_links": {
+    "other": "Liammoù war-du"
+  },
+  "protect_metric_transclusions": {
+    "other": "Enframmadurioù"
   },
   "protect_need_one_page": {
     "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
   },
   "protect_noncascade": {
-    "other": "hep diri"
+    "other": "hep skalier"
   },
   "protect_note_create": {
     "other": "Ne sell nemet ouzh ar pajennoù n'int ket krouet c'hoazh."
@@ -437,10 +473,13 @@
     "other": "Un titl e pep linenn"
   },
   "protect_press_proceed": {
-    "other": "Pouezit war Kenderc'hel evit arloañ kemmoù ar gwarez."
+    "other": "Pouezit war Kenderc'hel evit peurgas kemmoù ar gwarez."
   },
   "protect_press_proceed_dry": {
-    "other": "Darvanañ : pouezit war Kenderc'hel evit darvanañ (kemm ebet skrivet)."
+    "other": "Darvanañ : pouezit war Kenderc'hel evit darvanañ (kemm ebet graet)."
+  },
+  "protect_preview_summary": {
+    "other": "{{.Change}} da gemmañ · {{.Unchanged}} digemm · {{.Invalid}} n'haller ket kemmañ"
   },
   "protect_reason_loading": {
     "other": "(o kargañ...)"
@@ -463,6 +502,12 @@
   "protect_selected_count": {
     "other": "{{.Count}} dibabet"
   },
+  "protect_state_none": {
+    "other": "hini ebet"
+  },
+  "protect_state_until": {
+    "other": "{{.Level}} betek {{.Expiry}}"
+  },
   "protect_tab_create": {
     "other": "Krouiñ"
   },
@@ -476,22 +521,22 @@
     "other": "Adenvel"
   },
   "protect_title": {
-    "other": "Kemmañ gwarez ar pajennoù"
+    "other": "Kemmañ gwarez pajennoù"
   },
   "protect_unit_days": {
-    "other": "devezhioù"
+    "other": "deiz"
   },
   "protect_unit_hours": {
-    "other": "eurioù"
+    "other": "eur"
   },
   "protect_unit_months": {
-    "other": "mizioù"
+    "other": "miz"
   },
   "protect_unit_weeks": {
-    "other": "sizhunioù"
+    "other": "sizhun"
   },
   "protect_unit_years": {
-    "other": "bloavezhioù"
+    "other": "bloaz"
   },
   "protect_unknown_failure": {
     "other": "c'hwitadenn dianav"
@@ -512,7 +557,7 @@
     "other": "Ouzhpennañ ur wiki"
   },
   "startup_delete_confirm": {
-    "other": "Dilemel « {{.Name}} » diwar roll ar wikioù ?"
+    "other": "Dilemel « {{.Name}} » diouzh roll ar wikioù ?"
   },
   "startup_delete_title": {
     "other": "Dilemel ar wiki"

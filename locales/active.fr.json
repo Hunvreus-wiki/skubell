@@ -41,6 +41,9 @@
   "del_add_to_list": {
     "other": "Ajouter à la liste"
   },
+  "del_calculating": {
+    "other": "Calcul… {{.Percent}} % ({{.Count}} pages trouvées)"
+  },
   "del_category_not_empty": {
     "one": "catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
     "other": "catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
@@ -105,6 +108,9 @@
   "del_err_reason_text_required": {
     "other": "un motif complémentaire est requis lorsque {{.None}} est sélectionné"
   },
+  "del_err_reasons": {
+    "other": "Motifs de suppression"
+  },
   "del_err_verify": {
     "other": "Vérifier"
   },
@@ -160,6 +166,9 @@
   "del_final_list": {
     "other": "Liste finale"
   },
+  "del_finalizing": {
+    "other": "Finalisation… {{.Percent}} %"
+  },
   "del_grant_mediawiki_namespace": {
     "other": "Skubell ne peut pas supprimer de pages dans l’espace de noms MediaWiki avec ce mot de passe de robot. Dans Special:BotPasswords, activez « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur », puis reconnectez Skubell."
   },
@@ -183,6 +192,9 @@
   },
   "del_legend_talk": {
     "other": "page de discussion aussi supprimée"
+  },
+  "del_loading_reasons": {
+    "other": "Chargement des motifs prédéfinis…"
   },
   "del_namespace_any": {
     "other": "(tous)"
@@ -212,8 +224,14 @@
   "del_press_proceed": {
     "other": "Appuyez sur Continuer pour exécuter la suppression."
   },
+  "del_preview_legend": {
+    "other": "💬 page de discussion aussi supprimée   ·   ↳ redirection vers une page sélectionnée"
+  },
   "del_proceed_options": {
     "other": "Continuer vers les options"
+  },
+  "del_reason_loading": {
+    "other": "(chargement...)"
   },
   "del_reason_none": {
     "other": "(aucun)"
@@ -379,6 +397,12 @@
   "protect_field_level": {
     "other": "Niveau"
   },
+  "protect_field_metric": {
+    "other": "Critère de comptage"
+  },
+  "protect_field_min_count": {
+    "other": "Nombre minimum"
+  },
   "protect_field_min_links": {
     "other": "Liens/transclusions entrants min."
   },
@@ -408,6 +432,18 @@
   },
   "protect_legend": {
     "other": "✎ niveau  ·  ⏱ expiration  ·  ⊘ inchangé  ·  ⚠ inapplicable"
+  },
+  "protect_level_no_change": {
+    "other": "(inchangé)"
+  },
+  "protect_level_none": {
+    "other": "(aucun)"
+  },
+  "protect_metric_links": {
+    "other": "Liens entrants"
+  },
+  "protect_metric_transclusions": {
+    "other": "Transclusions"
   },
   "protect_need_one_page": {
     "other": "Ajoutez au moins une page pour continuer."
@@ -442,6 +478,9 @@
   "protect_press_proceed_dry": {
     "other": "Simulation : appuyez sur Continuer pour simuler (aucune modification écrite)."
   },
+  "protect_preview_summary": {
+    "other": "{{.Change}} à modifier · {{.Unchanged}} inchangées · {{.Invalid}} inapplicables"
+  },
   "protect_reason_loading": {
     "other": "(chargement...)"
   },
@@ -462,6 +501,12 @@
   },
   "protect_selected_count": {
     "other": "{{.Count}} sélectionnée(s)"
+  },
+  "protect_state_none": {
+    "other": "aucune"
+  },
+  "protect_state_until": {
+    "other": "{{.Level}} jusqu'au {{.Expiry}}"
   },
   "protect_tab_create": {
     "other": "Créer"

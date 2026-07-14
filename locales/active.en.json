@@ -41,6 +41,9 @@
   "del_add_to_list": {
     "other": "Add to list"
   },
+  "del_calculating": {
+    "other": "Calculating… {{.Percent}}% ({{.Count}} pages found)"
+  },
   "del_category_not_empty": {
     "one": "category not empty ({{.Count}} member remaining) — deletion will fail",
     "other": "category not empty ({{.Count}} members remaining) — deletion will fail"
@@ -105,6 +108,9 @@
   "del_err_reason_text_required": {
     "other": "additional reason text is required when {{.None}} is selected"
   },
+  "del_err_reasons": {
+    "other": "Delete reasons"
+  },
   "del_err_verify": {
     "other": "Verify"
   },
@@ -160,6 +166,9 @@
   "del_final_list": {
     "other": "Final list"
   },
+  "del_finalizing": {
+    "other": "Finalizing… {{.Percent}}%"
+  },
   "del_grant_mediawiki_namespace": {
     "other": "Skubell cannot delete pages in the MediaWiki namespace with this bot password. In Special:BotPasswords, enable \"Edit the MediaWiki namespace and sitewide/user JSON\", then reconnect Skubell."
   },
@@ -183,6 +192,9 @@
   },
   "del_legend_talk": {
     "other": "talk page also deleted"
+  },
+  "del_loading_reasons": {
+    "other": "Loading predefined reasons..."
   },
   "del_namespace_any": {
     "other": "(any)"
@@ -212,8 +224,14 @@
   "del_press_proceed": {
     "other": "Press Proceed to execute the deletion workflow."
   },
+  "del_preview_legend": {
+    "other": "💬 talk page also deleted   ·   ↳ redirect to a selected page"
+  },
   "del_proceed_options": {
     "other": "Proceed to options"
+  },
+  "del_reason_loading": {
+    "other": "(loading...)"
   },
   "del_reason_none": {
     "other": "(none)"
@@ -379,6 +397,12 @@
   "protect_field_level": {
     "other": "Level"
   },
+  "protect_field_metric": {
+    "other": "Count metric"
+  },
+  "protect_field_min_count": {
+    "other": "Minimum count"
+  },
   "protect_field_min_links": {
     "other": "Min. incoming links/transclusions"
   },
@@ -408,6 +432,18 @@
   },
   "protect_legend": {
     "other": "✎ level  ·  ⏱ expiry  ·  ⊘ unchanged  ·  ⚠ can't apply"
+  },
+  "protect_level_no_change": {
+    "other": "(no change)"
+  },
+  "protect_level_none": {
+    "other": "(none)"
+  },
+  "protect_metric_links": {
+    "other": "Incoming links"
+  },
+  "protect_metric_transclusions": {
+    "other": "Transclusions"
   },
   "protect_need_one_page": {
     "other": "Add at least one page to continue."
@@ -442,6 +478,9 @@
   "protect_press_proceed_dry": {
     "other": "Dry-run: press Proceed to simulate (no changes are written)."
   },
+  "protect_preview_summary": {
+    "other": "{{.Change}} will change · {{.Unchanged}} unchanged · {{.Invalid}} can't apply"
+  },
   "protect_reason_loading": {
     "other": "(loading...)"
   },
@@ -462,6 +501,12 @@
   },
   "protect_selected_count": {
     "other": "{{.Count}} selected"
+  },
+  "protect_state_none": {
+    "other": "none"
+  },
+  "protect_state_until": {
+    "other": "{{.Level}} until {{.Expiry}}"
   },
   "protect_tab_create": {
     "other": "Create"
