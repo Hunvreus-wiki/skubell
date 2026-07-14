@@ -30,7 +30,7 @@ var protectionTabTypes = []string{"edit", "move", "create"}
 func noChangeLevel() string { return t.T("protect_level_no_change", "(no change)") }
 
 // removeLevel is the menu label for removing protection (API level "all").
-func removeLevel() string { return t.T("protect_level_none", "(none)") }
+func removeLevel() string { return t.T("protect_level_none", "(no protection)") }
 
 // expiryUnitValues are the strtotime units MediaWiki accepts, in the display order of the unit dropdown. The value sent
 // to the API is always the English word; only the dropdown label is translated (index-mapped, see expiryInput.value).
@@ -623,10 +623,29 @@ func (s *protectionWorkflowScreen) runSearch() {
 // searchByAllPages runs the structural + current-protection filters over list=allpages and returns the matching
 // titles. MediaWiki caps a single allpages batch at 500; this issues one batch (protection filters, when set, usually
 // narrow the result well below that).
+// searchByAllPages runs the structural + current-protection filters over list=allpages. allpages is per-namespace with
+// no "all namespaces" option — so when no namespace is chosen it searches every namespace and combines. (Otherwise a
+// protection-level search in "(any)" namespace silently covers only the main namespace and misses e.g. templates.)
 func (s *protectionWorkflowScreen) searchByAllPages(ctx context.Context) ([]string, error) {
-	params := map[string]string{"action": "query", "list": "allpages", "aplimit": "500", "formatversion": "2"}
 	if id, ok := s.selectedNamespaceID(); ok {
-		params["apnamespace"] = strconv.Itoa(id)
+		return s.allPagesInNamespace(ctx, id)
+	}
+	var all []string
+	for _, id := range s.namespaceIDs() {
+		titles, err := s.allPagesInNamespace(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, titles...)
+	}
+	return all, nil
+}
+
+// allPagesInNamespace queries a single namespace with the current structural + current-protection filters.
+func (s *protectionWorkflowScreen) allPagesInNamespace(ctx context.Context, nsID int) ([]string, error) {
+	params := map[string]string{
+		"action": "query", "list": "allpages", "aplimit": "500", "formatversion": "2",
+		"apnamespace": strconv.Itoa(nsID),
 	}
 	if prefix := strings.TrimSpace(s.searchPrefix.Text); prefix != "" {
 		params["apprefix"] = prefix
@@ -655,6 +674,18 @@ func (s *protectionWorkflowScreen) searchByAllPages(ctx context.Context) ([]stri
 		return nil, err
 	}
 	return parseAllPagesTitles(payload), nil
+}
+
+// namespaceIDs returns the wiki's listable namespace IDs (>= 0, excluding the Special/Media pseudo-namespaces), sorted.
+func (s *protectionWorkflowScreen) namespaceIDs() []int {
+	ids := make([]int, 0, len(s.app.currentCaps.Namespaces))
+	for id := range s.app.currentCaps.Namespaces {
+		if id >= 0 {
+			ids = append(ids, id)
+		}
+	}
+	sort.Ints(ids)
+	return ids
 }
 
 // protectionFiltersActive reports whether any current-protection search filter (level / expiry class / cascade) is
@@ -1050,7 +1081,8 @@ func (s *protectionWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
 	}
 
 	s.cascadeCheck = widget.NewCheck(t.T("protect_cascade", "Cascade (protect transcluded pages)"), nil)
-	s.cascadeCheck.SetChecked(true)
+	s.cascadeCheck.SetChecked(false) // cascade is rarely used; opt in rather than out
+	s.applyCascadeEnabled()          // reflect the current Edit level (disabled when unprotecting)
 	s.reasonSelect = widget.NewSelect(s.reasonSelectOptions(), nil)
 	s.reasonSelect.SetSelectedIndex(0)
 	s.reasonEntry = widget.NewEntry()
@@ -1090,6 +1122,9 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 	expiry := newExpiryInput(s.expiryMenu())
 	s.expiryInputs[typ] = expiry
 
+	// Wire the level change only after expiry exists — SetSelectedIndex above would otherwise fire into a nil expiry.
+	level.OnChanged = func(string) { s.applyTypeEnabled(typ) }
+
 	// The applicability note, per the spec: edit/move apply to existing pages, create to nonexistent ones.
 	note := s.applicabilityNote(typ)
 
@@ -1100,6 +1135,7 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 	)
 
 	if typ == "edit" {
+		s.applyTypeEnabled(typ) // no "same as edit" box, but still apply the level -> expiry rule
 		return body
 	}
 	// create and move mirror edit by default.
@@ -1119,17 +1155,35 @@ func (s *protectionWorkflowScreen) applicabilityNote(typ string) string {
 
 // applyTypeEnabled disables a mirrored tab's own controls while its "same as edit" box is checked.
 func (s *protectionWorkflowScreen) applyTypeEnabled(typ string) {
-	same, ok := s.sameAsEdit[typ]
-	if !ok {
-		return
+	// A type mirrors Edit while its "same as edit" box is checked (Edit itself has no box, so it never mirrors).
+	mirrored := false
+	if same, ok := s.sameAsEdit[typ]; ok && same.Checked {
+		mirrored = true
 	}
-	if same.Checked {
+	if mirrored {
 		s.levelSelects[typ].Disable()
-		s.expiryInputs[typ].setEnabled(false)
 	} else {
 		s.levelSelects[typ].Enable()
-		s.expiryInputs[typ].setEnabled(true)
 	}
+	// The expiry only applies when a concrete level is set: "(no protection)" unprotects the type, so its expiry is
+	// meaningless. Disable it then (and while the type mirrors Edit).
+	unprotect := s.levelSelects[typ].Selected == removeLevel()
+	s.expiryInputs[typ].setEnabled(!mirrored && !unprotect)
+	s.applyCascadeEnabled()
+}
+
+// applyCascadeEnabled disables the page-level Cascade control when Edit is being unprotected — cascade protects a
+// page's transclusions, so it is meaningless with no edit protection. Safe to call before the checkbox exists.
+func (s *protectionWorkflowScreen) applyCascadeEnabled() {
+	if s.cascadeCheck == nil {
+		return
+	}
+	edit, ok := s.levelSelects["edit"]
+	if ok && edit.Selected == removeLevel() {
+		s.cascadeCheck.Disable()
+		return
+	}
+	s.cascadeCheck.Enable()
 }
 
 // expiryMenu offers the wiki's predefined durations (loaded lazily) plus a permanent option.
@@ -1269,7 +1323,8 @@ func (s *protectionWorkflowScreen) buildVerificationContent() fyne.CanvasObject 
 		},
 	)
 	legend := widget.NewLabelWithStyle(
-		t.T("protect_legend", "✎ level  ·  ⏱ expiry  ·  ⊘ unchanged  ·  ⚠ can't apply"),
+		glyphUnchanged+" "+t.T("protect_legend_unchanged", "unchanged")+
+			"   ·   "+glyphWarning+" "+t.T("protect_legend_invalid", "can't apply"),
 		fyne.TextAlignLeading, fyne.TextStyle{Italic: true},
 	)
 	return container.NewBorder(
@@ -1279,12 +1334,18 @@ func (s *protectionWorkflowScreen) buildVerificationContent() fyne.CanvasObject 
 	)
 }
 
+// glyphUnchanged marks a page that already carries the protection asked for. It lives here rather than in the messages
+// — a symbol is not language — and the legend takes it from here too, so the legend cannot describe a glyph the rows do
+// not draw. The one it replaced did exactly that, promising a ✎ for level and a ⏱ for expiry that no row has ever
+// carried. glyphWarning is deletion's, and means the same thing here: this will not work.
+const glyphUnchanged = "⊘"
+
 func protectionRowText(item protect.PlanItem) string {
 	switch {
 	case item.Invalid:
-		return "⚠ " + item.Title + " — " + item.Note
+		return glyphWarning + " " + item.Title + " — " + item.Note
 	case !item.Changed:
-		return "⊘ " + item.Title
+		return glyphUnchanged + " " + item.Title
 	}
 	parts := []string{}
 	for _, c := range item.Changes {

@@ -41,9 +41,6 @@
   "del_add_to_list": {
     "other": "Ouzhpennañ d’ar roll"
   },
-  "del_calculating": {
-    "other": "O jediñ… {{.Percent}} % ({{.Count}} pajenn kavet)"
-  },
   "del_category_not_empty": {
     "one": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur",
     "other": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur"
@@ -108,9 +105,6 @@
   "del_err_reason_text_required": {
     "other": "ret eo reiñ un abeg ouzhpenn pa vez dibabet {{.None}}"
   },
-  "del_err_reasons": {
-    "other": "Abegoù diverkañ"
-  },
   "del_err_verify": {
     "other": "Gwiriañ"
   },
@@ -166,9 +160,6 @@
   "del_final_list": {
     "other": "Roll diwezhañ"
   },
-  "del_finalizing": {
-    "other": "O peurechuiñ… {{.Percent}} %"
-  },
   "del_grant_mediawiki_namespace": {
     "other": "Ne c’hall ket Skubell diverkañ pajennoù en esaouenn anv MediaWiki gant ar ger-tremen robot-mañ. E Special:BotPasswords, gweredekait « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien », ha kevreit en-dro gant Skubell."
   },
@@ -192,9 +183,6 @@
   },
   "del_legend_talk": {
     "other": "dilamet e vo ar bajenn gaozeal ivez"
-  },
-  "del_loading_reasons": {
-    "other": "O kargañ an abegoù rakarventennet…"
   },
   "del_namespace_any": {
     "other": "(an holl)"
@@ -224,14 +212,8 @@
   "del_press_proceed": {
     "other": "Pouezit war Kenderc’hel evit peurgas an diverkadur."
   },
-  "del_preview_legend": {
-    "other": "💬 dilamet e vo ar bajenn gaozeal ivez   ·   ↳ adkas war-du ur bajenn dibabet"
-  },
   "del_proceed_options": {
     "other": "Kenderc’hel d’an dibarzhioù"
-  },
-  "del_reason_loading": {
-    "other": "(o kargañ...)"
   },
   "del_reason_none": {
     "other": "(hini ebet)"
@@ -320,7 +302,7 @@
     "other": "Penndibaboù"
   },
   "protect_add_results": {
-    "other": "Ouzhpennañ an disoc'hoù d'ar roll"
+    "other": "Ouzhpennañ an disoc’hoù d’ar roll"
   },
   "protect_any": {
     "other": "(an holl)"
@@ -335,7 +317,7 @@
     "other": "Goullonderiñ ar roll"
   },
   "protect_computing": {
-    "other": "O jediñ ar c'hemmoù…"
+    "other": "O jediñ ar c’hemmoù…"
   },
   "protect_download_journal": {
     "other": "Pellgargañ ar marilh"
@@ -353,7 +335,7 @@
     "other": "Dibabit un deiziad termen."
   },
   "protect_err_past_date": {
-    "other": "Ret eo d'an deiziad termen bezañ en dazont."
+    "other": "Ret eo d’an deiziad termen bezañ en dazont."
   },
   "protect_exec_canceled": {
     "other": "Peurgas nullet."
@@ -362,7 +344,7 @@
     "other": "Peurgas echu."
   },
   "protect_executing": {
-    "other": "Oc'h arloañ kemmoù ar gwarez…"
+    "other": "Oc’h arloañ kemmoù ar gwarez…"
   },
   "protect_expiry_custom": {
     "other": "Padelezh personelaet"
@@ -403,9 +385,6 @@
   "protect_field_min_count": {
     "other": "Niver izek"
   },
-  "protect_field_min_links": {
-    "other": "Liammoù/enframmadurioù o tont (izek)"
-  },
   "protect_field_namespace": {
     "other": "Esaouenn anv"
   },
@@ -430,14 +409,17 @@
   "protect_grant_site_json": {
     "other": "Ne c’hall ket Skubell gwareziñ pajennoù JSON al lec’hienn (MediaWiki:*.json) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit en-dro gant Skubell."
   },
-  "protect_legend": {
-    "other": "✎ live  ·  ⏱ termen  ·  ⊘ digemm  ·  ⚠ n'haller ket kemmañ"
+  "protect_legend_invalid": {
+    "other": "n’haller ket kemmañ"
+  },
+  "protect_legend_unchanged": {
+    "other": "digemm"
   },
   "protect_level_no_change": {
     "other": "(hep kemm)"
   },
   "protect_level_none": {
-    "other": "(hini ebet)"
+    "other": "(gwarez ebet)"
   },
   "protect_metric_links": {
     "other": "Liammoù war-du"
@@ -446,13 +428,13 @@
     "other": "Enframmadurioù"
   },
   "protect_need_one_page": {
-    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
+    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc’hel."
   },
   "protect_noncascade": {
     "other": "hep skalier"
   },
   "protect_note_create": {
-    "other": "Ne sell nemet ouzh ar pajennoù n'int ket krouet c'hoazh."
+    "other": "Ne sell nemet ouzh ar pajennoù n’int ket krouet c’hoazh."
   },
   "protect_note_existing": {
     "other": "Ne sell nemet ouzh ar pajennoù a zo dija."
@@ -473,13 +455,13 @@
     "other": "Un titl e pep linenn"
   },
   "protect_press_proceed": {
-    "other": "Pouezit war Kenderc'hel evit peurgas kemmoù ar gwarez."
+    "other": "Pouezit war Kenderc’hel evit peurgas kemmoù ar gwarez."
   },
   "protect_press_proceed_dry": {
-    "other": "Darvanañ : pouezit war Kenderc'hel evit darvanañ (kemm ebet graet)."
+    "other": "Darvanañ : pouezit war Kenderc’hel evit darvanañ (kemm ebet graet)."
   },
   "protect_preview_summary": {
-    "other": "{{.Change}} da gemmañ · {{.Unchanged}} digemm · {{.Invalid}} n'haller ket kemmañ"
+    "other": "{{.Change}} da gemmañ · {{.Unchanged}} digemm · {{.Invalid}} n’haller ket kemmañ"
   },
   "protect_reason_loading": {
     "other": "(o kargañ...)"
@@ -497,7 +479,7 @@
     "other": "Klask"
   },
   "protect_search_results": {
-    "other": "Disoc'hoù ar c'hlask"
+    "other": "Disoc’hoù ar c’hlask"
   },
   "protect_selected_count": {
     "other": "{{.Count}} dibabet"
@@ -539,7 +521,7 @@
     "other": "bloaz"
   },
   "protect_unknown_failure": {
-    "other": "c'hwitadenn dianav"
+    "other": "c’hwitadenn dianav"
   },
   "protect_utc": {
     "other": "UTC"

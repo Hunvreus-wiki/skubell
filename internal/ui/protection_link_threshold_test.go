@@ -146,3 +146,13 @@ func TestSplitNamespace(t *testing.T) {
 	require.Equal(t, 10, id)
 	require.Equal(t, "A:B", main)
 }
+
+func TestNamespaceIDs(t *testing.T) {
+	t.Parallel()
+	s := &protectionWorkflowScreen{app: &App{currentCaps: api.WikiCapabilities{
+		Namespaces: map[int]string{-2: "Media", -1: "Special", 0: "", 1: "Talk", 10: "Template", 828: "Module"},
+	}}}
+	// Excludes the negative Special/Media pseudo-namespaces (not listable), sorted ascending — an "(any)" search
+	// iterates these, so it must include Template (10), the bug's missing namespace.
+	require.Equal(t, []int{0, 1, 10, 828}, s.namespaceIDs())
+}

@@ -41,9 +41,6 @@
   "del_add_to_list": {
     "other": "Add to list"
   },
-  "del_calculating": {
-    "other": "Calculating… {{.Percent}}% ({{.Count}} pages found)"
-  },
   "del_category_not_empty": {
     "one": "category not empty ({{.Count}} member remaining) — deletion will fail",
     "other": "category not empty ({{.Count}} members remaining) — deletion will fail"
@@ -108,9 +105,6 @@
   "del_err_reason_text_required": {
     "other": "additional reason text is required when {{.None}} is selected"
   },
-  "del_err_reasons": {
-    "other": "Delete reasons"
-  },
   "del_err_verify": {
     "other": "Verify"
   },
@@ -166,9 +160,6 @@
   "del_final_list": {
     "other": "Final list"
   },
-  "del_finalizing": {
-    "other": "Finalizing… {{.Percent}}%"
-  },
   "del_grant_mediawiki_namespace": {
     "other": "Skubell cannot delete pages in the MediaWiki namespace with this bot password. In Special:BotPasswords, enable \"Edit the MediaWiki namespace and sitewide/user JSON\", then reconnect Skubell."
   },
@@ -192,9 +183,6 @@
   },
   "del_legend_talk": {
     "other": "talk page also deleted"
-  },
-  "del_loading_reasons": {
-    "other": "Loading predefined reasons..."
   },
   "del_namespace_any": {
     "other": "(any)"
@@ -224,14 +212,8 @@
   "del_press_proceed": {
     "other": "Press Proceed to execute the deletion workflow."
   },
-  "del_preview_legend": {
-    "other": "💬 talk page also deleted   ·   ↳ redirect to a selected page"
-  },
   "del_proceed_options": {
     "other": "Proceed to options"
-  },
-  "del_reason_loading": {
-    "other": "(loading...)"
   },
   "del_reason_none": {
     "other": "(none)"
@@ -403,9 +385,6 @@
   "protect_field_min_count": {
     "other": "Minimum count"
   },
-  "protect_field_min_links": {
-    "other": "Min. incoming links/transclusions"
-  },
   "protect_field_namespace": {
     "other": "Namespace"
   },
@@ -430,14 +409,17 @@
   "protect_grant_site_json": {
     "other": "Skubell cannot protect sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's \"Edit the MediaWiki namespace and sitewide/user JSON\" grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
   },
-  "protect_legend": {
-    "other": "✎ level  ·  ⏱ expiry  ·  ⊘ unchanged  ·  ⚠ can't apply"
+  "protect_legend_invalid": {
+    "other": "can't apply"
+  },
+  "protect_legend_unchanged": {
+    "other": "unchanged"
   },
   "protect_level_no_change": {
     "other": "(no change)"
   },
   "protect_level_none": {
-    "other": "(none)"
+    "other": "(no protection)"
   },
   "protect_metric_links": {
     "other": "Incoming links"

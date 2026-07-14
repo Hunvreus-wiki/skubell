@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"fyne.io/fyne/v2/widget"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,4 +27,24 @@ func TestNewExpiryInputInitialisesWithoutPanic(t *testing.T) {
 	e.method.SetSelected(e.optDate)
 	require.False(t, e.predefined.Visible())
 	require.True(t, e.dateRow.Visible())
+}
+
+// applyTypeEnabled must disable the expiry when the level removes protection ("(no protection)") — the page is just
+// unprotected, so an expiry is meaningless — and enable it for a concrete level.
+func TestApplyTypeEnabledDisablesExpiryWhenUnprotecting(t *testing.T) {
+	expiry := newExpiryInput([]string{"1 day"})
+	level := widget.NewSelect([]string{noChangeLevel(), removeLevel(), "sysop"}, nil)
+	s := &protectionWorkflowScreen{
+		levelSelects: map[string]*widget.Select{"edit": level},
+		expiryInputs: map[string]*expiryInput{"edit": expiry},
+		sameAsEdit:   map[string]*widget.Check{},
+	}
+
+	level.SetSelected("sysop")
+	s.applyTypeEnabled("edit")
+	require.False(t, expiry.method.Disabled()) // concrete level -> expiry active
+
+	level.SetSelected(removeLevel())
+	s.applyTypeEnabled("edit")
+	require.True(t, expiry.method.Disabled()) // "(no protection)" -> expiry disabled
 }

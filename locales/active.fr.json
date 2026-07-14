@@ -41,9 +41,6 @@
   "del_add_to_list": {
     "other": "Ajouter à la liste"
   },
-  "del_calculating": {
-    "other": "Calcul… {{.Percent}} % ({{.Count}} pages trouvées)"
-  },
   "del_category_not_empty": {
     "one": "catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
     "other": "catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
@@ -108,9 +105,6 @@
   "del_err_reason_text_required": {
     "other": "un motif complémentaire est requis lorsque {{.None}} est sélectionné"
   },
-  "del_err_reasons": {
-    "other": "Motifs de suppression"
-  },
   "del_err_verify": {
     "other": "Vérifier"
   },
@@ -166,9 +160,6 @@
   "del_final_list": {
     "other": "Liste finale"
   },
-  "del_finalizing": {
-    "other": "Finalisation… {{.Percent}} %"
-  },
   "del_grant_mediawiki_namespace": {
     "other": "Skubell ne peut pas supprimer de pages dans l’espace de noms MediaWiki avec ce mot de passe de robot. Dans Special:BotPasswords, activez « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur », puis reconnectez Skubell."
   },
@@ -192,9 +183,6 @@
   },
   "del_legend_talk": {
     "other": "page de discussion aussi supprimée"
-  },
-  "del_loading_reasons": {
-    "other": "Chargement des motifs prédéfinis…"
   },
   "del_namespace_any": {
     "other": "(tous)"
@@ -224,14 +212,8 @@
   "del_press_proceed": {
     "other": "Appuyez sur Continuer pour exécuter la suppression."
   },
-  "del_preview_legend": {
-    "other": "💬 page de discussion aussi supprimée   ·   ↳ redirection vers une page sélectionnée"
-  },
   "del_proceed_options": {
     "other": "Continuer vers les options"
-  },
-  "del_reason_loading": {
-    "other": "(chargement...)"
   },
   "del_reason_none": {
     "other": "(aucun)"
@@ -350,10 +332,10 @@
     "other": "Saisissez un nombre entier positif pour la durée personnalisée."
   },
   "protect_err_no_date": {
-    "other": "Choisissez une date d'expiration."
+    "other": "Choisissez une date d’expiration."
   },
   "protect_err_past_date": {
-    "other": "La date d'expiration doit être dans le futur."
+    "other": "La date d’expiration doit être dans le futur."
   },
   "protect_exec_canceled": {
     "other": "Exécution annulée."
@@ -368,7 +350,7 @@
     "other": "Durée personnalisée"
   },
   "protect_expiry_date": {
-    "other": "Jusqu'à une date"
+    "other": "Jusqu’à une date"
   },
   "protect_expiry_permanent": {
     "other": "permanent"
@@ -403,9 +385,6 @@
   "protect_field_min_count": {
     "other": "Nombre minimum"
   },
-  "protect_field_min_links": {
-    "other": "Liens/transclusions entrants min."
-  },
   "protect_field_namespace": {
     "other": "Espace de noms"
   },
@@ -430,14 +409,17 @@
   "protect_grant_site_json": {
     "other": "Skubell ne peut pas protéger les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
   },
-  "protect_legend": {
-    "other": "✎ niveau  ·  ⏱ expiration  ·  ⊘ inchangé  ·  ⚠ inapplicable"
+  "protect_legend_invalid": {
+    "other": "inapplicable"
+  },
+  "protect_legend_unchanged": {
+    "other": "inchangé"
   },
   "protect_level_no_change": {
     "other": "(inchangé)"
   },
   "protect_level_none": {
-    "other": "(aucun)"
+    "other": "(aucune protection)"
   },
   "protect_metric_links": {
     "other": "Liens entrants"
@@ -452,10 +434,10 @@
     "other": "sans cascade"
   },
   "protect_note_create": {
-    "other": "S'applique uniquement aux pages qui n'existent pas encore."
+    "other": "S’applique uniquement aux pages qui n’existent pas encore."
   },
   "protect_note_existing": {
-    "other": "S'applique uniquement aux pages qui existent déjà."
+    "other": "S’applique uniquement aux pages qui existent déjà."
   },
   "protect_nothing_to_change": {
     "other": "Aucune page ne changerait ; ajustez les réglages ou la sélection."
@@ -506,7 +488,7 @@
     "other": "aucune"
   },
   "protect_state_until": {
-    "other": "{{.Level}} jusqu'au {{.Expiry}}"
+    "other": "{{.Level}} jusqu’au {{.Expiry}}"
   },
   "protect_tab_create": {
     "other": "Créer"
