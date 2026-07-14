@@ -111,6 +111,35 @@ func TestBuildPlanRedirectCycleTerminates(t *testing.T) {
 	require.Equal(t, []string{"Apple", "Bravo"}, itemTitles(plan))
 }
 
+func TestBuildPlanReportsProgress(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		Redirects: map[string][]string{
+			"Apple":     {"Cider"},
+			"Cider":     {"Old-Apple"}, // Apple -> Cider -> Old-Apple: three pages, handled one per iteration
+			"Old-Apple": nil,
+		},
+	}
+
+	var processedSeq, foundSeq []int
+	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{
+		IncludeRedirect: true,
+		OnProgress: func(processed, found int) {
+			processedSeq = append(processedSeq, processed)
+			foundSeq = append(foundSeq, found)
+		},
+	})
+	require.NoError(t, err)
+	require.Len(t, plan.Items, 3)
+
+	require.Equal(t, []int{1, 2, 3}, processedSeq) // one callback per page, processed increments monotonically
+	require.Equal(t, 3, foundSeq[len(foundSeq)-1]) // ends with every page discovered
+	for i := range processedSeq {
+		require.GreaterOrEqual(t, foundSeq[i], processedSeq[i]) // discovery never lags behind processing
+	}
+}
+
 func TestPlanRemoveMainEntryDropsWholeGroup(t *testing.T) {
 	t.Parallel()
 

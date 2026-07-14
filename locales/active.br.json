@@ -69,6 +69,12 @@
   "del_clear_results": {
     "other": "Goullonderiñ an disoc'hoù"
   },
+  "del_calculating": {
+    "other": "O jediñ… {{.Percent}} % ({{.Count}} pajenn kavet)"
+  },
+  "del_finalizing": {
+    "other": "O peurechuiñ… {{.Percent}} %"
+  },
   "del_computing": {
     "other": "O jediñ ar pajennoù da ziverkañ…"
   },
