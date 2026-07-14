@@ -223,6 +223,9 @@
   "del_searching": {
     "other": "Searching pages..."
   },
+  "del_verify_empty": {
+    "other": "No pages left — go Back to change the selection."
+  },
   "del_summary": {
     "other": "{{.Operations}} operations · {{.Pages}} pages will be deleted."
   },
