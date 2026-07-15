@@ -9,9 +9,16 @@ import (
 	"strings"
 
 	"github.com/Hunvreus-wiki/skubell/internal/config"
+	t "github.com/Hunvreus-wiki/skubell/internal/i18n"
 )
 
-const customWikiUnreachableMessage = "Could not reach the MediaWiki API. The URL must point to the directory containing api.php, which depends on the server's configuration. Common locations include the server root (e.g., http://example.com/) and the /w/ subdirectory (e.g., http://example.com/w/). Please verify the URL in wiki settings."
+// customWikiUnreachableMessage guides the operator through the one URL a custom wiki cannot guess for them.
+func customWikiUnreachableMessage() string {
+	return t.T(
+		"connect_custom_unreachable",
+		`Could not reach the MediaWiki API. The URL must point to the directory containing api.php, which depends on the server's configuration. Common locations include the server root (e.g., http://example.com/) and the /w/ subdirectory (e.g., http://example.com/w/). Please verify the URL in wiki settings.`,
+	)
+}
 
 // ConnectionResult contains outputs of the full connection sequence.
 type ConnectionResult struct {
@@ -50,7 +57,7 @@ func ConnectContext(ctx context.Context, client *Client, wikiEntry config.WikiEn
 	username, err := LoginContext(ctx, client, apiURL, wikiEntry.Username, wikiEntry.Credential)
 	if err != nil {
 		if strings.EqualFold(wikiEntry.Farm, "custom") && isReachabilityError(err) {
-			return result, fmt.Errorf("%s", customWikiUnreachableMessage)
+			return result, fmt.Errorf("%s", customWikiUnreachableMessage())
 		}
 		return result, fmt.Errorf("connect/login failed: %w", err)
 	}

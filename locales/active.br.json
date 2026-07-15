@@ -32,6 +32,9 @@
   "connect_contacting": {
     "other": "O kevreañ ouzh ar wiki..."
   },
+  "connect_custom_unreachable": {
+    "other": "N'eus ket bet gallet tizhout API MediaWiki. Ret eo d'an URL poentañ war ar c'havlec'h m'emañ api.php, hag a zepend eus kefluniadur ar servijer. Al lec'hioù boaz eo gwrizienn ar servijer (da sk. http://example.com/) hag ar rannkavlec'h /w/ (da sk. http://example.com/w/). Gwiriit an URL e arventennoù ar wiki."
+  },
   "connect_title": {
     "other": "O kevreañ"
   },
@@ -159,6 +162,18 @@
   },
   "del_final_list": {
     "other": "Roll diwezhañ"
+  },
+  "del_grant_mediawiki_namespace": {
+    "other": "Ne c'hall ket Skubell diverkañ pajennoù en esaouenn anv MediaWiki gant ar ger-tremen robot-mañ. E Special:BotPasswords, gweredekait « Kemmañ esaouenn anvioù MediaWiki ha JSON al lec'hienn / an implijerien », ha kevreit Skubell en-dro."
+  },
+  "del_grant_site_css": {
+    "other": "Ne c'hall ket Skubell diverkañ pajennoù CSS al lec'hienn (MediaWiki:*.css) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitecss ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d'ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec'hienn hag an implijerien », ha kevreit Skubell en-dro."
+  },
+  "del_grant_site_js": {
+    "other": "Ne c'hall ket Skubell diverkañ pajennoù JavaScript al lec'hienn (MediaWiki:*.js) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitejs ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d'ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec'hienn hag an implijerien », ha kevreit Skubell en-dro."
+  },
+  "del_grant_site_json": {
+    "other": "Ne c'hall ket Skubell diverkañ pajennoù JSON al lec'hienn (MediaWiki:*.json) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anvioù MediaWiki ha JSON al lec'hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit Skubell en-dro."
   },
   "del_import": {
     "other": "Enporzhiañ"

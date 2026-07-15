@@ -32,6 +32,9 @@
   "connect_contacting": {
     "other": "Connexion au wiki en cours..."
   },
+  "connect_custom_unreachable": {
+    "other": "Impossible de joindre l’API MediaWiki. L’URL doit pointer vers le répertoire contenant api.php, qui dépend de la configuration du serveur. Les emplacements courants sont la racine du serveur (par ex. http://example.com/) et le sous-répertoire /w/ (par ex. http://example.com/w/). Veuillez vérifier l’URL dans les paramètres du wiki."
+  },
   "connect_title": {
     "other": "Connexion en cours"
   },
@@ -159,6 +162,18 @@
   },
   "del_final_list": {
     "other": "Liste finale"
+  },
+  "del_grant_mediawiki_namespace": {
+    "other": "Skubell ne peut pas supprimer de pages dans l’espace de noms MediaWiki avec ce mot de passe de robot. Dans Special:BotPasswords, activez « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_css": {
+    "other": "Skubell ne peut pas supprimer les pages CSS du site (MediaWiki:*.css) avec cette session : il lui manque le droit « editsitecss ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_js": {
+    "other": "Skubell ne peut pas supprimer les pages JavaScript du site (MediaWiki:*.js) avec cette session : il lui manque le droit « editsitejs ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_json": {
+    "other": "Skubell ne peut pas supprimer les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
   },
   "del_import": {
     "other": "Importer"

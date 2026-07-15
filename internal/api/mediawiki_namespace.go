@@ -1,6 +1,10 @@
 package api
 
-import "strings"
+import (
+	"strings"
+
+	t "github.com/Hunvreus-wiki/skubell/internal/i18n"
+)
 
 const (
 	// API error codes MediaWiki returns when a delete is denied for lack of the matching interface/site-config right.
@@ -8,12 +12,44 @@ const (
 	SiteCSSProtectedErrorCode            = "sitecssprotected"
 	SiteJSProtectedErrorCode             = "sitejsprotected"
 	SiteJSONProtectedErrorCode           = "sitejsonprotected"
-
-	MediaWikiNamespaceDeleteGrantMessage = "Skubell cannot delete pages in the MediaWiki namespace with this bot password. In Special:BotPasswords, enable \"Edit the MediaWiki namespace and sitewide/user JSON\", then reconnect Skubell."
-	SiteCSSDeleteGrantMessage            = "Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the \"editsitecss\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
-	SiteJSDeleteGrantMessage             = "Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the \"editsitejs\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell."
-	SiteJSONDeleteGrantMessage           = "Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's JSON grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
 )
+
+// The messages below name MediaWiki's own labels (the bot-password grant, the interface-administrator group), so each
+// translation quotes the wording that wiki shows rather than a literal rendering of the English. Right names such as
+// "editsitecss" are identifiers and stay untranslated, as does the canonical Special:BotPasswords, which resolves on a
+// wiki in any language.
+
+// MediaWikiNamespaceDeleteGrantMessage names the bot-password grant that unlocks deleting in the MediaWiki namespace.
+func MediaWikiNamespaceDeleteGrantMessage() string {
+	return t.T(
+		"del_grant_mediawiki_namespace",
+		`Skubell cannot delete pages in the MediaWiki namespace with this bot password. In Special:BotPasswords, enable "Edit the MediaWiki namespace and sitewide/user JSON", then reconnect Skubell.`,
+	)
+}
+
+// SiteCSSDeleteGrantMessage explains that deleting sitewide CSS needs both the editsitecss right and the CSS/JS grant.
+func SiteCSSDeleteGrantMessage() string {
+	return t.T(
+		"del_grant_site_css",
+		`Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the "editsitecss" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell.`,
+	)
+}
+
+// SiteJSDeleteGrantMessage explains that deleting sitewide JavaScript needs the editsitejs right and the CSS/JS grant.
+func SiteJSDeleteGrantMessage() string {
+	return t.T(
+		"del_grant_site_js",
+		`Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the "editsitejs" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell.`,
+	)
+}
+
+// SiteJSONDeleteGrantMessage explains that deleting sitewide JSON needs the editsitejson right and the JSON grant.
+func SiteJSONDeleteGrantMessage() string {
+	return t.T(
+		"del_grant_site_json",
+		`Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the "editsitejson" right. Enable the bot password's JSON grant (and ensure your account holds "editsitejson"), then reconnect Skubell.`,
+	)
+}
 
 // HasRight reports whether the connected user session has an effective right.
 func HasRight(caps WikiCapabilities, right string) bool {
@@ -74,13 +110,13 @@ func DeleteAccessMessage(caps WikiCapabilities, title string) string {
 func deleteRightMessage(right string) string {
 	switch right {
 	case RightEditInterface:
-		return MediaWikiNamespaceDeleteGrantMessage
+		return MediaWikiNamespaceDeleteGrantMessage()
 	case RightEditSiteCSS:
-		return SiteCSSDeleteGrantMessage
+		return SiteCSSDeleteGrantMessage()
 	case RightEditSiteJS:
-		return SiteJSDeleteGrantMessage
+		return SiteJSDeleteGrantMessage()
 	case RightEditSiteJSON:
-		return SiteJSONDeleteGrantMessage
+		return SiteJSONDeleteGrantMessage()
 	default:
 		return ""
 	}
@@ -103,13 +139,13 @@ func FriendlyErrorMessage(apiErr *APIError) string {
 	}
 	switch {
 	case IsProtectedNamespaceInterfaceError(apiErr):
-		return MediaWikiNamespaceDeleteGrantMessage
+		return MediaWikiNamespaceDeleteGrantMessage()
 	case strings.EqualFold(apiErr.Code, SiteCSSProtectedErrorCode):
-		return SiteCSSDeleteGrantMessage
+		return SiteCSSDeleteGrantMessage()
 	case strings.EqualFold(apiErr.Code, SiteJSProtectedErrorCode):
-		return SiteJSDeleteGrantMessage
+		return SiteJSDeleteGrantMessage()
 	case strings.EqualFold(apiErr.Code, SiteJSONProtectedErrorCode):
-		return SiteJSONDeleteGrantMessage
+		return SiteJSONDeleteGrantMessage()
 	}
 	if strings.TrimSpace(apiErr.Info) != "" {
 		return apiErr.Info
