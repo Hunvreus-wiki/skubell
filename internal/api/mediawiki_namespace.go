@@ -31,7 +31,7 @@ func MediaWikiNamespaceDeleteGrantMessage() string {
 func SiteCSSDeleteGrantMessage() string {
 	return t.T(
 		"del_grant_site_css",
-		`Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the "editsitecss" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell.`,
+		`Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the "editsitecss" right. That right belongs to interface administrators; add your account to that group and enable the bot password's "Edit sitewide and user CSS/JS" grant, then reconnect Skubell.`,
 	)
 }
 
@@ -39,7 +39,7 @@ func SiteCSSDeleteGrantMessage() string {
 func SiteJSDeleteGrantMessage() string {
 	return t.T(
 		"del_grant_site_js",
-		`Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the "editsitejs" right. That right belongs to interface administrators; add your account to that group and enable the bot password's sitewide CSS/JS grant, then reconnect Skubell.`,
+		`Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the "editsitejs" right. That right belongs to interface administrators; add your account to that group and enable the bot password's "Edit sitewide and user CSS/JS" grant, then reconnect Skubell.`,
 	)
 }
 
@@ -47,7 +47,7 @@ func SiteJSDeleteGrantMessage() string {
 func SiteJSONDeleteGrantMessage() string {
 	return t.T(
 		"del_grant_site_json",
-		`Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the "editsitejson" right. Enable the bot password's JSON grant (and ensure your account holds "editsitejson"), then reconnect Skubell.`,
+		`Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the "editsitejson" right. Enable the bot password's "Edit the MediaWiki namespace and sitewide/user JSON" grant (and ensure your account holds "editsitejson"), then reconnect Skubell.`,
 	)
 }
 
