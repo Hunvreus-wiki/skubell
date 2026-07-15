@@ -2642,41 +2642,82 @@ func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, err
 	return result, nil
 }
 
-func (p *deletionDataProvider) GetRedirects(title string) ([]string, error) {
-	params := map[string]string{
-		"action":        "query",
-		"list":          "backlinks",
-		"bltitle":       title,
-		"bllimit":       "max",
-		"blfilterredir": "redirects",
-		"formatversion": "2",
+// GetRedirects returns, for each requested title, the pages that redirect to it.
+//
+// It asks prop=redirects, which answers exactly that question, for a batch of titles at a time, which is how the API
+// wants to be asked. The obvious-looking alternative — list=backlinks with blfilterredir=redirects — answers a
+// different question, "pages that link to title and are themselves redirects", and takes one title per request. A
+// redirect pointing somewhere else entirely satisfies it, as long as it happens to link here: deleting "Cat" would have
+// taken "Kucing" with it, which redirects to Kuching, a city in Malaysia.
+func (p *deletionDataProvider) GetRedirects(titles []string) (map[string][]string, error) {
+	result := make(map[string][]string, len(titles))
+	batchSize := 50
+	if p.caps.HasHighLimits {
+		batchSize = 500
 	}
-	redirects := []string{}
-	for {
-		payload, err := p.client.GetContext(p.context(), p.apiURL, params)
-		if err != nil {
-			return nil, fmt.Errorf("query redirects for %q: %w", title, err)
+	for start := 0; start < len(titles); start += batchSize {
+		batch := titles[start:min(start+batchSize, len(titles))]
+		params := map[string]string{
+			"action":        "query",
+			"prop":          "redirects",
+			"titles":        strings.Join(batch, "|"),
+			"rdlimit":       "max",
+			"formatversion": "2",
 		}
-		query, _ := payload["query"].(map[string]any)
-		items, _ := query["backlinks"].([]any)
-		for _, raw := range items {
-			entry, ok := raw.(map[string]any)
-			if !ok {
-				continue
+		for {
+			payload, err := p.client.GetContext(p.context(), p.apiURL, params)
+			if err != nil {
+				return nil, fmt.Errorf("query redirects: %w", err)
 			}
-			name, _ := entry["title"].(string)
-			if strings.TrimSpace(name) != "" {
-				redirects = append(redirects, name)
+			query, _ := payload["query"].(map[string]any)
+
+			// MediaWiki may normalize requested titles; map results back to what we asked for, or the caller will not
+			// recognize its own pages.
+			requestedFor := map[string]string{}
+			if normalized, ok := query["normalized"].([]any); ok {
+				for _, raw := range normalized {
+					entry, _ := raw.(map[string]any)
+					from, _ := entry["from"].(string)
+					to, _ := entry["to"].(string)
+					if from != "" && to != "" {
+						requestedFor[to] = from
+					}
+				}
 			}
+
+			pages, _ := query["pages"].([]any)
+			for _, rawPage := range pages {
+				page, ok := rawPage.(map[string]any)
+				if !ok {
+					continue
+				}
+				pageTitle, _ := page["title"].(string)
+				key := pageTitle
+				if original, ok := requestedFor[pageTitle]; ok {
+					key = original
+				}
+				items, _ := page["redirects"].([]any)
+				for _, raw := range items {
+					entry, ok := raw.(map[string]any)
+					if !ok {
+						continue
+					}
+					name, _ := entry["title"].(string)
+					if strings.TrimSpace(name) != "" {
+						result[key] = append(result[key], name)
+					}
+				}
+			}
+
+			continueMap, _ := payload["continue"].(map[string]any)
+			next, _ := continueMap["rdcontinue"].(string)
+			if next == "" {
+				break
+			}
+			params["rdcontinue"] = next
 		}
-		continueMap, _ := payload["continue"].(map[string]any)
-		next, _ := continueMap["blcontinue"].(string)
-		if next == "" {
-			break
-		}
-		params["blcontinue"] = next
 	}
-	return redirects, nil
+	return result, nil
 }
 
 func (p *deletionDataProvider) context() context.Context {

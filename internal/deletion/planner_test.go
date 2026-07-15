@@ -343,3 +343,42 @@ func TestBuildPlanSortsTalkAfterMainGroupedUnderRoot(t *testing.T) {
 		"Banana",
 	}, itemTitles(plan))
 }
+
+// TestBuildPlanBatchesEachLevelOnce pins the shape of the walk: one request per level of the redirect chain, not one
+// per page. Asking page by page turned a page list into a round trip per page, and the walk is transitive, so it
+// compounded — while the bar sat still on whichever page owned the chain.
+func TestBuildPlanBatchesEachLevelOnce(t *testing.T) {
+	t.Parallel()
+
+	var batches [][]string
+	provider := &recordingRedirectProvider{
+		MockDataProvider: ops.MockDataProvider{Redirects: map[string][]string{
+			"Apple":  {"Cider"},     // level 2
+			"Cider":  {"Old-Apple"}, // level 3
+			"Banana": {"Plantain"},  // level 2, alongside Cider
+		}},
+		seen: &batches,
+	}
+
+	plan, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{IncludeRedirect: true})
+	require.NoError(t, err)
+	require.ElementsMatch(t,
+		[]string{"Apple", "Cider", "Old-Apple", "Banana", "Plantain"}, itemTitles(plan))
+
+	// One request per level, each carrying that level's whole set — three levels deep, three requests.
+	require.Equal(t, [][]string{
+		{"Apple", "Banana"},
+		{"Cider", "Plantain"},
+		{"Old-Apple"},
+	}, batches)
+}
+
+type recordingRedirectProvider struct {
+	ops.MockDataProvider
+	seen *[][]string
+}
+
+func (r *recordingRedirectProvider) GetRedirects(titles []string) (map[string][]string, error) {
+	*r.seen = append(*r.seen, append([]string(nil), titles...))
+	return r.MockDataProvider.GetRedirects(titles)
+}

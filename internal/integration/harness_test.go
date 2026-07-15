@@ -122,14 +122,27 @@ func pageExists(t *testing.T, c *api.Client, apiURL, title string) bool {
 }
 
 // deleteViaPlan runs the real workflow execution path (BuildPlan → DeleteTranslator → HttpExecutor), one result per op.
-func deleteViaPlan(t *testing.T, c *api.Client, apiURL string, caps api.WikiCapabilities, titles []string, reason string) []api.APIResult {
+func deleteViaPlan(
+	t *testing.T,
+	c *api.Client,
+	apiURL string,
+	caps api.WikiCapabilities,
+	titles []string,
+	reason string,
+) []api.APIResult {
 	t.Helper()
 	provider := &liveProvider{client: c, apiURL: apiURL, caps: caps, ctx: context.Background()}
 	plan, err := deletion.BuildPlan(provider, titles, deletion.PlanOptions{Reason: reason})
 	require.NoError(t, err)
 	executor, err := api.NewHttpExecutor(c, apiURL)
 	require.NoError(t, err)
-	results, err := deletion.ExecutePlan(context.Background(), plan.ExecutionPlan(), api.DeleteTranslator{}, caps, executor)
+	results, err := deletion.ExecutePlan(
+		context.Background(),
+		plan.ExecutionPlan(),
+		api.DeleteTranslator{},
+		caps,
+		executor,
+	)
 	require.NoError(t, err)
 	return results
 }
@@ -275,38 +288,62 @@ func (p *liveProvider) PagesExist(titles []string) (map[string]bool, error) {
 	return result, nil
 }
 
-func (p *liveProvider) GetRedirects(title string) ([]string, error) {
+func (p *liveProvider) GetRedirects(titles []string) (map[string][]string, error) {
+	// Mirrors the real provider: prop=redirects answers "what redirects to these", which is the question, and answers
+	// for a batch. See deletionDataProvider.GetRedirects for what the backlinks form answers instead.
 	params := map[string]string{
 		"action":        "query",
-		"list":          "backlinks",
-		"bltitle":       title,
-		"bllimit":       "max",
-		"blfilterredir": "redirects",
+		"prop":          "redirects",
+		"titles":        strings.Join(titles, "|"),
+		"rdlimit":       "max",
 		"formatversion": "2",
 	}
-	var redirects []string
+	redirects := map[string][]string{}
 	for {
 		payload, err := p.client.GetContext(p.ctx, p.apiURL, params)
 		if err != nil {
 			return nil, err
 		}
 		query, _ := payload["query"].(map[string]any)
-		items, _ := query["backlinks"].([]any)
-		for _, raw := range items {
-			entry, ok := raw.(map[string]any)
+		requestedFor := map[string]string{}
+		if normalized, ok := query["normalized"].([]any); ok {
+			for _, raw := range normalized {
+				entry, _ := raw.(map[string]any)
+				from, _ := entry["from"].(string)
+				to, _ := entry["to"].(string)
+				if from != "" && to != "" {
+					requestedFor[to] = from
+				}
+			}
+		}
+		pages, _ := query["pages"].([]any)
+		for _, rawPage := range pages {
+			page, ok := rawPage.(map[string]any)
 			if !ok {
 				continue
 			}
-			if name, _ := entry["title"].(string); strings.TrimSpace(name) != "" {
-				redirects = append(redirects, name)
+			pageTitle, _ := page["title"].(string)
+			key := pageTitle
+			if original, ok := requestedFor[pageTitle]; ok {
+				key = original
+			}
+			items, _ := page["redirects"].([]any)
+			for _, raw := range items {
+				entry, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				if name, _ := entry["title"].(string); strings.TrimSpace(name) != "" {
+					redirects[key] = append(redirects[key], name)
+				}
 			}
 		}
 		cont, _ := payload["continue"].(map[string]any)
-		next, _ := cont["blcontinue"].(string)
+		next, _ := cont["rdcontinue"].(string)
 		if next == "" {
 			break
 		}
-		params["blcontinue"] = next
+		params["rdcontinue"] = next
 	}
 	return redirects, nil
 }
