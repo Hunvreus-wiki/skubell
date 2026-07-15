@@ -24,7 +24,7 @@
     "other": "Penndibaboù"
   },
   "common_proceed": {
-    "other": "Kenderc'hel"
+    "other": "Kenderc’hel"
   },
   "common_save": {
     "other": "Enrollañ"
@@ -33,17 +33,17 @@
     "other": "O kevreañ ouzh ar wiki..."
   },
   "connect_custom_unreachable": {
-    "other": "N'eus ket bet gallet tizhout API MediaWiki. Ret eo d'an URL poentañ war ar c'havlec'h m'emañ api.php, hag a zepend eus kefluniadur ar servijer. Al lec'hioù boaz eo gwrizienn ar servijer (da sk. http://example.com/) hag ar rannkavlec'h /w/ (da sk. http://example.com/w/). Gwiriit an URL e arventennoù ar wiki."
+    "other": "N’eus ket bet gallet tizhout API MediaWiki. Ret eo d’an URL kas war lec’h api.php, a zo termenet gant kefluniadur ar servijer. E touez al lec’hioù boaz ez eus gwrizienn ar servijer (d.s. http://example.com/) hag an iskavlec’h /w/ (d.s. http://example.com/w/). Gwiriit an URL en arventennoù ar wiki."
   },
   "connect_title": {
     "other": "O kevreañ"
   },
   "del_add_to_list": {
-    "other": "Ouzhpennañ d'ar roll"
+    "other": "Ouzhpennañ d’ar roll"
   },
   "del_category_not_empty": {
-    "one": "rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur",
-    "other": "rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur"
+    "one": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur",
+    "other": "rummad nann-goullo ({{.Count}} ezel a chom) — c’hwitañ a raio an diverkadur"
   },
   "del_check_broken_redirects": {
     "other": "Adkasoù torr"
@@ -70,7 +70,7 @@
     "other": "Goullonderiñ ar roll"
   },
   "del_clear_results": {
-    "other": "Goullonderiñ an disoc'hoù"
+    "other": "Goullonderiñ an disoc’hoù"
   },
   "del_calculating": {
     "other": "O jediñ… {{.Percent}} % ({{.Count}} pajenn kavet)"
@@ -82,10 +82,10 @@
     "other": "O jediñ ar pajennoù da ziverkañ…"
   },
   "del_detail_category_not_empty": {
-    "other": "N'eo ket goullo ar rummad ; n'eo ket bet dilamet."
+    "other": "N’eo ket goullo ar rummad ; n’eo ket bet dilamet."
   },
   "del_detail_unknown_failure": {
-    "other": "c'hwitadenn dianav"
+    "other": "c’hwitadenn dianav"
   },
   "del_download": {
     "other": "Pellgargañ"
@@ -118,7 +118,7 @@
     "other": "Peurgas echu."
   },
   "del_exec_not_started": {
-    "other": "N'eo ket bet kroget ar peurgas."
+    "other": "N’eo ket bet kroget ar peurgas."
   },
   "del_execute": {
     "other": "peurgas"
@@ -164,16 +164,16 @@
     "other": "Roll diwezhañ"
   },
   "del_grant_mediawiki_namespace": {
-    "other": "Ne c'hall ket Skubell diverkañ pajennoù en esaouenn anv MediaWiki gant ar ger-tremen robot-mañ. E Special:BotPasswords, gweredekait « Kemmañ esaouenn anvioù MediaWiki ha JSON al lec'hienn / an implijerien », ha kevreit Skubell en-dro."
+    "other": "Ne c’hall ket Skubell diverkañ pajennoù en esaouenn anv MediaWiki gant ar ger-tremen robot-mañ. E Special:BotPasswords, gweredekait « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien », ha kevreit en-dro gant Skubell."
   },
   "del_grant_site_css": {
-    "other": "Ne c'hall ket Skubell diverkañ pajennoù CSS al lec'hienn (MediaWiki:*.css) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitecss ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d'ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec'hienn hag an implijerien », ha kevreit Skubell en-dro."
+    "other": "Ne c’hall ket Skubell diverkañ pajennoù CSS al lec’hienn (MediaWiki:*.css) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitecss ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d’ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec’hienn hag an implijerien », ha kevreit en-dro gant Skubell."
   },
   "del_grant_site_js": {
-    "other": "Ne c'hall ket Skubell diverkañ pajennoù JavaScript al lec'hienn (MediaWiki:*.js) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitejs ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d'ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec'hienn hag an implijerien », ha kevreit Skubell en-dro."
+    "other": "Ne c’hall ket Skubell diverkañ pajennoù JavaScript al lec’hienn (MediaWiki:*.js) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejs ». Ar verourien etrefas hepken o deus ar gwir-se ; ouzhpennit ho kont d’ar strollad-se, gweredekait evit ar ger-tremen robot an aotre « Kemmañ CSS/JS al lec’hienn hag an implijerien », ha kevreit en-dro gant Skubell."
   },
   "del_grant_site_json": {
-    "other": "Ne c'hall ket Skubell diverkañ pajennoù JSON al lec'hienn (MediaWiki:*.json) gant an dalc'h-mañ : n'en deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anvioù MediaWiki ha JSON al lec'hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit Skubell en-dro."
+    "other": "Ne c’hall ket Skubell diverkañ pajennoù JSON al lec’hienn (MediaWiki:*.json) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit en-dro gant Skubell."
   },
   "del_import": {
     "other": "Enporzhiañ"
@@ -194,10 +194,10 @@
     "other": "(Pennañ)"
   },
   "del_need_one_page": {
-    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc'hel."
+    "other": "Ouzhpennit ur bajenn da nebeutañ evit kenderc’hel."
   },
   "del_not_connected": {
-    "other": "N'oc'h ket kevreet ouzh ur wiki."
+    "other": "N’oc’h ket kevreet ouzh ur wiki."
   },
   "del_options_heading": {
     "other": "Dibarzhioù diverkañ"
@@ -213,10 +213,10 @@
     "other": "O prientiñ an oberoù…"
   },
   "del_press_proceed": {
-    "other": "Pouezit war Kenderc'hel evit peurgas an diverkadur."
+    "other": "Pouezit war Kenderc’hel evit peurgas an diverkadur."
   },
   "del_proceed_options": {
-    "other": "Kenderc'hel d'an dibarzhioù"
+    "other": "Kenderc’hel d’an dibarzhioù"
   },
   "del_reason_none": {
     "other": "(hini ebet)"
@@ -226,14 +226,14 @@
     "other": "{{.Title}} ({{.Count}} okted)"
   },
   "del_results_count": {
-    "one": "{{.Count}} disoc'h",
-    "other": "{{.Count}} disoc'h"
+    "one": "{{.Count}} disoc’h",
+    "other": "{{.Count}} disoc’h"
   },
   "del_search": {
     "other": "Klask"
   },
   "del_search_results": {
-    "other": "Disoc'hoù ar c'hlask"
+    "other": "Disoc’hoù ar c’hlask"
   },
   "del_searching": {
     "other": "O klask pajennoù…"
@@ -314,10 +314,10 @@
     "other": "Oberoù"
   },
   "welcome_no_actions": {
-    "other": "Ober ebet graet c'hoazh en dalc'h-mañ."
+    "other": "Ober ebet graet c’hoazh en dalc’h-mañ."
   },
   "welcome_session_activity": {
-    "other": "Obereriantiz an dalc'h"
+    "other": "Obereriantiz an dalc’h"
   },
   "welcome_stat_active_users": {
     "other": "Implijerien oberiant : {{.Count}}"
@@ -383,7 +383,7 @@
     "other": "Diverkañ pajennoù"
   },
   "workflow_missing_sitewide_block": {
-    "other": "stankadenn war al lec'hienn a-bezh"
+    "other": "stankadenn war al lec’hienn a-bezh"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (ezhomm eus {{.Rights}})"

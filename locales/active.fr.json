@@ -82,7 +82,7 @@
     "other": "Calcul des pages à supprimer…"
   },
   "del_detail_category_not_empty": {
-    "other": "La catégorie n'est pas vide ; non supprimée."
+    "other": "La catégorie n’est pas vide ; non supprimée."
   },
   "del_detail_unknown_failure": {
     "other": "échec inconnu"
