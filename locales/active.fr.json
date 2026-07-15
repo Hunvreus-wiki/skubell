@@ -1,6 +1,6 @@
 {
   "common_back": {
-    "other": "← Retour"
+    "other": "Retour"
   },
   "common_cancel": {
     "other": "Annuler"
@@ -32,6 +32,9 @@
   "connect_contacting": {
     "other": "Connexion au wiki en cours..."
   },
+  "connect_custom_unreachable": {
+    "other": "Impossible de joindre l’API MediaWiki. L’URL doit pointer vers le répertoire contenant api.php, qui dépend de la configuration du serveur. Les emplacements courants sont la racine du serveur (par ex. http://example.com/) et le sous-répertoire /w/ (par ex. http://example.com/w/). Veuillez vérifier l’URL dans les paramètres du wiki."
+  },
   "connect_title": {
     "other": "Connexion en cours"
   },
@@ -39,8 +42,8 @@
     "other": "Ajouter à la liste"
   },
   "del_category_not_empty": {
-    "one": "  ⚠ catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
-    "other": "  ⚠ catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
+    "one": "catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
+    "other": "catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
   },
   "del_check_broken_redirects": {
     "other": "Redirections brisées"
@@ -79,7 +82,7 @@
     "other": "Calcul des pages à supprimer…"
   },
   "del_detail_category_not_empty": {
-    "other": "La catégorie n'est pas vide ; non supprimée."
+    "other": "La catégorie n’est pas vide ; non supprimée."
   },
   "del_detail_unknown_failure": {
     "other": "échec inconnu"
@@ -104,9 +107,6 @@
   },
   "del_err_reason_text_required": {
     "other": "un motif complémentaire est requis lorsque {{.None}} est sélectionné"
-  },
-  "del_err_reasons": {
-    "other": "Motifs de suppression"
   },
   "del_err_verify": {
     "other": "Vérifier"
@@ -163,14 +163,29 @@
   "del_final_list": {
     "other": "Liste finale"
   },
+  "del_grant_mediawiki_namespace": {
+    "other": "Skubell ne peut pas supprimer de pages dans l’espace de noms MediaWiki avec ce mot de passe de robot. Dans Special:BotPasswords, activez « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_css": {
+    "other": "Skubell ne peut pas supprimer les pages CSS du site (MediaWiki:*.css) avec cette session : il lui manque le droit « editsitecss ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_js": {
+    "other": "Skubell ne peut pas supprimer les pages JavaScript du site (MediaWiki:*.js) avec cette session : il lui manque le droit « editsitejs ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "del_grant_site_json": {
+    "other": "Skubell ne peut pas supprimer les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
+  },
   "del_import": {
     "other": "Importer"
   },
   "del_import_file": {
     "other": "Importer un fichier…"
   },
-  "del_loading_reasons": {
-    "other": "Chargement des motifs prédéfinis…"
+  "del_legend_redirect": {
+    "other": "redirection vers une page sélectionnée"
+  },
+  "del_legend_talk": {
+    "other": "page de discussion aussi supprimée"
   },
   "del_namespace_any": {
     "other": "(tous)"
@@ -200,14 +215,8 @@
   "del_press_proceed": {
     "other": "Appuyez sur Continuer pour exécuter la suppression."
   },
-  "del_preview_legend": {
-    "other": "💬 page de discussion aussi supprimée   ·   ↳ redirection vers une page sélectionnée"
-  },
   "del_proceed_options": {
-    "other": "Continuer vers les options →"
-  },
-  "del_reason_loading": {
-    "other": "(chargement...)"
+    "other": "Continuer vers les options"
   },
   "del_reason_none": {
     "other": "(aucun)"
@@ -239,10 +248,10 @@
     "other": "Mode simulation"
   },
   "del_summary_includes_redirects": {
-    "other": "Inclut les redirections"
+    "other": "Inclure les redirections"
   },
   "del_summary_includes_talk": {
-    "other": "Inclut les pages de discussion"
+    "other": "Inclure les pages de discussion"
   },
   "del_summary_none": {
     "other": "Aucune option supplémentaire."
@@ -290,7 +299,7 @@
     "other": "Inconnu"
   },
   "startup_add_wiki": {
-    "other": "+ Ajouter un wiki"
+    "other": "Ajouter un wiki"
   },
   "startup_delete_confirm": {
     "other": "Retirer « {{.Name}} » de la liste des wikis ?"

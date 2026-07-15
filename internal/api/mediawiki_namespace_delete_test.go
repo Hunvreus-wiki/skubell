@@ -66,23 +66,23 @@ func TestDeleteAccessMessageMapsEachRight(t *testing.T) {
 
 	caps := sysopCaps()
 	require.Empty(t, DeleteAccessMessage(caps, "MediaWiki:Sidebar"))
-	require.Equal(t, SiteCSSDeleteGrantMessage, DeleteAccessMessage(caps, "MediaWiki:Common.css"))
-	require.Equal(t, SiteJSDeleteGrantMessage, DeleteAccessMessage(caps, "MediaWiki:Common.js"))
+	require.Equal(t, SiteCSSDeleteGrantMessage(), DeleteAccessMessage(caps, "MediaWiki:Common.css"))
+	require.Equal(t, SiteJSDeleteGrantMessage(), DeleteAccessMessage(caps, "MediaWiki:Common.js"))
 
 	noInterface := WikiCapabilities{UserRights: []string{"delete"}}
-	require.Equal(t, MediaWikiNamespaceDeleteGrantMessage, DeleteAccessMessage(noInterface, "MediaWiki:Sidebar"))
+	require.Equal(t, MediaWikiNamespaceDeleteGrantMessage(), DeleteAccessMessage(noInterface, "MediaWiki:Sidebar"))
 
 	noJSON := WikiCapabilities{UserRights: []string{"delete", "editinterface"}}
-	wantMsg := SiteJSONDeleteGrantMessage
+	wantMsg := SiteJSONDeleteGrantMessage()
 	require.Equal(t, wantMsg, DeleteAccessMessage(noJSON, "MediaWiki:Gadgets-definition.json"))
 }
 
 func TestFriendlyErrorMessageMapsSiteConfigCodes(t *testing.T) {
 	t.Parallel()
 
-	require.Equal(t, SiteCSSDeleteGrantMessage, FriendlyErrorMessage(&APIError{Code: SiteCSSProtectedErrorCode}))
-	require.Equal(t, SiteJSDeleteGrantMessage, FriendlyErrorMessage(&APIError{Code: SiteJSProtectedErrorCode}))
-	wantSiteConfigMsg := SiteJSONDeleteGrantMessage
+	require.Equal(t, SiteCSSDeleteGrantMessage(), FriendlyErrorMessage(&APIError{Code: SiteCSSProtectedErrorCode}))
+	require.Equal(t, SiteJSDeleteGrantMessage(), FriendlyErrorMessage(&APIError{Code: SiteJSProtectedErrorCode}))
+	wantSiteConfigMsg := SiteJSONDeleteGrantMessage()
 	require.Equal(t, wantSiteConfigMsg, FriendlyErrorMessage(&APIError{Code: SiteJSONProtectedErrorCode}))
 	// Unknown codes fall back to the API-provided info.
 	require.Equal(t, "boom", FriendlyErrorMessage(&APIError{Code: "whatever", Info: "boom"}))

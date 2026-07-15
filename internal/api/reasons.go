@@ -7,18 +7,20 @@ import (
 	"strings"
 )
 
+// Action keys for the reason dropdowns returned by FetchReasonDropdowns, and used to look them up in the per-session
+// cache.
 const (
-	reasonDelete    = "delete"
-	reasonBlock     = "block"
-	reasonProtect   = "protect"
-	reasonRevDelete = "revdelete"
+	ReasonActionDelete    = "delete"
+	ReasonActionBlock     = "block"
+	ReasonActionProtect   = "protect"
+	ReasonActionRevDelete = "revdelete"
 )
 
 var reasonMessageByAction = map[string]string{
-	reasonDelete:    "deletereason-dropdown",
-	reasonBlock:     "ipbreason-dropdown",
-	reasonProtect:   "protect-dropdown",
-	reasonRevDelete: "revdelete-reason-dropdown",
+	ReasonActionDelete:    "deletereason-dropdown",
+	ReasonActionBlock:     "ipbreason-dropdown",
+	ReasonActionProtect:   "protect-dropdown",
+	ReasonActionRevDelete: "revdelete-reason-dropdown",
 }
 
 // ReasonCategory represents a predefined reason group.
@@ -45,10 +47,10 @@ func FetchReasonDropdownsContext(
 	apiURL, adminLanguage string,
 ) (map[string]ReasonDropdown, error) {
 	messages := []string{
-		reasonMessageByAction[reasonDelete],
-		reasonMessageByAction[reasonBlock],
-		reasonMessageByAction[reasonProtect],
-		reasonMessageByAction[reasonRevDelete],
+		reasonMessageByAction[ReasonActionDelete],
+		reasonMessageByAction[ReasonActionBlock],
+		reasonMessageByAction[ReasonActionProtect],
+		reasonMessageByAction[ReasonActionRevDelete],
 	}
 	params := map[string]string{
 		"action":        "query",

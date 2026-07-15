@@ -1,6 +1,6 @@
 {
   "common_back": {
-    "other": "<- Back"
+    "other": "Back"
   },
   "common_cancel": {
     "other": "Cancel"
@@ -32,6 +32,9 @@
   "connect_contacting": {
     "other": "Contacting the wiki..."
   },
+  "connect_custom_unreachable": {
+    "other": "Could not reach the MediaWiki API. The URL must point to the directory containing api.php, which depends on the server's configuration. Common locations include the server root (e.g., http://example.com/) and the /w/ subdirectory (e.g., http://example.com/w/). Please verify the URL in wiki settings."
+  },
   "connect_title": {
     "other": "Connecting"
   },
@@ -39,8 +42,8 @@
     "other": "Add to list"
   },
   "del_category_not_empty": {
-    "one": "  ⚠ category not empty ({{.Count}} member remaining) — deletion will fail",
-    "other": "  ⚠ category not empty ({{.Count}} members remaining) — deletion will fail"
+    "one": "category not empty ({{.Count}} member remaining) — deletion will fail",
+    "other": "category not empty ({{.Count}} members remaining) — deletion will fail"
   },
   "del_check_broken_redirects": {
     "other": "Broken redirects"
@@ -105,9 +108,6 @@
   "del_err_reason_text_required": {
     "other": "additional reason text is required when {{.None}} is selected"
   },
-  "del_err_reasons": {
-    "other": "Delete reasons"
-  },
   "del_err_verify": {
     "other": "Verify"
   },
@@ -163,14 +163,29 @@
   "del_final_list": {
     "other": "Final list"
   },
+  "del_grant_mediawiki_namespace": {
+    "other": "Skubell cannot delete pages in the MediaWiki namespace with this bot password. In Special:BotPasswords, enable \"Edit the MediaWiki namespace and sitewide/user JSON\", then reconnect Skubell."
+  },
+  "del_grant_site_css": {
+    "other": "Skubell cannot delete sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the \"editsitecss\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's \"Edit sitewide and user CSS/JS\" grant, then reconnect Skubell."
+  },
+  "del_grant_site_js": {
+    "other": "Skubell cannot delete sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the \"editsitejs\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's \"Edit sitewide and user CSS/JS\" grant, then reconnect Skubell."
+  },
+  "del_grant_site_json": {
+    "other": "Skubell cannot delete sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's \"Edit the MediaWiki namespace and sitewide/user JSON\" grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
+  },
   "del_import": {
     "other": "Import"
   },
   "del_import_file": {
     "other": "Import file..."
   },
-  "del_loading_reasons": {
-    "other": "Loading predefined reasons..."
+  "del_legend_redirect": {
+    "other": "redirect to a selected page"
+  },
+  "del_legend_talk": {
+    "other": "talk page also deleted"
   },
   "del_namespace_any": {
     "other": "(any)"
@@ -200,14 +215,8 @@
   "del_press_proceed": {
     "other": "Press Proceed to execute the deletion workflow."
   },
-  "del_preview_legend": {
-    "other": "💬 talk page also deleted   ·   ↳ redirect to a selected page"
-  },
   "del_proceed_options": {
-    "other": "Proceed to options ->"
-  },
-  "del_reason_loading": {
-    "other": "(loading...)"
+    "other": "Proceed to options"
   },
   "del_reason_none": {
     "other": "(none)"
@@ -290,7 +299,7 @@
     "other": "Unknown"
   },
   "startup_add_wiki": {
-    "other": "+ Add a new wiki"
+    "other": "Add a new wiki"
   },
   "startup_delete_confirm": {
     "other": "Remove \"{{.Name}}\" from the wiki list?"

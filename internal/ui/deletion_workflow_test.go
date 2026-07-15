@@ -77,7 +77,7 @@ func TestValidateMediaWikiNamespaceDeleteAccessRequiresEditInterface(t *testing.
 	if msg == "" {
 		t.Fatalf("expected validation error without editinterface")
 	}
-	if msg != api.MediaWikiNamespaceDeleteGrantMessage {
+	if msg != api.MediaWikiNamespaceDeleteGrantMessage() {
 		t.Fatalf("unexpected message: %v", msg)
 	}
 
@@ -126,18 +126,18 @@ func TestValidateMediaWikiNamespaceDeleteAccessGatesSiteCSSAndJS(t *testing.T) {
 	}
 	if msg := screen.validateMediaWikiNamespaceDeleteAccess(
 		[]string{"MediaWiki:Common.css"},
-	); msg != api.SiteCSSDeleteGrantMessage {
+	); msg != api.SiteCSSDeleteGrantMessage() {
 		t.Fatalf("expected sitecss message, got %v", msg)
 	}
 	if msg := screen.validateMediaWikiNamespaceDeleteAccess(
 		[]string{"MediaWiki:Common.js"},
-	); msg != api.SiteJSDeleteGrantMessage {
+	); msg != api.SiteJSDeleteGrantMessage() {
 		t.Fatalf("expected sitejs message, got %v", msg)
 	}
 	// A batch mixing an allowed page and a blocked one is blocked.
 	if msg := screen.validateMediaWikiNamespaceDeleteAccess(
 		[]string{"Apple", "MediaWiki:Common.js"},
-	); msg != api.SiteJSDeleteGrantMessage {
+	); msg != api.SiteJSDeleteGrantMessage() {
 		t.Fatalf("expected batch with sitejs page to be blocked, got %v", msg)
 	}
 	// User-space scripts are not gated on delete.

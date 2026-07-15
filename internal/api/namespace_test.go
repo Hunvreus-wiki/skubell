@@ -46,5 +46,5 @@ func TestFriendlyErrorMessageMapsProtectedNamespaceInterface(t *testing.T) {
 		Info: "This page provides interface text for the software on this wiki.",
 	})
 
-	require.Equal(t, MediaWikiNamespaceDeleteGrantMessage, got)
+	require.Equal(t, MediaWikiNamespaceDeleteGrantMessage(), got)
 }

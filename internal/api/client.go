@@ -21,6 +21,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	t "github.com/Hunvreus-wiki/skubell/internal/i18n"
 	"github.com/Hunvreus-wiki/skubell/internal/version"
 )
 
@@ -143,6 +144,14 @@ func (c *Client) request(ctx context.Context, method, apiURL string, params map[
 	workingParams := cloneParams(params)
 	if _, ok := workingParams["format"]; !ok {
 		workingParams["format"] = "json"
+	}
+	// MediaWiki's default error format ("bc") always answers in English and ignores errorlang; any other format honours
+	// it, so ask for tag-free text in the language the operator reads. An unknown code degrades to English server-side.
+	if _, ok := workingParams["errorformat"]; !ok {
+		workingParams["errorformat"] = "plaintext"
+	}
+	if _, ok := workingParams["errorlang"]; !ok {
+		workingParams["errorlang"] = t.CurrentLanguage()
 	}
 
 	c.warnIfInsecure(apiURL)
@@ -354,7 +363,49 @@ func shouldAttachCSRF(params map[string]string) bool {
 	return params["action"] != "login"
 }
 
+// extractAPIError reads the failure out of an API response, accepting both shapes: the "errors" list returned for the
+// errorformat we request (its text is localized), and the legacy single "error" object, which wikis older than the
+// errorformat parameter still reply with. Returns nil when the response reports no error.
 func extractAPIError(payload map[string]any) *APIError {
+	if apiErr := extractLocalizedAPIError(payload); apiErr != nil {
+		return apiErr
+	}
+	return extractLegacyAPIError(payload)
+}
+
+// extractLocalizedAPIError parses the errorformat shape: a list of errors carrying localized "text", with machine
+// details such as maxlag's lag moved under "data". Only the first entry is reported; it is the one that failed the
+// request.
+func extractLocalizedAPIError(payload map[string]any) *APIError {
+	errorList, ok := payload["errors"].([]any)
+	if !ok || len(errorList) == 0 {
+		return nil
+	}
+	errorData, ok := errorList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiErr := &APIError{}
+	if code, ok := errorData["code"].(string); ok {
+		apiErr.Code = code
+	}
+	// formatversion=2 names the localized text "text"; under formatversion=1 the same text arrives as "*".
+	if text, ok := errorData["text"].(string); ok {
+		apiErr.Info = text
+	}
+	if apiErr.Info == "" {
+		apiErr.Info, _ = errorData["*"].(string)
+	}
+	if data, ok := errorData["data"].(map[string]any); ok {
+		if lag, ok := data["lag"].(float64); ok {
+			apiErr.Lag = lag
+		}
+	}
+	return apiErr
+}
+
+func extractLegacyAPIError(payload map[string]any) *APIError {
 	errorData, ok := payload["error"].(map[string]any)
 	if !ok {
 		return nil

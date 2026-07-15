@@ -29,6 +29,19 @@ This file records implementation practices that we want to keep applying across 
 - Prefer actionable guidance over diagnostic wording.
 - When rejecting input, suggest examples of criteria or actions that will succeed.
 
+## Translations
+
+- French and Breton use the typographic apostrophe `’`, never the straight `'`. Breton takes it in the `c’h` trigraph
+  too. English keeps `'`.
+- Symbols are not language: arrows, glyphs and the like belong in the interface that composes the string, never in the
+  message a translator edits. Left there, every translator re-decides them and they drift apart.
+- Punctuation inside a sentence is prose, and stays with the translator. The rule above is about decoration attached to
+  a label, not about hoisting a separator out of a sentence and gluing fragments back together.
+- A message that names a label the wiki shows (a bot-password grant, a group) should quote that wiki's own wording,
+  taken from its message catalogue rather than translated afresh, so the name matches what is on the operator's screen.
+- Identifiers stay untranslated: right names such as `editsitecss`, and canonical titles such as
+  `Special:BotPasswords`, which resolve on a wiki in any language.
+
 ## Execution And Workflow Cancellation
 
 - Cancellation should cover preparation phases as well as execution phases.
