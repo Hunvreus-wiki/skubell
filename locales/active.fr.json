@@ -66,17 +66,14 @@
   "del_check_redirects_only": {
     "other": "Redirections uniquement"
   },
+  "del_checking_categories": {
+    "other": "Vérification des catégories : {{.Done}}/{{.Total}}"
+  },
   "del_clear_list": {
     "other": "Vider la liste"
   },
   "del_clear_results": {
     "other": "Effacer les résultats"
-  },
-  "del_calculating": {
-    "other": "Calcul… {{.Percent}} % ({{.Count}} pages trouvées)"
-  },
-  "del_finalizing": {
-    "other": "Finalisation… {{.Percent}} %"
   },
   "del_computing": {
     "other": "Calcul des pages à supprimer…"
@@ -238,8 +235,20 @@
   "del_searching": {
     "other": "Recherche de pages…"
   },
-  "del_verify_empty": {
-    "other": "Plus aucune page — revenez en arrière pour modifier la sélection."
+  "del_step_categories_pending": {
+    "other": "Vérification des catégories"
+  },
+  "del_step_redirects": {
+    "other": "Recherche des redirections : {{.Processed}}/{{.Total}} pages traitées, {{.Found}} pages trouvées"
+  },
+  "del_step_redirects_pending": {
+    "other": "Recherche des redirections"
+  },
+  "del_step_talk_pages": {
+    "other": "Recherche des pages de discussion : {{.Done}}/{{.Total}}"
+  },
+  "del_step_talk_pending": {
+    "other": "Recherche des pages de discussion"
   },
   "del_summary": {
     "other": "{{.Operations}} opérations · {{.Pages}} pages seront supprimées."
@@ -261,6 +270,9 @@
   },
   "del_tab_manual": {
     "other": "Saisie manuelle"
+  },
+  "del_verify_empty": {
+    "other": "Plus aucune page — revenez en arrière pour modifier la sélection."
   },
   "journal_action_fallback": {
     "other": "(action)"

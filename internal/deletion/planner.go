@@ -19,10 +19,24 @@ type PlanOptions struct {
 	Reason          string
 	IncludeTalk     bool
 	IncludeRedirect bool
-	// OnProgress, when set, is called during discovery (pass 1) once per page handled, with the number of pages
-	// processed so far and the total discovered (found grows as redirects/talk pages are enqueued). It runs on
-	// BuildPlan's own goroutine; the caller is responsible for marshaling any UI work.
-	OnProgress func(processed, found int)
+	// OnProgress, when set, reports discovery as it runs: how many reference pages are fully processed, how many there
+	// are, and how many pages have been found.
+	//
+	// A reference page — one of the caller's own list, deduplicated — is processed once everything depending on it has
+	// surfaced, so a page whose redirects lead to further redirects stays unprocessed until the last of them is found.
+	// The reference list is the total because it is the only one known before discovery starts and the only one that
+	// cannot grow while the caller is reading it.
+	//
+	// A page is found once it is identified for deletion, so redirects and existing talk pages count and found normally
+	// runs ahead of processed, ending at the plan's PageCount. A talk page is only found once the wiki confirms it
+	// exists, which is why the last call comes after discovery has finished.
+	//
+	// It runs on BuildPlan's own goroutine; the caller is responsible for marshaling any UI work.
+	OnProgress func(processed, total, found int)
+	// OnTalkCheck, when set, reports the associated-talk-page existence check — the one question discovery cannot
+	// answer from a title alone. It is asked in batches rather than page by page, so it reports the titles resolved of
+	// those to resolve and moves in jumps. Same goroutine and caveat as OnProgress.
+	OnTalkCheck func(done, total int)
 }
 
 // PlanItem is one deletion row plus the metadata the UI needs to group, sort, and annotate it. A subject page and its
@@ -145,6 +159,9 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 	root := map[string]string{}
 	parent := map[string]string{}
 	var queue []string
+	// pending counts the titles still queued for each reference page. A reference is processed only when it reaches
+	// zero: that is the moment everything depending on that page has surfaced, redirects of redirects included.
+	pending := map[string]int{}
 	enqueue := func(title, redirectParent, ultimateRoot string) {
 		title = strings.TrimSpace(title)
 		if title == "" {
@@ -157,9 +174,20 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 		if redirectParent != "" {
 			parent[title] = redirectParent
 		}
+		pending[ultimateRoot]++
 		queue = append(queue, title)
 	}
+	// A talk title is namespace arithmetic, not something the wiki reported: it is enqueued so that redirects pointing
+	// at the talk page are found, but whether the page exists — and so whether it is a page identified for deletion at
+	// all — is unknown until the existence check below. Counting those guesses is what made discovery announce twice
+	// what would be deleted.
+	unverified := map[string]struct{}{}
+
+	// The reference pages are the caller's own list: the only total known before discovery starts, and so the only
+	// honest denominator for progress. Everything else is found along the way.
+	references := map[string]struct{}{}
 	for _, title := range normalizeTitles(titles) {
+		references[title] = struct{}{}
 		enqueue(title, "", title)
 	}
 
@@ -198,10 +226,10 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 		}
 
 		for _, title := range level {
-			processed++
 			itemRoot := root[title]
 
 			for _, redirect := range redirectsOf[title] {
+				delete(unverified, redirect) // the wiki just named it, so it is a page and not a guess
 				enqueue(redirect, title, itemRoot)
 			}
 
@@ -217,12 +245,25 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 					if err != nil {
 						return Plan{}, fmt.Errorf("resolve talk page of %q: %w", title, err)
 					}
-					enqueue(talk, "", itemRoot)
+					// "" means this namespace has no talk page at all, so there is nothing to guess at or enqueue.
+					if talk = strings.TrimSpace(talk); talk != "" {
+						if _, known := root[talk]; !known {
+							unverified[talk] = struct{}{}
+						}
+						enqueue(talk, "", itemRoot)
+					}
 				}
 			}
 
+			// Decremented only now, after this page's own dependents have been enqueued, so a reference cannot look
+			// finished while work it spawned is still queued.
+			pending[itemRoot]--
+			if pending[itemRoot] == 0 {
+				processed++
+			}
+
 			if options.OnProgress != nil {
-				options.OnProgress(processed, len(root))
+				options.OnProgress(processed, len(references), len(root)-len(unverified))
 			}
 		}
 	}
@@ -253,11 +294,27 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 	}
 	existing := map[string]bool{}
 	if len(talkTitles) > 0 {
+		if options.OnTalkCheck != nil {
+			options.OnTalkCheck(0, len(talkTitles))
+		}
 		found, err := provider.PagesExist(talkTitles)
 		if err != nil {
 			return Plan{}, fmt.Errorf("check associated talk page existence: %w", err)
 		}
 		existing = found
+		if options.OnTalkCheck != nil {
+			options.OnTalkCheck(len(talkTitles), len(talkTitles))
+		}
+		// This answers the one question discovery could not: a talk page that exists rides along on its subject's
+		// deletetalk, so it is a page identified for deletion and joins the found count. The rest were never pages.
+		for talk, exists := range existing {
+			if exists {
+				delete(unverified, talk)
+			}
+		}
+		if options.OnProgress != nil {
+			options.OnProgress(processed, len(references), len(root)-len(unverified))
+		}
 	}
 
 	// Pass 2: assign one operation per row, plus display metadata.

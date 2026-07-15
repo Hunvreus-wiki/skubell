@@ -66,17 +66,14 @@
   "del_check_redirects_only": {
     "other": "Redirects only"
   },
+  "del_checking_categories": {
+    "other": "Checking categories: {{.Done}}/{{.Total}}"
+  },
   "del_clear_list": {
     "other": "Clear list"
   },
   "del_clear_results": {
     "other": "Clear results"
-  },
-  "del_calculating": {
-    "other": "Calculating… {{.Percent}}% ({{.Count}} pages found)"
-  },
-  "del_finalizing": {
-    "other": "Finalizing… {{.Percent}}%"
   },
   "del_computing": {
     "other": "Computing pages to delete…"
@@ -238,8 +235,20 @@
   "del_searching": {
     "other": "Searching pages..."
   },
-  "del_verify_empty": {
-    "other": "No pages left — go Back to change the selection."
+  "del_step_categories_pending": {
+    "other": "Checking categories"
+  },
+  "del_step_redirects": {
+    "other": "Finding redirects: {{.Processed}}/{{.Total}} pages processed, {{.Found}} pages found"
+  },
+  "del_step_redirects_pending": {
+    "other": "Finding redirects"
+  },
+  "del_step_talk_pages": {
+    "other": "Checking talk pages: {{.Done}}/{{.Total}}"
+  },
+  "del_step_talk_pending": {
+    "other": "Checking talk pages"
   },
   "del_summary": {
     "other": "{{.Operations}} operations · {{.Pages}} pages will be deleted."
@@ -261,6 +270,9 @@
   },
   "del_tab_manual": {
     "other": "Manual entry"
+  },
+  "del_verify_empty": {
+    "other": "No pages left — go Back to change the selection."
   },
   "journal_action_fallback": {
     "other": "(action)"

@@ -122,22 +122,109 @@ func TestBuildPlanReportsProgress(t *testing.T) {
 		},
 	}
 
-	var processedSeq, foundSeq []int
+	var processedSeq, totalSeq, foundSeq []int
 	plan, err := BuildPlan(provider, []string{"Apple"}, PlanOptions{
 		IncludeRedirect: true,
-		OnProgress: func(processed, found int) {
+		OnProgress: func(processed, total, found int) {
 			processedSeq = append(processedSeq, processed)
+			totalSeq = append(totalSeq, total)
 			foundSeq = append(foundSeq, found)
 		},
 	})
 	require.NoError(t, err)
 	require.Len(t, plan.Items, 3)
 
-	require.Equal(t, []int{1, 2, 3}, processedSeq) // one callback per page, processed increments monotonically
-	require.Equal(t, 3, foundSeq[len(foundSeq)-1]) // ends with every page discovered
+	// Apple is the whole reference list, and it is not processed until everything hanging off it has surfaced: Cider
+	// leads to Old-Apple, so Apple only completes on the third pass. Found meanwhile runs ahead, which is the normal
+	// shape — pages are identified for deletion faster than references are exhausted.
+	require.Equal(t, []int{0, 0, 1}, processedSeq)
+	require.Equal(t, []int{1, 1, 1}, totalSeq)
+	require.Equal(t, []int{2, 3, 3}, foundSeq)
+
 	for i := range processedSeq {
-		require.GreaterOrEqual(t, foundSeq[i], processedSeq[i]) // discovery never lags behind processing
+		require.LessOrEqual(t, processedSeq[i], totalSeq[i]) // progress never overshoots its own total
 	}
+	require.Equal(t, plan.PageCount, foundSeq[len(foundSeq)-1]) // found settles on what the summary will report
+}
+
+// TestBuildPlanProgressFindsOnlyTalkPagesThatExist is the reported bug. Discovery synthesises a talk title for every
+// subject page and enqueues it — that is how redirects pointing at a talk page get found — but a title is not a page.
+// Counting those guesses announced twice what would be deleted when, as here, none of them existed. A talk page is
+// found only once the wiki confirms it, and then it is found, because deletetalk removes it.
+func TestBuildPlanProgressFindsOnlyTalkPagesThatExist(t *testing.T) {
+	t.Parallel()
+
+	newProvider := func(existing map[string]struct{}) *ops.MockDataProvider {
+		return &ops.MockDataProvider{
+			SubjectPages:  map[string]string{"Talk:Apple": "Apple", "Talk:Banana": "Banana"},
+			TalkPages:     map[string]string{"Apple": "Talk:Apple", "Banana": "Talk:Banana"},
+			ExistingPages: existing,
+		}
+	}
+	build := func(t *testing.T, provider *ops.MockDataProvider) (Plan, int, int, int) {
+		t.Helper()
+		var processed, total, found int
+		plan, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{
+			IncludeTalk: true,
+			OnProgress:  func(p, tot, f int) { processed, total, found = p, tot, f },
+		})
+		require.NoError(t, err)
+		return plan, processed, total, found
+	}
+
+	// No talk page exists: the two synthesised titles are neither progress nor pages found.
+	plan, processed, total, found := build(t, newProvider(map[string]struct{}{}))
+	require.Equal(t, 2, total)
+	require.Equal(t, 2, processed)
+	require.Equal(t, 2, found)
+	require.Equal(t, 2, plan.PageCount) // and what was announced is what gets deleted
+	require.Equal(t, plan.PageCount, found)
+
+	// Both exist: they ride along on their subjects' deletetalk, so they are found — and found still lands on the
+	// page count the summary reports, which is the property that broke.
+	plan, processed, total, found = build(t, newProvider(map[string]struct{}{"Talk:Apple": {}, "Talk:Banana": {}}))
+	require.Equal(t, 2, total)
+	require.Equal(t, 2, processed)
+	require.Equal(t, 4, found)
+	require.Equal(t, 2, plan.OperationCount()) // still one call per subject
+	require.Equal(t, plan.PageCount, found)
+
+	// One of each, the case that hid the bug: the count is wrong by less, not right.
+	plan, _, _, found = build(t, newProvider(map[string]struct{}{"Talk:Apple": {}}))
+	require.Equal(t, 3, found)
+	require.Equal(t, plan.PageCount, found)
+}
+
+// TestBuildPlanFoundSettlesOnPageCount is the invariant the report was a violation of: whatever discovery announces it
+// has found, that is the number of pages the summary then says will be deleted. A page in a namespace with no talk page
+// is in here because "" is not a title, and mistaking it for one silently cost a page.
+func TestBuildPlanFoundSettlesOnPageCount(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages: map[string]string{"Talk:Apple": "Apple"},
+		TalkPages: map[string]string{
+			"Apple": "Talk:Apple",
+			// Special:Nowhere has no talk namespace: GetTalkPageTitle answers "".
+		},
+		ExistingPages: map[string]struct{}{"Talk:Apple": {}},
+		Redirects: map[string][]string{
+			"Apple": {"Cider"},
+			"Cider": {"Old-Apple"},
+		},
+	}
+
+	var found int
+	plan, err := BuildPlan(provider, []string{"Apple", "Special:Nowhere"}, PlanOptions{
+		IncludeTalk:     true,
+		IncludeRedirect: true,
+		OnProgress:      func(_, _, f int) { found = f },
+	})
+	require.NoError(t, err)
+
+	// Apple, Cider, Old-Apple, Special:Nowhere, and Talk:Apple riding along on Apple's deletetalk.
+	require.Equal(t, 5, plan.PageCount)
+	require.Equal(t, plan.PageCount, found)
 }
 
 func TestPlanRemoveMainEntryDropsWholeGroup(t *testing.T) {
@@ -381,4 +468,32 @@ type recordingRedirectProvider struct {
 func (r *recordingRedirectProvider) GetRedirects(titles []string) (map[string][]string, error) {
 	*r.seen = append(*r.seen, append([]string(nil), titles...))
 	return r.MockDataProvider.GetRedirects(titles)
+}
+
+// TestBuildPlanReportsTalkCheck covers the one pass discovery cannot answer from a title alone. It is asked in batches,
+// so it reports the titles to resolve and then their resolution, rather than page by page.
+func TestBuildPlanReportsTalkCheck(t *testing.T) {
+	t.Parallel()
+
+	provider := &ops.MockDataProvider{
+		SubjectPages:  map[string]string{"Talk:Apple": "Apple", "Talk:Banana": "Banana"},
+		TalkPages:     map[string]string{"Apple": "Talk:Apple", "Banana": "Talk:Banana"},
+		ExistingPages: map[string]struct{}{"Talk:Apple": {}},
+	}
+
+	var ticks [][2]int
+	_, err := BuildPlan(provider, []string{"Apple", "Banana"}, PlanOptions{
+		IncludeTalk: true,
+		OnTalkCheck: func(done, total int) { ticks = append(ticks, [2]int{done, total}) },
+	})
+	require.NoError(t, err)
+	require.Equal(t, [][2]int{{0, 2}, {2, 2}}, ticks)
+
+	// Talk pages not wanted: nothing to check, so nothing is reported and the row never appears.
+	ticks = nil
+	_, err = BuildPlan(provider, []string{"Apple"}, PlanOptions{
+		OnTalkCheck: func(done, total int) { ticks = append(ticks, [2]int{done, total}) },
+	})
+	require.NoError(t, err)
+	require.Empty(t, ticks)
 }
