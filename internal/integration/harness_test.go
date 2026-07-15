@@ -122,14 +122,27 @@ func pageExists(t *testing.T, c *api.Client, apiURL, title string) bool {
 }
 
 // deleteViaPlan runs the real workflow execution path (BuildPlan → DeleteTranslator → HttpExecutor), one result per op.
-func deleteViaPlan(t *testing.T, c *api.Client, apiURL string, caps api.WikiCapabilities, titles []string, reason string) []api.APIResult {
+func deleteViaPlan(
+	t *testing.T,
+	c *api.Client,
+	apiURL string,
+	caps api.WikiCapabilities,
+	titles []string,
+	reason string,
+) []api.APIResult {
 	t.Helper()
 	provider := &liveProvider{client: c, apiURL: apiURL, caps: caps, ctx: context.Background()}
 	plan, err := deletion.BuildPlan(provider, titles, deletion.PlanOptions{Reason: reason})
 	require.NoError(t, err)
 	executor, err := api.NewHttpExecutor(c, apiURL)
 	require.NoError(t, err)
-	results, err := deletion.ExecutePlan(context.Background(), plan.ExecutionPlan(), api.DeleteTranslator{}, caps, executor)
+	results, err := deletion.ExecutePlan(
+		context.Background(),
+		plan.ExecutionPlan(),
+		api.DeleteTranslator{},
+		caps,
+		executor,
+	)
 	require.NoError(t, err)
 	return results
 }
@@ -276,12 +289,13 @@ func (p *liveProvider) PagesExist(titles []string) (map[string]bool, error) {
 }
 
 func (p *liveProvider) GetRedirects(title string) ([]string, error) {
+	// Mirrors the real provider: prop=redirects answers "what redirects to title", which is the question. See
+	// deletionDataProvider.GetRedirects for what the backlinks form answers instead.
 	params := map[string]string{
 		"action":        "query",
-		"list":          "backlinks",
-		"bltitle":       title,
-		"bllimit":       "max",
-		"blfilterredir": "redirects",
+		"prop":          "redirects",
+		"titles":        title,
+		"rdlimit":       "max",
 		"formatversion": "2",
 	}
 	var redirects []string
@@ -291,22 +305,29 @@ func (p *liveProvider) GetRedirects(title string) ([]string, error) {
 			return nil, err
 		}
 		query, _ := payload["query"].(map[string]any)
-		items, _ := query["backlinks"].([]any)
-		for _, raw := range items {
-			entry, ok := raw.(map[string]any)
+		pages, _ := query["pages"].([]any)
+		for _, rawPage := range pages {
+			page, ok := rawPage.(map[string]any)
 			if !ok {
 				continue
 			}
-			if name, _ := entry["title"].(string); strings.TrimSpace(name) != "" {
-				redirects = append(redirects, name)
+			items, _ := page["redirects"].([]any)
+			for _, raw := range items {
+				entry, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				if name, _ := entry["title"].(string); strings.TrimSpace(name) != "" {
+					redirects = append(redirects, name)
+				}
 			}
 		}
 		cont, _ := payload["continue"].(map[string]any)
-		next, _ := cont["blcontinue"].(string)
+		next, _ := cont["rdcontinue"].(string)
 		if next == "" {
 			break
 		}
-		params["blcontinue"] = next
+		params["rdcontinue"] = next
 	}
 	return redirects, nil
 }

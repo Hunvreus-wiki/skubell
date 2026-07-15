@@ -2642,13 +2642,18 @@ func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, err
 	return result, nil
 }
 
+// GetRedirects returns the pages that redirect to title.
+//
+// It asks prop=redirects, which answers exactly that question. The obvious-looking alternative — list=backlinks with
+// blfilterredir=redirects — answers a different one: "pages that link to title and are themselves redirects". A
+// redirect pointing somewhere else entirely counts, as long as it happens to link here, so deleting "Cat" would have
+// taken "Kucing" with it, which redirects to Kuching, a city in Malaysia.
 func (p *deletionDataProvider) GetRedirects(title string) ([]string, error) {
 	params := map[string]string{
 		"action":        "query",
-		"list":          "backlinks",
-		"bltitle":       title,
-		"bllimit":       "max",
-		"blfilterredir": "redirects",
+		"prop":          "redirects",
+		"titles":        title,
+		"rdlimit":       "max",
 		"formatversion": "2",
 	}
 	redirects := []string{}
@@ -2658,23 +2663,30 @@ func (p *deletionDataProvider) GetRedirects(title string) ([]string, error) {
 			return nil, fmt.Errorf("query redirects for %q: %w", title, err)
 		}
 		query, _ := payload["query"].(map[string]any)
-		items, _ := query["backlinks"].([]any)
-		for _, raw := range items {
-			entry, ok := raw.(map[string]any)
+		pages, _ := query["pages"].([]any)
+		for _, rawPage := range pages {
+			page, ok := rawPage.(map[string]any)
 			if !ok {
 				continue
 			}
-			name, _ := entry["title"].(string)
-			if strings.TrimSpace(name) != "" {
-				redirects = append(redirects, name)
+			items, _ := page["redirects"].([]any)
+			for _, raw := range items {
+				entry, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				name, _ := entry["title"].(string)
+				if strings.TrimSpace(name) != "" {
+					redirects = append(redirects, name)
+				}
 			}
 		}
 		continueMap, _ := payload["continue"].(map[string]any)
-		next, _ := continueMap["blcontinue"].(string)
+		next, _ := continueMap["rdcontinue"].(string)
 		if next == "" {
 			break
 		}
-		params["blcontinue"] = next
+		params["rdcontinue"] = next
 	}
 	return redirects, nil
 }
