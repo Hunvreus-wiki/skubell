@@ -16,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Hunvreus-wiki/skubell/internal/i18n"
 )
 
 func TestClientGetParsesJSON(t *testing.T) {
@@ -398,6 +400,108 @@ func TestClientGetContextCancelsRequest(t *testing.T) {
 	_, err = client.GetContext(ctx, testServer.URL, map[string]string{"action": "query"})
 	require.ErrorIs(t, err, context.Canceled)
 	require.Less(t, time.Since(start), 2*time.Second)
+}
+
+// TestClientRequestsLocalizedErrors pins the parameters that make MediaWiki answer in the operator's language: the
+// default "bc" error format would reply in English whatever errorlang says.
+func TestClientRequestsLocalizedErrors(t *testing.T) {
+	previous := i18n.CurrentLanguage()
+	defer i18n.SetLanguage(previous)
+	i18n.SetLanguage("br")
+
+	var seenErrorFormat, seenErrorLang string
+	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !assert.NoError(t, request.ParseForm()) {
+			return
+		}
+		seenErrorFormat = request.Form.Get("errorformat")
+		seenErrorLang = request.Form.Get("errorlang")
+		_, _ = writer.Write([]byte(`{"query":{"ok":true}}`))
+	}))
+	defer testServer.Close()
+
+	client, err := NewClient(1000, 0, nil)
+	require.NoError(t, err)
+
+	_, err = client.Get(testServer.URL, map[string]string{"action": "query"})
+	require.NoError(t, err)
+	require.Equal(t, "plaintext", seenErrorFormat)
+	require.Equal(t, "br", seenErrorLang)
+}
+
+// TestClientKeepsExplicitErrorParams lets a caller that needs another shape opt out of the defaults.
+func TestClientKeepsExplicitErrorParams(t *testing.T) {
+	var seenErrorFormat, seenErrorLang string
+	testServer := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !assert.NoError(t, request.ParseForm()) {
+			return
+		}
+		seenErrorFormat = request.Form.Get("errorformat")
+		seenErrorLang = request.Form.Get("errorlang")
+		_, _ = writer.Write([]byte(`{"query":{"ok":true}}`))
+	}))
+	defer testServer.Close()
+
+	client, err := NewClient(1000, 0, nil)
+	require.NoError(t, err)
+
+	_, err = client.Get(testServer.URL, map[string]string{
+		"action":      "query",
+		"errorformat": "wikitext",
+		"errorlang":   "content",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "wikitext", seenErrorFormat)
+	require.Equal(t, "content", seenErrorLang)
+}
+
+// TestExtractAPIErrorReadsLocalizedAndLegacyShapes covers both replies: the errors list carries the localized text and
+// hides maxlag's lag under "data", while wikis predating errorformat still answer with a single English error object.
+func TestExtractAPIErrorReadsLocalizedAndLegacyShapes(t *testing.T) {
+	t.Parallel()
+
+	localized := map[string]any{"errors": []any{map[string]any{
+		"code": "permissiondenied",
+		"text": "N'ho peus ket ar gwirioù ret.",
+	}}}
+	apiErr := extractAPIError(localized)
+	require.NotNil(t, apiErr)
+	require.Equal(t, "permissiondenied", apiErr.Code)
+	require.Equal(t, "N'ho peus ket ar gwirioù ret.", apiErr.Info)
+
+	// Not every caller asks for formatversion=2, and formatversion=1 delivers the same localized text as "*".
+	legacyFormatVersion := map[string]any{"errors": []any{map[string]any{
+		"code": "badtoken",
+		"*":    "Jeton CSRF non valide.",
+	}}}
+	apiErr = extractAPIError(legacyFormatVersion)
+	require.NotNil(t, apiErr)
+	require.Equal(t, "badtoken", apiErr.Code)
+	require.Equal(t, "Jeton CSRF non valide.", apiErr.Info)
+
+	lagging := map[string]any{"errors": []any{map[string]any{
+		"code": "maxlag",
+		"text": "Attente d'un serveur de base de données.",
+		"data": map[string]any{"lag": 4.5},
+	}}}
+	apiErr = extractAPIError(lagging)
+	require.NotNil(t, apiErr)
+	require.True(t, isRetriableAPIError(apiErr))
+	require.InDelta(t, 4.5, apiErr.Lag, 0.001)
+
+	legacy := map[string]any{"error": map[string]any{
+		"code": "maxlag",
+		"info": "Waiting for a database server.",
+		"lag":  2.0,
+	}}
+	apiErr = extractAPIError(legacy)
+	require.NotNil(t, apiErr)
+	require.Equal(t, "maxlag", apiErr.Code)
+	require.Equal(t, "Waiting for a database server.", apiErr.Info)
+	require.InDelta(t, 2.0, apiErr.Lag, 0.001)
+
+	require.Nil(t, extractAPIError(map[string]any{"query": map[string]any{"ok": true}}))
+	require.Nil(t, extractAPIError(map[string]any{"errors": []any{}}))
 }
 
 type roundTripFunc func(request *http.Request) (*http.Response, error)
