@@ -66,17 +66,14 @@
   "del_check_redirects_only": {
     "other": "Adkasoù hepken"
   },
+  "del_checking_categories": {
+    "other": "O wiriañ ar rummadoù : {{.Done}}/{{.Total}}"
+  },
   "del_clear_list": {
     "other": "Goullonderiñ ar roll"
   },
   "del_clear_results": {
     "other": "Goullonderiñ an disoc’hoù"
-  },
-  "del_calculating": {
-    "other": "O jediñ… {{.Percent}} % ({{.Count}} pajenn kavet)"
-  },
-  "del_finalizing": {
-    "other": "O peurechuiñ… {{.Percent}} %"
   },
   "del_computing": {
     "other": "O jediñ ar pajennoù da ziverkañ…"
@@ -238,8 +235,20 @@
   "del_searching": {
     "other": "O klask pajennoù…"
   },
-  "del_verify_empty": {
-    "other": "Pajenn ebet ken — distroit evit kemmañ an dibab."
+  "del_step_categories_pending": {
+    "other": "O wiriañ ar rummadoù"
+  },
+  "del_step_redirects": {
+    "other": "O klask an adkasoù : {{.Processed}}/{{.Total}} pajenn tretet, {{.Found}} pajenn kavet"
+  },
+  "del_step_redirects_pending": {
+    "other": "O klask an adkasoù"
+  },
+  "del_step_talk_pages": {
+    "other": "O klask ar pajennoù kaozeal : {{.Done}}/{{.Total}}"
+  },
+  "del_step_talk_pending": {
+    "other": "O klask ar pajennoù kaozeal"
   },
   "del_summary": {
     "other": "{{.Operations}} ober · {{.Pages}} pajenn a vo diverket."
@@ -261,6 +270,9 @@
   },
   "del_tab_manual": {
     "other": "Merkañ dre zorn"
+  },
+  "del_verify_empty": {
+    "other": "Pajenn ebet ken — distroit evit kemmañ an dibab."
   },
   "journal_action_fallback": {
     "other": "(ober)"

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -122,6 +123,9 @@ type deleteWorkflowScreen struct {
 	previewComputing     bool
 	previewCancel        context.CancelFunc
 	verificationInfo     *widget.Label
+	stepRedirects        *verificationStep
+	stepTalkPages        *verificationStep
+	stepCategories       *verificationStep
 	verificationList     *deletableList
 	selectedPreviewIndex int
 
@@ -347,6 +351,11 @@ func (s *deleteWorkflowScreen) computePreview() {
 		},
 	}
 
+	// Announce the passes that will run before any of them has anything to report, so the reader sees the whole plan
+	// rather than rows arriving one at a time. Which ones run is already settled: the two options just chosen, and
+	// whether the selection holds a category for the last one to have anything to check.
+	s.showPendingVerificationSteps(titles)
+
 	go func() {
 		defer cancel()
 
@@ -359,10 +368,16 @@ func (s *deleteWorkflowScreen) computePreview() {
 			fyne.Do(update)
 		}
 
-		// Phase 1: discovery. found grows as redirects/talk pages surface, so this is a live count, not a fraction of
-		// a known total.
-		planOptions.OnProgress = func(processed, found int) {
-			throttled(func() { s.verificationInfo.SetText(calcProgressLabel(processed, found)) })
+		// Discovery, measured against the reference pages — the only total known this early.
+		if planOptions.IncludeRedirect {
+			planOptions.OnProgress = func(processed, total, found int) {
+				throttled(func() {
+					s.stepRedirects.set(processed, total, redirectStepLabel(processed, total, found))
+				})
+			}
+		}
+		planOptions.OnTalkCheck = func(done, total int) {
+			throttled(func() { s.stepTalkPages.set(done, total, talkStepLabel(done, total)) })
 		}
 		plan, err := deletion.BuildPlan(provider, titles, planOptions)
 		if err != nil {
@@ -378,12 +393,15 @@ func (s *deleteWorkflowScreen) computePreview() {
 		fyne.Do(func() {
 			s.previewRows = base
 			s.verificationList.Refresh()
-			s.verificationInfo.SetText(finalizeProgressLabel(0, len(base)))
+			// Both passes are over: fill their bars rather than leave them wherever the throttle last let them land.
+			// Either can finish inside one throttle window.
+			s.stepRedirects.complete()
+			s.stepTalkPages.complete()
 		})
 
-		// Phase 2: category-emptiness checks over the known total, so this is a real percentage.
+		// The category-emptiness checks: a request per category, and nothing at all for any other page.
 		rows, err := s.buildPreviewRows(ctx, plan, func(done, total int) {
-			throttled(func() { s.verificationInfo.SetText(finalizeProgressLabel(done, total)) })
+			throttled(func() { s.stepCategories.set(done, total, categoryCheckLabel(done, total)) })
 		})
 		fyne.Do(func() {
 			if err != nil {
@@ -394,6 +412,7 @@ func (s *deleteWorkflowScreen) computePreview() {
 			s.previewCancel = nil
 			s.previewPlan = plan
 			s.previewRows = rows
+			s.completeVerificationSteps()
 			s.verificationInfo.SetText(t.Td(
 				"del_summary",
 				"{{.Operations}} operations · {{.Pages}} pages will be deleted.",
@@ -416,30 +435,152 @@ func (s *deleteWorkflowScreen) finishPreviewWithError(ctx context.Context, err e
 	}
 }
 
-// deletionPercent is a clamped integer percentage; total <= 0 yields 0 (unknown).
-func deletionPercent(done, total int) int {
-	if total <= 0 {
-		return 0
-	}
-	return min(100, max(0, done*100/total))
+// verificationProgressWidth keeps each bar a fixed strip at the left of its row: a ProgressBar sizes itself to the text
+// it draws, and these draw none.
+const verificationProgressWidth = 120
+
+// verificationStep is one of the passes on the way to the final list. Each says what it is doing and counts its own
+// work, so a slow run shows which step is slow rather than hiding it behind one number: finding redirects is a request
+// per level of the redirect chain, the talk-page check is one batched query, and the category check is a request per
+// category.
+//
+// The rows that will run are all shown from the moment the step opens, before any of them has anything to report, so
+// the reader can see the whole plan rather than watch rows appear and vanish. Which rows those are is decided by the
+// options already chosen: no redirects wanted, no redirects row.
+type verificationStep struct {
+	bar   *widget.ProgressBar
+	label *widget.Label
+	row   fyne.CanvasObject
+	// header is the container the row is laid out in. Showing a hidden child does not tell its ancestors that their
+	// height changed, so without refreshing it a shown row is Visible() at zero height — present, and invisible.
+	header *fyne.Container
 }
 
-// calcProgressLabel is the phase-1 (discovery) status line: a live percentage of processed-so-far plus the running
-// count of pages found.
-func calcProgressLabel(processed, found int) string {
+func newVerificationStep() *verificationStep {
+	bar := widget.NewProgressBar()
+	bar.TextFormatter = func() string { return "" } // the label beside it carries the words
+	label := widget.NewLabel("")
+	step := &verificationStep{bar: bar, label: label}
+	step.row = container.NewBorder(
+		nil, nil,
+		container.NewGridWrap(fyne.NewSize(verificationProgressWidth, label.MinSize().Height), bar),
+		nil,
+		label,
+	)
+	step.row.Hide()
+	return step
+}
+
+// pending shows the row before its work starts. Two of the three cannot know their total until discovery has finished —
+// how many talk pages there are to check is one of the things being discovered — so the row names itself and leaves the
+// bar empty rather than inventing a number or waiting to appear.
+func (v *verificationStep) pending(text string) {
+	wasHidden := !v.row.Visible()
+	v.bar.Max = 1
+	v.bar.SetValue(0)
+	v.label.SetText(text)
+	v.row.Show()
+	if wasHidden {
+		v.refreshHeader()
+	}
+}
+
+// set moves the step to done/total. A total of zero means there turned out to be nothing to do, and the row goes: a
+// batch with no categories in it should not be told about the category check.
+func (v *verificationStep) set(done, total int, text string) {
+	if total <= 0 {
+		v.hide()
+		return
+	}
+	wasHidden := !v.row.Visible()
+	v.bar.Max = float64(total)
+	v.bar.SetValue(float64(min(done, total)))
+	v.label.SetText(text)
+	v.row.Show()
+	if wasHidden {
+		v.refreshHeader()
+	}
+}
+
+// refreshHeader re-lays out the rows after one appears or goes. Fyne sizes a container from its visible children, but
+// showing a child only refreshes the child: the row would sit at zero height, visible to code and to no one else.
+func (v *verificationStep) refreshHeader() {
+	if v.header != nil {
+		v.header.Refresh()
+	}
+}
+
+// complete fills the bar. A step can finish inside a single throttle window — discovery without redirects needs no
+// request at all — which would otherwise leave the bar showing the first tick it happened to catch.
+func (v *verificationStep) complete() {
+	if v.row.Visible() {
+		v.bar.SetValue(v.bar.Max)
+	}
+}
+
+func (v *verificationStep) hide() {
+	if !v.row.Visible() {
+		return
+	}
+	v.row.Hide()
+	v.refreshHeader()
+}
+
+// showPendingVerificationSteps puts up the rows for the passes that will run, before any of them has a count. The two
+// options settle their own rows. The category row needs a category in the selection to have anything to check — a
+// discovered redirect can be one too, so the row can still arrive later, but the common case is decided here rather
+// than left to appear mid-run.
+func (s *deleteWorkflowScreen) showPendingVerificationSteps(titles []string) {
+	if s.optionIncludeRedir {
+		s.stepRedirects.pending(t.T("del_step_redirects_pending", "Finding redirects"))
+	}
+	if s.optionIncludeTalk {
+		s.stepTalkPages.pending(t.T("del_step_talk_pending", "Checking talk pages"))
+	}
+	if slices.ContainsFunc(titles, s.isCategoryTitle) {
+		s.stepCategories.pending(t.T("del_step_categories_pending", "Checking categories"))
+	}
+}
+
+// completeVerificationSteps fills the rows that ran and leaves them standing. They are the record of the search the
+// user asked for: a short list finishes each pass faster than it can be watched, and clearing the rows at the end
+// turned that into a flicker — the answer arrives having apparently done nothing.
+func (s *deleteWorkflowScreen) completeVerificationSteps() {
+	for _, step := range []*verificationStep{s.stepRedirects, s.stepTalkPages, s.stepCategories} {
+		if step != nil {
+			step.complete()
+		}
+	}
+}
+
+// redirectStepLabel names the discovery pass by the thing that costs time in it: one request per page asking the wiki
+// what redirects there. It counts the reference pages, not everything discovered, and reports found beside them.
+func redirectStepLabel(processed, total, found int) string {
 	return t.Td(
-		"del_calculating",
-		"Calculating… {{.Percent}}% ({{.Count}} pages found)",
-		map[string]any{"Percent": deletionPercent(processed, found), "Count": found},
+		"del_step_redirects",
+		"Finding redirects: {{.Processed}}/{{.Total}} pages processed, {{.Found}} pages found",
+		map[string]any{"Processed": processed, "Total": total, "Found": found},
 	)
 }
 
-// finalizeProgressLabel is the phase-2 (category checks) status line: a real percentage over the known total.
-func finalizeProgressLabel(done, total int) string {
+// talkStepLabel names the associated-talk-page existence check. The wiki answers in batches, so it moves in jumps.
+func talkStepLabel(done, total int) string {
 	return t.Td(
-		"del_finalizing",
-		"Finalizing… {{.Percent}}%",
-		map[string]any{"Percent": deletionPercent(done, total)},
+		"del_step_talk_pages",
+		"Checking talk pages: {{.Done}}/{{.Total}}",
+		map[string]any{"Done": done, "Total": total},
+	)
+}
+
+// categoryCheckLabel is the status line for the category-emptiness checks, which are the only work left once the list
+// is known. It names them rather than saying "finalizing", because it counts categories and not pages, and a batch with
+// no categories never shows it at all. The bar stays where discovery left it — full — this being a different pass over
+// a different set.
+func categoryCheckLabel(done, total int) string {
+	return t.Td(
+		"del_checking_categories",
+		"Checking categories: {{.Done}}/{{.Total}}",
+		map[string]any{"Done": done, "Total": total},
 	)
 }
 
@@ -453,9 +594,22 @@ func (s *deleteWorkflowScreen) buildPreviewRows(
 	for _, item := range plan.Items {
 		deleted[item.Title] = struct{}{}
 	}
-	total := len(plan.Items)
-	rows := make([]previewRow, 0, total)
-	for i, item := range plan.Items {
+
+	// A category is the only row that costs a request here, so it is the only one worth counting. Ticking once per page
+	// announced work for pages nothing was ever done to, and a batch with no categories at all claimed a full pass.
+	categories := 0
+	for _, item := range plan.Items {
+		if s.isCategoryTitle(item.Title) {
+			categories++
+		}
+	}
+	if onProgress != nil && categories > 0 {
+		onProgress(0, categories)
+	}
+
+	rows := make([]previewRow, 0, len(plan.Items))
+	checked := 0
+	for _, item := range plan.Items {
 		row := previewRow{item: item}
 		if s.isCategoryTitle(item.Title) {
 			remaining, err := s.categoryMembersOutsideSet(ctx, item.Title, deleted)
@@ -466,11 +620,12 @@ func (s *deleteWorkflowScreen) buildPreviewRows(
 				row.categoryNotEmpty = true
 				row.remainingMembers = remaining
 			}
+			checked++
+			if onProgress != nil {
+				onProgress(checked, categories)
+			}
 		}
 		rows = append(rows, row)
-		if onProgress != nil {
-			onProgress(i+1, total)
-		}
 	}
 	return rows, nil
 }
@@ -796,6 +951,9 @@ func (s *deleteWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
 
 func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 	s.verificationInfo = widget.NewLabel(t.T("del_computing", "Computing pages to delete…"))
+	s.stepRedirects = newVerificationStep()
+	s.stepTalkPages = newVerificationStep()
+	s.stepCategories = newVerificationStep()
 	detail := widget.NewLabel(s.optionSummary())
 	s.previewRows = nil
 
@@ -824,8 +982,15 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 		fyne.TextAlignLeading,
 		fyne.TextStyle{Italic: true},
 	)
+	// One row per pass that can cost time, each hidden until it has work, so what is taking the time says so itself.
+	steps := container.NewVBox(s.stepRedirects.row, s.stepTalkPages.row, s.stepCategories.row)
+	header := container.NewVBox(s.verificationInfo, steps, detail, widget.NewSeparator())
+	for _, step := range []*verificationStep{s.stepRedirects, s.stepTalkPages, s.stepCategories} {
+		step.header = header
+	}
+
 	return container.NewBorder(
-		container.NewVBox(s.verificationInfo, detail, widget.NewSeparator()),
+		header,
 		container.NewVBox(widget.NewSeparator(), legend),
 		nil,
 		nil,
