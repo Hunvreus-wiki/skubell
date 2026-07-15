@@ -57,6 +57,10 @@ type Preferences struct {
 	JournalDirectory          string  `json:"journal_directory,omitempty"`
 	ShowAPICallsInLog         bool    `json:"show_api_calls_in_log"`
 	LastConnectedWiki         string  `json:"last_connected_wiki,omitempty"`
+	// Window size as the user last left it. Position is deliberately absent: Fyne exposes no way to place a window, and
+	// under Wayland a client may not position itself at all.
+	WindowWidth  float32 `json:"window_width,omitempty"`
+	WindowHeight float32 `json:"window_height,omitempty"`
 }
 
 // DefaultConfig returns an initialized configuration with default values.
