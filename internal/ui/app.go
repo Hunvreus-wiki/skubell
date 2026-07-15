@@ -205,7 +205,9 @@ func resolveLanguage(preference string) string {
 // Run starts the UI.
 func (a *App) Run() {
 	a.applyThemeFromConfig()
+	a.applyWindowSizeFromConfig()
 	a.window.SetCloseIntercept(func() {
+		a.rememberWindowSize()
 		a.logout()
 		a.window.Close()
 	})
@@ -410,6 +412,41 @@ func (a *App) logout() {
 	}
 	a.client = nil
 	a.apiURL = ""
+}
+
+// minimumRememberedWindow is the smallest window worth restoring. A saved size below it is treated as absent rather
+// than obeyed: a window can be dragged down to nothing, and reopening the app into a sliver it cannot be used from is
+// worse than forgetting.
+var minimumRememberedWindow = fyne.NewSize(480, 360)
+
+// applyWindowSizeFromConfig restores the window to the size the user left it, or leaves the caller's default alone when
+// nothing was saved. Position is not restored — Fyne exposes no way to place a window, and Wayland forbids a client
+// from placing itself, so there is nothing to remember.
+func (a *App) applyWindowSizeFromConfig() {
+	saved := fyne.NewSize(a.config.Preferences.WindowWidth, a.config.Preferences.WindowHeight)
+	if saved.Width < minimumRememberedWindow.Width || saved.Height < minimumRememberedWindow.Height {
+		return
+	}
+	a.window.Resize(saved)
+}
+
+// rememberWindowSize records the window's size on the way out. It writes only when the size actually changed, so
+// closing the app does not rewrite the config file for nothing, and a failure is logged rather than surfaced: the user
+// asked to quit, and a dialog they cannot act on is no way to answer.
+func (a *App) rememberWindowSize() {
+	size := a.window.Canvas().Size()
+	if size.Width < minimumRememberedWindow.Width || size.Height < minimumRememberedWindow.Height {
+		return
+	}
+	cfg := a.config
+	if cfg.Preferences.WindowWidth == size.Width && cfg.Preferences.WindowHeight == size.Height {
+		return
+	}
+	cfg.Preferences.WindowWidth = size.Width
+	cfg.Preferences.WindowHeight = size.Height
+	if err := a.saveConfig(cfg); err != nil {
+		logrus.WithError(err).Warn("skubell: failed to remember the window size")
+	}
 }
 
 func (a *App) applyThemeFromConfig() {
