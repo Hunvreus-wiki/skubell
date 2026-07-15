@@ -76,7 +76,7 @@ func TestConnectFullSequence(t *testing.T) {
 	require.Equal(t, "1.45.1", result.Capabilities.Version)
 	require.True(t, result.Capabilities.HasHighLimits)
 	require.Contains(t, result.Capabilities.UserRights, "delete")
-	require.NotEmpty(t, result.ReasonDropdown[reasonDelete].Categories)
+	require.NotEmpty(t, result.ReasonDropdown[ReasonActionDelete].Categories)
 }
 
 func TestConnectWrongCustomURLReturnsGuidance(t *testing.T) {

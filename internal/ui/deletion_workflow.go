@@ -81,7 +81,6 @@ type deleteWorkflowScreen struct {
 	searchResults   []searchResult
 	journalEntries  []ops.JournalEntry
 	reasons         []string
-	reasonsLoading  bool
 
 	optionReasonChoice   string
 	optionReasonFreeText string
@@ -285,8 +284,9 @@ func (s *deleteWorkflowScreen) showOptionsStep() {
 		ProceedEnabled: true,
 		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
+	// Load before building: the reasons come from the session cache, so the Select can be built already populated.
+	s.loadReasons()
 	s.wf.SetContent(s.buildOptionsContent())
-	s.loadReasonsIfNeeded()
 }
 
 func (s *deleteWorkflowScreen) showVerificationStep() {
@@ -1718,74 +1718,13 @@ func resultsFromTitleSet(items map[string]struct{}) []searchResult {
 	return results
 }
 
-func (s *deleteWorkflowScreen) loadReasonsIfNeeded() {
-	if len(s.reasons) > 0 || s.reasonsLoading || s.app.client == nil {
+// loadReasons fills the reason list from the reasons cached when the session connected, so reaching the options step
+// costs no request and cannot fail here.
+func (s *deleteWorkflowScreen) loadReasons() {
+	if len(s.reasons) > 0 {
 		return
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	progressBar := widget.NewProgressBarInfinite()
-	progressBar.Start()
-	cancelButton := widget.NewButton(t.T("common_cancel", "Cancel"), func() {
-		cancel()
-	})
-	progress := dialog.NewCustomWithoutButtons(
-		t.T("del_err_reasons", "Delete reasons"),
-		container.NewVBox(
-			widget.NewLabel(t.T("del_loading_reasons", "Loading predefined reasons...")),
-			progressBar,
-			container.NewHBox(cancelButton),
-		),
-		s.app.window,
-	)
-	progress.SetOnClosed(func() {
-		cancel()
-	})
-	progress.Show()
-	s.reasonsLoading = true
-	go func() {
-		dropdowns, err := api.FetchReasonDropdownsContext(
-			ctx,
-			s.app.client,
-			s.app.apiURL,
-			s.app.currentWiki.AdminLanguage,
-		)
-		reasons := []string{}
-		if err == nil {
-			if deleteReasons, ok := dropdowns["delete"]; ok {
-				for _, category := range deleteReasons.Categories {
-					for _, reason := range category.Reasons {
-						if strings.TrimSpace(reason) != "" {
-							reasons = append(reasons, reason)
-						}
-					}
-				}
-			}
-		}
-		sort.Strings(reasons)
-		fyne.Do(func() {
-			s.reasonsLoading = false
-			progress.Hide()
-			progressBar.Stop()
-			if err != nil {
-				if ctx.Err() != nil || errors.Is(err, context.Canceled) {
-					return
-				}
-				s.app.showError(t.T("del_err_reasons", "Delete reasons"), err)
-				return
-			}
-			s.reasons = reasons
-			if s.optionReasonSelect != nil {
-				s.optionReasonSelect.Options = s.reasonSelectOptions()
-				s.optionReasonSelect.Refresh()
-				if s.optionReasonChoice != "" {
-					s.optionReasonSelect.SetSelected(s.optionReasonChoice)
-				} else if len(s.optionReasonSelect.Options) > 0 {
-					s.optionReasonSelect.SetSelected(s.optionReasonSelect.Options[0])
-				}
-			}
-		})
-	}()
+	s.reasons = s.app.reasonsForAction(api.ReasonActionDelete)
 }
 
 func (s *deleteWorkflowScreen) reasonSelectOptions() []string {
@@ -1797,9 +1736,6 @@ func (s *deleteWorkflowScreen) reasonSelectOptions() []string {
 			continue
 		}
 		options = append(options, reason)
-	}
-	if len(options) == 1 && len(s.reasons) == 0 {
-		options = append(options, t.T("del_reason_loading", "(loading...)"))
 	}
 	return options
 }
@@ -2141,7 +2077,7 @@ func (s *deleteWorkflowScreen) categoryHasMembers(ctx context.Context, title str
 
 func (s *deleteWorkflowScreen) combinedReason() string {
 	reason := strings.TrimSpace(s.optionReasonChoice)
-	if reason == t.T("del_reason_loading", "(loading...)") || reason == t.T("del_reason_none", "(none)") {
+	if reason == t.T("del_reason_none", "(none)") {
 		reason = ""
 	}
 	extra := strings.TrimSpace(s.optionReasonFreeText)

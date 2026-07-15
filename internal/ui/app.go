@@ -50,6 +50,11 @@ type App struct {
 	currentCaps          api.WikiCapabilities
 	workflowAvailability map[string]api.WorkflowAvailability
 
+	// reasonDropdowns caches the wiki's predefined reasons for every action, keyed by api.ReasonAction*. Connecting
+	// already fetches them (and fails if it cannot), so workflows read them from here instead of re-querying the wiki
+	// each time they reach their options step. Reset on disconnect, since the next wiki has its own reasons.
+	reasonDropdowns map[string]api.ReasonDropdown
+
 	// sessionJournal accumulates the actions performed since the current connection began; the welcome-screen footer
 	// renders its tail, and sessionJournalWriter (when set) persists each entry to disk. Reset when a new session
 	// starts and guarded by the mutex because workflows may record entries from a background goroutine.
@@ -269,12 +274,33 @@ func (a *App) disconnect() {
 	a.currentUser = ""
 	a.currentCaps = api.WikiCapabilities{}
 	a.workflowAvailability = nil
+	a.reasonDropdowns = nil
 	a.resetSessionJournal()
 }
 
 func (a *App) returnToStartup() {
 	a.disconnect()
 	a.startup()
+}
+
+// reasonsForAction returns the connected wiki's predefined reasons for one api.ReasonAction*, flattened across the
+// dropdown's categories, trimmed and sorted. It reads the per-session cache filled at connect time, so it never blocks
+// on the network; an action the wiki defines no reasons for yields an empty list.
+func (a *App) reasonsForAction(action string) []string {
+	dropdown, ok := a.reasonDropdowns[action]
+	if !ok {
+		return nil
+	}
+	reasons := []string{}
+	for _, category := range dropdown.Categories {
+		for _, reason := range category.Reasons {
+			if reason = strings.TrimSpace(reason); reason != "" {
+				reasons = append(reasons, reason)
+			}
+		}
+	}
+	slices.Sort(reasons)
+	return reasons
 }
 
 func (a *App) connectAndOpenWelcome(wiki config.WikiEntry) {
@@ -338,6 +364,7 @@ func (a *App) connectAndOpenWelcome(wiki config.WikiEntry) {
 			a.currentUser = result.Username
 			a.currentCaps = result.Capabilities
 			a.workflowAvailability = api.EvaluateWorkflowAvailability(result.Capabilities.UserRights)
+			a.reasonDropdowns = result.ReasonDropdown
 			a.apiURL = working.APIURL
 			a.resetSessionJournal()
 			a.startSessionJournal()

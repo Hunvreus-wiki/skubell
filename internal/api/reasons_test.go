@@ -18,8 +18,8 @@ func TestParseReasonDropdownsFromFixture(t *testing.T) {
 	dropdowns, err := parseReasonDropdownResponse(fixture)
 	require.NoError(t, err)
 
-	deleteDropdown := dropdowns[reasonDelete]
-	require.Equal(t, reasonDelete, deleteDropdown.Action)
+	deleteDropdown := dropdowns[ReasonActionDelete]
+	require.Equal(t, ReasonActionDelete, deleteDropdown.Action)
 	require.Len(t, deleteDropdown.Categories, 2)
 	require.Equal(t, "Common deletion reasons", deleteDropdown.Categories[0].Label)
 	require.Equal(t, []string{

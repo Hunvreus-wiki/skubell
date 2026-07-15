@@ -105,9 +105,6 @@
   "del_err_reason_text_required": {
     "other": "additional reason text is required when {{.None}} is selected"
   },
-  "del_err_reasons": {
-    "other": "Delete reasons"
-  },
   "del_err_verify": {
     "other": "Verify"
   },
@@ -169,9 +166,6 @@
   "del_import_file": {
     "other": "Import file..."
   },
-  "del_loading_reasons": {
-    "other": "Loading predefined reasons..."
-  },
   "del_namespace_any": {
     "other": "(any)"
   },
@@ -205,9 +199,6 @@
   },
   "del_proceed_options": {
     "other": "Proceed to options ->"
-  },
-  "del_reason_loading": {
-    "other": "(loading...)"
   },
   "del_reason_none": {
     "other": "(none)"
