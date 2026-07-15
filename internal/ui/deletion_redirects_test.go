@@ -42,9 +42,9 @@ func TestGetRedirectsAsksWhatRedirectsHere(t *testing.T) {
 	require.NoError(t, err)
 	provider := &deletionDataProvider{client: client, apiURL: server.URL}
 
-	redirects, err := provider.GetRedirects("Cat")
+	byTitle, err := provider.GetRedirects([]string{"Cat"})
 	require.NoError(t, err)
-	require.Equal(t, []string{"Cats", "Domestic cat"}, redirects)
+	require.Equal(t, map[string][]string{"Cat": {"Cats", "Domestic cat"}}, byTitle)
 
 	require.Equal(t, "redirects", seen.Get("prop"))
 	require.Equal(t, "Cat", seen.Get("titles"))
@@ -83,9 +83,9 @@ func TestGetRedirectsFollowsContinuation(t *testing.T) {
 	require.NoError(t, err)
 	provider := &deletionDataProvider{client: client, apiURL: server.URL}
 
-	redirects, err := provider.GetRedirects("Cat")
+	byTitle, err := provider.GetRedirects([]string{"Cat"})
 	require.NoError(t, err)
-	require.Equal(t, []string{"Cats", "Felis catus"}, redirects)
+	require.Equal(t, map[string][]string{"Cat": {"Cats", "Felis catus"}}, byTitle)
 	require.Equal(t, 2, call)
 }
 
@@ -104,7 +104,7 @@ func TestGetRedirectsOnPageWithNone(t *testing.T) {
 	require.NoError(t, err)
 	provider := &deletionDataProvider{client: client, apiURL: server.URL}
 
-	redirects, err := provider.GetRedirects("Nowhere")
+	byTitle, err := provider.GetRedirects([]string{"Nowhere"})
 	require.NoError(t, err)
-	require.Empty(t, redirects)
+	require.Empty(t, byTitle)
 }

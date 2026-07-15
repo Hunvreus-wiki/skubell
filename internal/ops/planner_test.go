@@ -49,9 +49,9 @@ func TestMockDataProviderReturnsFixtures(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "Talk:Apple", talk)
 
-	redirects, err := mock.GetRedirects("Apple")
+	redirects, err := mock.GetRedirects([]string{"Apple"})
 	require.NoError(t, err)
-	require.Equal(t, []string{"Apple (fruit)"}, redirects)
+	require.Equal(t, map[string][]string{"Apple": {"Apple (fruit)"}}, redirects)
 
 	block, err := mock.GetBlockInfo("TestBlocked")
 	require.NoError(t, err)

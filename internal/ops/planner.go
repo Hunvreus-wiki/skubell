@@ -56,7 +56,10 @@ type DataProvider interface {
 	// GetSubjectPageTitle returns the subject page of a talk page, or "" when the title is not a talk page. It is the
 	// inverse of GetTalkPageTitle and lets callers classify a title as subject vs talk.
 	GetSubjectPageTitle(title string) (string, error)
-	GetRedirects(title string) ([]string, error)
+	// GetRedirects returns, for each requested title, the pages that redirect to it. It takes a batch because the API
+	// answers a batch: asking one title at a time turns a page list into a round trip per page, and the walk is
+	// transitive, so it compounds. A title with no redirects may be absent from the result.
+	GetRedirects(titles []string) (map[string][]string, error)
 	// PagesExist reports, for each requested title, whether the page exists. Titles absent from the result map are
 	// treated as non-existent.
 	PagesExist(titles []string) (map[string]bool, error)
@@ -128,12 +131,18 @@ func (m *MockDataProvider) GetSubjectPageTitle(title string) (string, error) {
 	return m.SubjectPages[title], nil
 }
 
-func (m *MockDataProvider) GetRedirects(title string) ([]string, error) {
+func (m *MockDataProvider) GetRedirects(titles []string) (map[string][]string, error) {
 	if m == nil {
 		return nil, errors.New("mock data provider is nil")
 	}
 	// A missing entry means "no redirects", matching the real provider.
-	return m.Redirects[title], nil
+	result := make(map[string][]string, len(titles))
+	for _, title := range titles {
+		if redirects := m.Redirects[title]; len(redirects) > 0 {
+			result[title] = redirects
+		}
+	}
+	return result, nil
 }
 
 func (m *MockDataProvider) PagesExist(titles []string) (map[string]bool, error) {

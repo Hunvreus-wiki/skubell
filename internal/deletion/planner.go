@@ -180,41 +180,50 @@ func BuildPlan(provider ops.DataProvider, titles []string, options PlanOptions) 
 		return subject, nil
 	}
 
+	// The walk goes a level at a time rather than a page at a time: the wiki answers a batch of titles in one request,
+	// so asking page by page turned a list into a round trip per page — and since each redirect found is itself asked
+	// about, that compounds down the chain.
 	processed := 0
 	for len(queue) > 0 {
-		title := queue[0]
-		queue = queue[1:]
-		processed++
-		itemRoot := root[title]
+		level := queue
+		queue = nil
 
+		redirectsOf := map[string][]string{}
 		if options.IncludeRedirect {
-			redirects, err := provider.GetRedirects(title)
+			found, err := provider.GetRedirects(level)
 			if err != nil {
-				return Plan{}, fmt.Errorf("query redirects for %q: %w", title, err)
+				return Plan{}, fmt.Errorf("query redirects: %w", err)
 			}
-			for _, redirect := range redirects {
+			redirectsOf = found
+		}
+
+		for _, title := range level {
+			processed++
+			itemRoot := root[title]
+
+			for _, redirect := range redirectsOf[title] {
 				enqueue(redirect, title, itemRoot)
 			}
-		}
 
-		if options.IncludeTalk {
-			subject, err := subjectOf(title)
-			if err != nil {
-				return Plan{}, err
-			}
-			if subject == "" {
-				// title is a subject page: its talk page is removed by deletetalk. Enqueue it so redirects pointing at
-				// the talk page are found too.
-				talk, err := provider.GetTalkPageTitle(title)
+			if options.IncludeTalk {
+				subject, err := subjectOf(title)
 				if err != nil {
-					return Plan{}, fmt.Errorf("resolve talk page of %q: %w", title, err)
+					return Plan{}, err
 				}
-				enqueue(talk, "", itemRoot)
+				if subject == "" {
+					// title is a subject page: its talk page is removed by deletetalk. Enqueue it so redirects pointing
+					// at the talk page are found too.
+					talk, err := provider.GetTalkPageTitle(title)
+					if err != nil {
+						return Plan{}, fmt.Errorf("resolve talk page of %q: %w", title, err)
+					}
+					enqueue(talk, "", itemRoot)
+				}
 			}
-		}
 
-		if options.OnProgress != nil {
-			options.OnProgress(processed, len(root))
+			if options.OnProgress != nil {
+				options.OnProgress(processed, len(root))
+			}
 		}
 	}
 
