@@ -1,6 +1,6 @@
 {
   "common_back": {
-    "other": "<- Back"
+    "other": "Back"
   },
   "common_cancel": {
     "other": "Cancel"
@@ -42,8 +42,8 @@
     "other": "Add to list"
   },
   "del_category_not_empty": {
-    "one": "  ⚠ category not empty ({{.Count}} member remaining) — deletion will fail",
-    "other": "  ⚠ category not empty ({{.Count}} members remaining) — deletion will fail"
+    "one": "category not empty ({{.Count}} member remaining) — deletion will fail",
+    "other": "category not empty ({{.Count}} members remaining) — deletion will fail"
   },
   "del_check_broken_redirects": {
     "other": "Broken redirects"
@@ -181,6 +181,12 @@
   "del_import_file": {
     "other": "Import file..."
   },
+  "del_legend_redirect": {
+    "other": "redirect to a selected page"
+  },
+  "del_legend_talk": {
+    "other": "talk page also deleted"
+  },
   "del_namespace_any": {
     "other": "(any)"
   },
@@ -209,11 +215,8 @@
   "del_press_proceed": {
     "other": "Press Proceed to execute the deletion workflow."
   },
-  "del_preview_legend": {
-    "other": "💬 talk page also deleted   ·   ↳ redirect to a selected page"
-  },
   "del_proceed_options": {
-    "other": "Proceed to options ->"
+    "other": "Proceed to options"
   },
   "del_reason_none": {
     "other": "(none)"
@@ -296,7 +299,7 @@
     "other": "Unknown"
   },
   "startup_add_wiki": {
-    "other": "+ Add a new wiki"
+    "other": "Add a new wiki"
   },
   "startup_delete_confirm": {
     "other": "Remove \"{{.Name}}\" from the wiki list?"

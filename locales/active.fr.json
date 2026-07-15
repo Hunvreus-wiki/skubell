@@ -1,6 +1,6 @@
 {
   "common_back": {
-    "other": "← Retour"
+    "other": "Retour"
   },
   "common_cancel": {
     "other": "Annuler"
@@ -42,8 +42,8 @@
     "other": "Ajouter à la liste"
   },
   "del_category_not_empty": {
-    "one": "  ⚠ catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
-    "other": "  ⚠ catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
+    "one": "catégorie non vide ({{.Count}} membre restant) — la suppression échouera",
+    "other": "catégorie non vide ({{.Count}} membres restants) — la suppression échouera"
   },
   "del_check_broken_redirects": {
     "other": "Redirections brisées"
@@ -181,6 +181,12 @@
   "del_import_file": {
     "other": "Importer un fichier…"
   },
+  "del_legend_redirect": {
+    "other": "redirection vers une page sélectionnée"
+  },
+  "del_legend_talk": {
+    "other": "page de discussion aussi supprimée"
+  },
   "del_namespace_any": {
     "other": "(tous)"
   },
@@ -209,11 +215,8 @@
   "del_press_proceed": {
     "other": "Appuyez sur Continuer pour exécuter la suppression."
   },
-  "del_preview_legend": {
-    "other": "💬 page de discussion aussi supprimée   ·   ↳ redirection vers une page sélectionnée"
-  },
   "del_proceed_options": {
-    "other": "Continuer vers les options →"
+    "other": "Continuer vers les options"
   },
   "del_reason_none": {
     "other": "(aucun)"
@@ -296,7 +299,7 @@
     "other": "Inconnu"
   },
   "startup_add_wiki": {
-    "other": "+ Ajouter un wiki"
+    "other": "Ajouter un wiki"
   },
   "startup_delete_confirm": {
     "other": "Retirer « {{.Name}} » de la liste des wikis ?"

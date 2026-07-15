@@ -71,7 +71,7 @@ func (s *StartupScreen) build() fyne.CanvasObject {
 	rightPad.SetMinSize(fyne.NewSize(outerPadWidth, 0))
 	scrollArea := container.NewBorder(nil, nil, leftPad, rightPad, scroll)
 
-	addButton := widget.NewButton(t.T("startup_add_wiki", "+ Add a new wiki"), func() {
+	addButton := widget.NewButton("+ "+t.T("startup_add_wiki", "Add a new wiki"), func() {
 		screen := NewWikiSettingsScreen(s.app, WikiSettingsModeCreate, config.WikiEntry{})
 		s.app.window.SetContent(screen.Canvas())
 	})

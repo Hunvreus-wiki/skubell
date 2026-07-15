@@ -1,6 +1,6 @@
 {
   "common_back": {
-    "other": "← Distreiñ"
+    "other": "Distreiñ"
   },
   "common_cancel": {
     "other": "Nullañ"
@@ -42,8 +42,8 @@
     "other": "Ouzhpennañ d'ar roll"
   },
   "del_category_not_empty": {
-    "one": "  ⚠ rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur",
-    "other": "  ⚠ rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur"
+    "one": "rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur",
+    "other": "rummad nann-goullo ({{.Count}} ezel a chom) — c'hwitañ a raio an diverkadur"
   },
   "del_check_broken_redirects": {
     "other": "Adkasoù torr"
@@ -181,6 +181,12 @@
   "del_import_file": {
     "other": "Enporzhiañ ur restr…"
   },
+  "del_legend_redirect": {
+    "other": "adkas war-du ur bajenn dibabet"
+  },
+  "del_legend_talk": {
+    "other": "dilamet e vo ar bajenn gaozeal ivez"
+  },
   "del_namespace_any": {
     "other": "(an holl)"
   },
@@ -209,11 +215,8 @@
   "del_press_proceed": {
     "other": "Pouezit war Kenderc'hel evit peurgas an diverkadur."
   },
-  "del_preview_legend": {
-    "other": "💬 dilamet e vo ar bajenn gaozeal ivez   ·   ↳ adkas war-du ur bajenn dibabet"
-  },
   "del_proceed_options": {
-    "other": "Kenderc'hel d'an dibarzhioù →"
+    "other": "Kenderc'hel d'an dibarzhioù"
   },
   "del_reason_none": {
     "other": "(hini ebet)"
@@ -296,7 +299,7 @@
     "other": "Dianav"
   },
   "startup_add_wiki": {
-    "other": "+ Ouzhpennañ ur wiki"
+    "other": "Ouzhpennañ ur wiki"
   },
   "startup_delete_confirm": {
     "other": "Dilemel « {{.Name}} » diwar roll ar wikioù ?"

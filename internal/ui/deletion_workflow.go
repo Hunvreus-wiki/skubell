@@ -144,22 +144,30 @@ type previewRow struct {
 	remainingMembers int
 }
 
-// previewRowText renders a preview row: derived rows are indented with "↳", a
-// subject page whose talk page is also deleted is marked 💬, and a category that
-// will still have members (so the delete will fail) is flagged.
+// Glyphs marking preview rows. They live here rather than in the messages: a symbol is not language, and the legend
+// below the list has to explain the very glyphs the rows carry.
+const (
+	glyphDerived  = "↳" // a row pulled in by a selected page, not chosen directly
+	glyphTalkPage = "💬" // a subject page whose talk page goes with it
+	glyphWarning  = "⚠"
+)
+
+// previewRowText renders a preview row: derived rows are indented with glyphDerived, a subject page whose talk page is
+// also deleted is marked with glyphTalkPage, and a category that will still have members (so the delete will fail) is
+// flagged.
 func previewRowText(row previewRow) string {
 	line := row.item.Title
 	if row.item.Derived {
-		line = " ↳ " + line
+		line = " " + glyphDerived + " " + line
 	}
 	if row.item.HasTalkPage {
-		line += " 💬"
+		line += " " + glyphTalkPage
 	}
 	if row.categoryNotEmpty {
-		line += t.Tp(
+		line += "  " + glyphWarning + " " + t.Tp(
 			"del_category_not_empty",
-			"  ⚠ category not empty ({{.Count}} member remaining) — deletion will fail",
-			"  ⚠ category not empty ({{.Count}} members remaining) — deletion will fail",
+			"category not empty ({{.Count}} member remaining) — deletion will fail",
+			"category not empty ({{.Count}} members remaining) — deletion will fail",
 			row.remainingMembers,
 		)
 	}
@@ -693,7 +701,7 @@ func (s *deleteWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 		s.categoryParents = map[string]map[string]struct{}{}
 		s.refreshSelectionPanel()
 	})
-	s.selectionProceedBtn = widget.NewButton(t.T("del_proceed_options", "Proceed to options ->"), func() {
+	s.selectionProceedBtn = widget.NewButton(t.T("del_proceed_options", "Proceed to options")+" →", func() {
 		s.onProceed()
 	})
 
@@ -811,7 +819,8 @@ func (s *deleteWorkflowScreen) buildVerificationContent() fyne.CanvasObject {
 	}
 
 	legend := widget.NewLabelWithStyle(
-		t.T("del_preview_legend", "💬 talk page also deleted   ·   ↳ redirect to a selected page"),
+		glyphTalkPage+" "+t.T("del_legend_talk", "talk page also deleted")+
+			"   ·   "+glyphDerived+" "+t.T("del_legend_redirect", "redirect to a selected page"),
 		fyne.TextAlignLeading,
 		fyne.TextStyle{Italic: true},
 	)

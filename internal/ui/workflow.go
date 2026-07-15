@@ -83,7 +83,7 @@ func (w *workflowController) build() fyne.CanvasObject {
 	w.stepLabel = widget.NewLabel("")
 	w.SetStep(workflowStepSelection)
 
-	w.backButton = widget.NewButtonWithIcon(t.T("common_back", "<- Back"), theme.NavigateBackIcon(), func() {
+	w.backButton = widget.NewButtonWithIcon(t.T("common_back", "Back"), theme.NavigateBackIcon(), func() {
 		if w.onBack != nil {
 			w.onBack()
 		}
