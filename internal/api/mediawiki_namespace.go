@@ -199,7 +199,8 @@ func IsProtectedNamespaceInterfaceError(apiErr *APIError) bool {
 	return apiErr != nil && strings.EqualFold(apiErr.Code, ProtectedNamespaceInterfaceErrorCode)
 }
 
-// FriendlyErrorMessage returns a user-facing message for known API errors.
+// FriendlyErrorMessage returns a user-facing message for known API errors. It phrases the interface/site-config denials
+// for the delete action; the protect path uses FriendlyProtectErrorMessage instead.
 func FriendlyErrorMessage(apiErr *APIError) string {
 	if apiErr == nil {
 		return ""
@@ -214,6 +215,30 @@ func FriendlyErrorMessage(apiErr *APIError) string {
 	case strings.EqualFold(apiErr.Code, SiteJSONProtectedErrorCode):
 		return SiteJSONDeleteGrantMessage()
 	}
+	return friendlyInfoOrCode(apiErr)
+}
+
+// FriendlyProtectErrorMessage is FriendlyErrorMessage for the protect action: the same interface/site-config denials
+// map to the protection-specific guidance rather than deletion's, so a failed row doesn't say Skubell "cannot delete".
+func FriendlyProtectErrorMessage(apiErr *APIError) string {
+	if apiErr == nil {
+		return ""
+	}
+	switch {
+	case IsProtectedNamespaceInterfaceError(apiErr):
+		return MediaWikiNamespaceProtectGrantMessage()
+	case strings.EqualFold(apiErr.Code, SiteCSSProtectedErrorCode):
+		return SiteCSSProtectGrantMessage()
+	case strings.EqualFold(apiErr.Code, SiteJSProtectedErrorCode):
+		return SiteJSProtectGrantMessage()
+	case strings.EqualFold(apiErr.Code, SiteJSONProtectedErrorCode):
+		return SiteJSONProtectGrantMessage()
+	}
+	return friendlyInfoOrCode(apiErr)
+}
+
+// friendlyInfoOrCode is the shared fallback for an unrecognized API error: its human-readable info, else its code.
+func friendlyInfoOrCode(apiErr *APIError) string {
 	if strings.TrimSpace(apiErr.Info) != "" {
 		return apiErr.Info
 	}

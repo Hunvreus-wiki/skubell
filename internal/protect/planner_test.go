@@ -47,7 +47,7 @@ func TestBuildPlanFiltersTypesByExistence(t *testing.T) {
 		"create": {Level: "sysop"},
 	}}
 
-	plan, err := BuildPlan(context.Background(), reader, []string{"Foo", "Bar"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo", "Bar"}, settings, []string{"sysop"}, nil)
 	require.NoError(t, err)
 
 	foo := itemFor(t, plan, "Foo").Op.Params
@@ -75,7 +75,7 @@ func TestBuildPlanMakePermanent(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true}, // preserve (currently none)
 	}}
 
-	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, plan.Change)
 	op := itemFor(t, plan, "Foo").Op.Params
@@ -97,7 +97,7 @@ func TestBuildPlanNoOp(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true},
 	}}
 
-	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, 0, plan.Change)
 	require.Equal(t, 1, plan.Unchanged)
@@ -119,7 +119,7 @@ func TestBuildPlanUnprotect(t *testing.T) {
 		"move": {KeepLevel: true, KeepExpiry: true},
 	}}
 
-	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"})
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, plan.Change)
 	require.Empty(t, itemFor(t, plan, "Foo").Op.Params["protect_edit"])
@@ -136,7 +136,7 @@ func TestBuildPlanCascadeValidity(t *testing.T) {
 	cascading := []string{"sysop"}
 
 	invalid, err := BuildPlan(context.Background(), reader, []string{"Foo"},
-		Settings{Cascade: true, ByType: map[string]TypeSetting{"edit": {Level: "autoconfirmed"}}}, cascading)
+		Settings{Cascade: true, ByType: map[string]TypeSetting{"edit": {Level: "autoconfirmed"}}}, cascading, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, invalid.Invalid)
 	require.True(t, itemFor(t, invalid, "Foo").Invalid)
@@ -145,8 +145,131 @@ func TestBuildPlanCascadeValidity(t *testing.T) {
 	valid, err := BuildPlan(context.Background(), reader, []string{"Foo"}, Settings{
 		Cascade: true,
 		ByType:  map[string]TypeSetting{"edit": {Level: "sysop"}, "move": {Level: "sysop"}},
-	}, cascading)
+	}, cascading, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, valid.Change)
 	require.Equal(t, "true", itemFor(t, valid, "Foo").Op.Params["cascade"])
+}
+
+// A File page's upload protection is preserved when edit/move change: action=protect replaces the whole set, so the
+// upload type must be resent or it would be silently removed.
+func TestBuildPlanPreservesUnmanagedProtection(t *testing.T) {
+	t.Parallel()
+
+	reader := fakeReader{data: map[string]PageProtection{
+		"File:Logo.png": {Title: "File:Logo.png", Exists: true, Protections: map[string]TypeProtection{
+			"edit":   {Level: "autoconfirmed", Expiry: "infinity"},
+			"upload": {Level: "sysop", Expiry: "infinity"},
+		}},
+	}}
+	settings := Settings{ByType: map[string]TypeSetting{
+		"edit": {Level: "sysop"}, // changes edit
+		"move": {KeepLevel: true, KeepExpiry: true},
+	}}
+
+	plan, err := BuildPlan(context.Background(), reader, []string{"File:Logo.png"}, settings, []string{"sysop"}, nil)
+	require.NoError(t, err)
+	op := itemFor(t, plan, "File:Logo.png").Op.Params
+	require.Equal(t, "sysop", op["protect_edit"])
+	require.Equal(t, "sysop", op["protect_upload"], "upload protection must be preserved in the full replacement")
+	require.Equal(t, "infinity", op["expiry_upload"])
+}
+
+// Toggling cascade off while keeping level and expiry is a change and emits an op, even though no level/expiry differs.
+func TestBuildPlanCascadeOnlyChange(t *testing.T) {
+	t.Parallel()
+
+	reader := fakeReader{data: map[string]PageProtection{
+		"Foo": {Title: "Foo", Exists: true, Protections: map[string]TypeProtection{
+			"edit": {Level: "sysop", Expiry: "infinity", Cascade: true},
+		}},
+	}}
+	settings := Settings{Cascade: false, ByType: map[string]TypeSetting{
+		"edit": {KeepLevel: true, KeepExpiry: true}, // keep edit exactly as-is
+		"move": {KeepLevel: true, KeepExpiry: true},
+	}}
+
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, plan.Change)
+	item := itemFor(t, plan, "Foo")
+	require.True(t, item.Changed)
+	require.True(t, item.FromCascade)
+	require.False(t, item.ToCascade)
+	require.NotContains(t, item.Op.Params, "cascade", "removing cascade omits the flag so action=protect drops it")
+}
+
+// Cascade is a property of an existing page's edit restriction. Requesting it on a change that leaves edit unprotected
+// (a move-only change) neither sets the flag nor invalidates the change — MediaWiki would simply discard the flag, and
+// the non-cascading move level is irrelevant to cascade eligibility.
+func TestBuildPlanCascadeIgnoredWithoutEditProtection(t *testing.T) {
+	t.Parallel()
+
+	reader := fakeReader{data: map[string]PageProtection{"Foo": {Title: "Foo", Exists: true}}}
+	settings := Settings{Cascade: true, ByType: map[string]TypeSetting{
+		"move": {Level: "autoconfirmed"}, // move only; edit stays unprotected
+	}}
+
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, nil)
+	require.NoError(t, err)
+	item := itemFor(t, plan, "Foo")
+	require.False(t, item.Invalid, "a non-cascading move level must not invalidate a cascade request")
+	require.False(t, item.ToCascade)
+	require.NotContains(t, item.Op.Params, "cascade")
+}
+
+// Cascade is disabled for missing titles: requesting it on a create protection neither sets the flag nor invalidates
+// the change, even when the create level is non-cascading.
+func TestBuildPlanCascadeIgnoredForMissingTitle(t *testing.T) {
+	t.Parallel()
+
+	reader := fakeReader{data: map[string]PageProtection{"Bar": {Title: "Bar", Exists: false}}}
+	settings := Settings{Cascade: true, ByType: map[string]TypeSetting{
+		"create": {Level: "autoconfirmed"},
+	}}
+
+	plan, err := BuildPlan(context.Background(), reader, []string{"Bar"}, settings, []string{"sysop"}, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, plan.Change) // the create protection itself is still a change
+	item := itemFor(t, plan, "Bar")
+	require.False(t, item.Invalid, "cascade is disabled for missing titles, so it must not reject a create change")
+	require.False(t, item.ToCascade)
+	require.NotContains(t, item.Op.Params, "cascade")
+}
+
+// A wiki that doesn't offer "move" must not have move planned: naming an unsupported type makes action=protect reject
+// the whole request.
+func TestBuildPlanRestrictsToWikiTypes(t *testing.T) {
+	t.Parallel()
+
+	reader := fakeReader{data: map[string]PageProtection{"Foo": {Title: "Foo", Exists: true}}}
+	settings := Settings{ByType: map[string]TypeSetting{
+		"edit": {Level: "sysop"},
+		"move": {Level: "sysop"},
+	}}
+
+	plan, err := BuildPlan(context.Background(), reader, []string{"Foo"}, settings, []string{"sysop"}, []string{"edit"})
+	require.NoError(t, err)
+	op := itemFor(t, plan, "Foo").Op.Params
+	require.Equal(t, "sysop", op["protect_edit"])
+	require.NotContains(t, op, "protect_move", "a wiki that doesn't offer move must not plan it")
+}
+
+// Aliases that MediaWiki normalizes to one page emit a single write, titled by the normalized page.
+func TestBuildPlanDeduplicatesNormalizedTitles(t *testing.T) {
+	t.Parallel()
+
+	page := PageProtection{Title: "Foo bar", Exists: true}
+	reader := fakeReader{data: map[string]PageProtection{
+		"Foo bar": page,
+		"Foo_bar": page, // the underscore alias resolves to the same normalized page
+	}}
+	settings := Settings{ByType: map[string]TypeSetting{"edit": {Level: "sysop"}}}
+
+	plan, err := BuildPlan(
+		context.Background(), reader, []string{"Foo_bar", "Foo bar"}, settings, []string{"sysop"}, nil,
+	)
+	require.NoError(t, err)
+	require.Len(t, plan.Items, 1)
+	require.Equal(t, "Foo bar", plan.Items[0].Title)
 }

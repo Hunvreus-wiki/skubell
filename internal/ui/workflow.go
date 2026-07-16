@@ -47,6 +47,7 @@ type workflowButtonState struct {
 // workflowController renders reusable workflow chrome (step title + nav buttons).
 type workflowController struct {
 	app           *App
+	title         string // workflow name shown at the top of every step
 	titleLabel    *widget.Label
 	stepLabel     *widget.Label
 	content       *fyne.Container
@@ -62,9 +63,10 @@ type workflowController struct {
 	onProceed func()
 }
 
-func newWorkflowController(app *App, onBack, onHome, onCancel, onProceed func()) *workflowController {
+func newWorkflowController(app *App, title string, onBack, onHome, onCancel, onProceed func()) *workflowController {
 	w := &workflowController{
 		app:       app,
+		title:     title,
 		onBack:    onBack,
 		onHome:    onHome,
 		onCancel:  onCancel,
@@ -76,7 +78,7 @@ func newWorkflowController(app *App, onBack, onHome, onCancel, onProceed func())
 
 func (w *workflowController) build() fyne.CanvasObject {
 	w.titleLabel = widget.NewLabelWithStyle(
-		t.T("workflow_delete_pages", "Delete pages"),
+		w.title,
 		fyne.TextAlignLeading,
 		fyne.TextStyle{Bold: true},
 	)

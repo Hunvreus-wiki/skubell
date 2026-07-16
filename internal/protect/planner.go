@@ -1,7 +1,8 @@
 // Package protect builds bulk page-protection change plans: given selected titles and the user's target protection
-// settings, it reads current protection, filters the restriction types applicable to each page (existing pages take
-// edit/move, missing titles take create), computes the resulting protection, drops no-ops, and emits one OpProtectPage
-// per actually-changing page. See local-notes/phase2-protection.md.
+// settings, it reads current protection, picks the restriction types applicable to each page (existing pages take
+// edit/move, missing titles take create — each narrowed to the types the wiki actually offers), preserves any current
+// protection the UI doesn't manage (e.g. upload on File pages), tracks cascade, computes the resulting protection,
+// drops no-ops, and emits one OpProtectPage per actually-changing page. See local-notes/phase2-protection.md.
 package protect
 
 import (
@@ -70,13 +71,15 @@ type TypeChange struct {
 
 // PlanItem is one page's protection change (or non-change).
 type PlanItem struct {
-	Title   string
-	Exists  bool
-	Changes []TypeChange  // per applicable type
-	Changed bool          // true when at least one applicable type changes
-	Invalid bool          // true when the request can't be made (e.g. cascade with a non-cascading level)
-	Note    string        // why it is invalid, when Invalid
-	Op      ops.Operation // the OpProtectPage to run; zero when unchanged or invalid
+	Title       string
+	Exists      bool
+	Changes     []TypeChange  // per applicable type
+	Changed     bool          // true when at least one applicable type (or cascade) changes
+	FromCascade bool          // current direct cascade state
+	ToCascade   bool          // resulting cascade state
+	Invalid     bool          // true when the request can't be made (e.g. cascade with a non-cascading level)
+	Note        string        // why it is invalid, when Invalid
+	Op          ops.Operation // the OpProtectPage to run; zero when unchanged or invalid
 }
 
 // Plan is the outcome of BuildPlan: display-ordered items and counts.
@@ -88,9 +91,11 @@ type Plan struct {
 }
 
 // BuildPlan computes the protection plan. cascadingLevels are the wiki's levels that permit cascade (siteinfo
-// restrictions.cascadinglevels).
+// restrictions.cascadinglevels). restrictionTypes are the types the wiki offers (siteinfo restrictions.types); a page's
+// managed types are narrowed to these so the plan never names a type the wiki would reject. Empty restrictionTypes
+// disables that filtering (unknown wiki → fall back to the built-in defaults).
 func BuildPlan(
-	ctx context.Context, reader Reader, titles []string, settings Settings, cascadingLevels []string,
+	ctx context.Context, reader Reader, titles []string, settings Settings, cascadingLevels, restrictionTypes []string,
 ) (Plan, error) {
 	current, err := reader.PageProtections(ctx, titles)
 	if err != nil {
@@ -107,14 +112,21 @@ func BuildPlan(
 		if title == "" {
 			continue
 		}
-		if _, dup := seen[title]; dup {
+		page, ok := current[title]
+		// Dedup by the API-normalized title so aliases of one page (Foo_bar / Foo bar) emit a single write; fall back
+		// to the input spelling when the read didn't return the page (e.g. an invalid title).
+		canonical := title
+		if ok && strings.TrimSpace(page.Title) != "" {
+			canonical = page.Title
+		} else {
+			page.Title = title
+		}
+		if _, dup := seen[canonical]; dup {
 			continue
 		}
-		seen[title] = struct{}{}
+		seen[canonical] = struct{}{}
 
-		page := current[title]
-		page.Title = title
-		item := buildItem(page, settings, cascadingLevels)
+		item := buildItem(page, settings, cascadingLevels, restrictionTypes)
 		plan.Items = append(plan.Items, item)
 		switch {
 		case item.Invalid:
@@ -128,19 +140,32 @@ func BuildPlan(
 	return plan, nil
 }
 
-func applicableTypes(exists bool) []string {
-	if exists {
-		return existingPageTypes
+// applicableTypes are the restriction types the plan manages for a page by its existence, narrowed to the types the
+// wiki offers (supported). Naming a type the wiki doesn't support makes action=protect reject the whole request, so it
+// must never be planned. Empty supported means the wiki is unknown and falls back to the unfiltered defaults.
+func applicableTypes(exists bool, supported []string) []string {
+	base := existingPageTypes
+	if !exists {
+		base = missingPageTypes
 	}
-	return missingPageTypes
+	if len(supported) == 0 {
+		return base
+	}
+	out := make([]string, 0, len(base))
+	for _, typ := range base {
+		if slices.Contains(supported, typ) {
+			out = append(out, typ)
+		}
+	}
+	return out
 }
 
-func buildItem(page PageProtection, s Settings, cascadingLevels []string) PlanItem {
+func buildItem(page PageProtection, s Settings, cascadingLevels, restrictionTypes []string) PlanItem {
 	item := PlanItem{Title: page.Title, Exists: page.Exists}
 	params := map[string]string{"title": page.Title}
-	anyRealProtection := false
 
-	for _, typ := range applicableTypes(page.Exists) {
+	managed := applicableTypes(page.Exists, restrictionTypes)
+	for _, typ := range managed {
 		cur := page.Protections[typ]
 		set, ok := s.ByType[typ]
 		if !ok {
@@ -161,21 +186,40 @@ func buildItem(page PageProtection, s Settings, cascadingLevels []string) PlanIt
 		// unprotected. "" level → the translator emits "all" (no restriction).
 		params["protect_"+typ] = normLevel(toLevel)
 		params["expiry_"+typ] = defaultPermanentExpiry(toExpiry)
-		if !isNoRestriction(toLevel) {
-			anyRealProtection = true
-		}
 	}
 
-	if s.Cascade {
-		if bad := firstNonCascadingLevel(params, cascadingLevels); bad != "" {
-			item.Invalid = true
-			item.Note = fmt.Sprintf("cascade requires a cascading level; %q is not one", bad)
-			return item
+	// Carry over current protection the UI doesn't manage (e.g. upload on File pages): action=protect replaces the
+	// whole set, so a type left out of the request would be silently unprotected. Preserved unchanged, so not a change.
+	for typ, cur := range page.Protections {
+		if slices.Contains(managed, typ) || isNoRestriction(cur.Level) {
+			continue
 		}
-		if anyRealProtection {
-			params["cascade"] = "true"
-		}
+		params["protect_"+typ] = normLevel(cur.Level)
+		params["expiry_"+typ] = defaultPermanentExpiry(cur.Expiry)
 	}
+
+	// Cascade is a property of an existing page's edit restriction: MediaWiki stores it only there, and discards it for
+	// a missing title or when edit is left unprotected. Gate ToCascade on both so the preview and the request match
+	// reality (a move-only or create change never cascades), and validate only the edit level for cascade eligibility —
+	// a non-cascading move/create/upload level is irrelevant and must not reject an otherwise valid change.
+	editLevel := normLevel(params["protect_edit"])
+	cascadeApplies := s.Cascade && page.Exists && editLevel != ""
+	if cascadeApplies && !slices.Contains(cascadingLevels, editLevel) {
+		item.Invalid = true
+		item.Note = fmt.Sprintf("cascade requires a cascading edit level; %q is not one", editLevel)
+		return item
+	}
+	// FromCascade is the page's own (direct) cascade — sourced/inherited entries are excluded upstream so they can't
+	// masquerade as direct state. A change to cascade alone (level/expiry unchanged) is still a change to apply.
+	item.FromCascade = pageCascades(page)
+	item.ToCascade = cascadeApplies
+	if item.FromCascade != item.ToCascade {
+		item.Changed = true
+	}
+	if item.ToCascade {
+		params["cascade"] = "true"
+	}
+
 	if reason := strings.TrimSpace(s.Reason); reason != "" {
 		params["reason"] = reason
 	}
@@ -184,6 +228,16 @@ func buildItem(page PageProtection, s Settings, cascadingLevels []string) PlanIt
 		item.Op = ops.Operation{Type: ops.OpProtectPage, Params: params, Description: describe(page)}
 	}
 	return item
+}
+
+// pageCascades reports whether the page carries its own (direct) cascade protection on any type.
+func pageCascades(page PageProtection) bool {
+	for _, p := range page.Protections {
+		if p.Cascade {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveTarget applies a TypeSetting over the current protection, honoring the Keep* flags.
@@ -244,19 +298,6 @@ func defaultPermanentExpiry(expiry string) string {
 		return "infinite"
 	}
 	return strings.TrimSpace(expiry)
-}
-
-func firstNonCascadingLevel(params map[string]string, cascadingLevels []string) string {
-	for _, typ := range []string{"edit", "create", "move", "upload"} {
-		level := normLevel(params["protect_"+typ])
-		if level == "" {
-			continue
-		}
-		if !slices.Contains(cascadingLevels, level) {
-			return level
-		}
-	}
-	return ""
 }
 
 func describe(page PageProtection) string {

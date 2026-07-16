@@ -319,6 +319,9 @@
   "protect_computing": {
     "other": "O jediñ ar c’hemmoù…"
   },
+  "protect_confirm_all_namespaces": {
+    "other": "N’eus esaouenn anv ebet diuzet, klasket e vo neuze en {{.Count}} esaouenn anv, pezh a c’hall padout hir. Klask memes tra ?"
+  },
   "protect_download_journal": {
     "other": "Pellgargañ ar marilh"
   },
@@ -331,11 +334,23 @@
   "protect_err_bad_duration": {
     "other": "Enankit un niver anterin pozitivel evit ar badelezh."
   },
+  "protect_err_count_floor": {
+    "other": "Kontoù krubuilhet ar wiki-mañ ne ziskennont ket dindan {{.Floor}}, setu ne c’haller ket respont d’un niver izelañ bihanoc’h evitañ. Lakait an niver izelañ da {{.Floor}} pe muioc’h, pe savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
+  },
+  "protect_err_need_criterion": {
+    "other": "Dibabit un dezverk klask da nebeutañ : un esaouenn anv, ur rakger titl, ur sil gwareziñ pe un niver izelañ."
+  },
+  "protect_err_no_count_cache": {
+    "other": "N’en deus ket ar wiki-mañ kontoù krubuilhet da glask enno, ha re goustus e vefe kontañ war-eeun pajenn ha pajenn. Savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
+  },
   "protect_err_no_date": {
     "other": "Dibabit un deiziad termen."
   },
   "protect_err_past_date": {
     "other": "Ret eo d’an deiziad termen bezañ en dazont."
+  },
+  "protect_err_too_broad": {
+    "other": "Re a bajennoù a glot gant ar c’hlask (muioc’h eget {{.Max}} en un esaouenn anv hepken). Strishait anezhañ gant ur rakger titl pe ur sil gwareziñ, pe savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
   },
   "protect_exec_canceled": {
     "other": "Peurgas nullet."
@@ -463,9 +478,6 @@
   "protect_preview_summary": {
     "other": "{{.Change}} da gemmañ · {{.Unchanged}} digemm · {{.Invalid}} n’haller ket kemmañ"
   },
-  "protect_reason_loading": {
-    "other": "(o kargañ...)"
-  },
   "protect_reason_none": {
     "other": "(hini ebet)"
   },
@@ -480,6 +492,9 @@
   },
   "protect_search_results": {
     "other": "Disoc’hoù ar c’hlask"
+  },
+  "protect_searching": {
+    "other": "O klask pajennoù…"
   },
   "protect_selected_count": {
     "other": "{{.Count}} dibabet"

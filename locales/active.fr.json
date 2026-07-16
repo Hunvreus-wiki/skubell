@@ -319,6 +319,9 @@
   "protect_computing": {
     "other": "Calcul des modifications…"
   },
+  "protect_confirm_all_namespaces": {
+    "other": "Aucun espace de noms n’est sélectionné, les {{.Count}} espaces de noms seront donc tous parcourus, ce qui peut être lent. Rechercher quand même ?"
+  },
   "protect_download_journal": {
     "other": "Télécharger le journal"
   },
@@ -331,11 +334,23 @@
   "protect_err_bad_duration": {
     "other": "Saisissez un nombre entier positif pour la durée personnalisée."
   },
+  "protect_err_count_floor": {
+    "other": "Les comptages en cache de ce wiki ne descendent pas sous {{.Floor}}, un minimum plus bas ne peut donc pas y être vérifié. Fixez le nombre minimal à {{.Floor}} ou plus, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+  },
+  "protect_err_need_criterion": {
+    "other": "Saisissez au moins un critère de recherche : un espace de noms, un préfixe de titre, un filtre de protection ou un nombre minimal."
+  },
+  "protect_err_no_count_cache": {
+    "other": "Ce wiki n’a pas de comptages en cache où chercher, et compter en direct page par page serait trop coûteux. Construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+  },
   "protect_err_no_date": {
     "other": "Choisissez une date d’expiration."
   },
   "protect_err_past_date": {
     "other": "La date d’expiration doit être dans le futur."
+  },
+  "protect_err_too_broad": {
+    "other": "La recherche correspond à trop de pages (plus de {{.Max}} dans un même espace de noms). Restreignez-la avec un préfixe de titre ou un filtre de protection, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
   },
   "protect_exec_canceled": {
     "other": "Exécution annulée."
@@ -463,9 +478,6 @@
   "protect_preview_summary": {
     "other": "{{.Change}} à modifier · {{.Unchanged}} inchangées · {{.Invalid}} inapplicables"
   },
-  "protect_reason_loading": {
-    "other": "(chargement...)"
-  },
   "protect_reason_none": {
     "other": "(aucun)"
   },
@@ -480,6 +492,9 @@
   },
   "protect_search_results": {
     "other": "Résultats de recherche"
+  },
+  "protect_searching": {
+    "other": "Recherche de pages…"
   },
   "protect_selected_count": {
     "other": "{{.Count}} sélectionnée(s)"

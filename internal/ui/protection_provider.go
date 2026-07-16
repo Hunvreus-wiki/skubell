@@ -92,6 +92,12 @@ func parsePageProtection(title string, page map[string]any) protect.PageProtecti
 		if strings.TrimSpace(typ) == "" {
 			continue
 		}
+		// A "source" field marks a restriction inherited from another page's cascade — not a direct protection on this
+		// page. Resending it as a direct restriction (or previewing its removal) would be wrong: it can only be changed
+		// on its source page and remains inherited regardless. Skip it so only the page's own protection is modelled.
+		if source, _ := entry["source"].(string); strings.TrimSpace(source) != "" {
+			continue
+		}
 		level, _ := entry["level"].(string)
 		expiry, _ := entry["expiry"].(string)
 		_, cascade := entry["cascade"] // fv2 emits the key only when the protection cascades

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -58,7 +60,7 @@ type expiryInput struct {
 	dateRow    fyne.CanvasObject // date+time row, shown for the until-a-date method
 	root       fyne.CanvasObject
 
-	optPreset, optCustom, optDate string
+	optNoChange, optPreset, optCustom, optDate string
 }
 
 // twoDigitRange returns "00".."<n-1>" zero-padded, for the hour/minute dropdowns (index == value).
@@ -72,9 +74,12 @@ func twoDigitRange(n int) []string {
 
 func newExpiryInput(presets []string) *expiryInput {
 	e := &expiryInput{
-		optPreset: t.T("protect_expiry_preset", "Preset duration"),
-		optCustom: t.T("protect_expiry_custom", "Custom duration"),
-		optDate:   t.T("protect_expiry_date", "Until a date"),
+		// "(no change)" mirrors the level control's sentinel: it keeps the page's current expiry, so level and expiry
+		// can be changed independently (e.g. keep the level but set a new expiry, or change the level but keep expiry).
+		optNoChange: t.T("protect_level_no_change", "(no change)"),
+		optPreset:   t.T("protect_expiry_preset", "Preset duration"),
+		optCustom:   t.T("protect_expiry_custom", "Custom duration"),
+		optDate:     t.T("protect_expiry_date", "Until a date"),
 	}
 	e.predefined = widget.NewSelect(presets, nil)
 	if len(presets) > 0 {
@@ -105,9 +110,11 @@ func newExpiryInput(presets []string) *expiryInput {
 	timeControls := container.NewHBox(e.hour, widget.NewLabel(":"), e.minute, utcLabel)
 	e.dateRow = container.NewBorder(nil, nil, nil, timeControls, e.date)
 
-	e.method = widget.NewRadioGroup([]string{e.optPreset, e.optCustom, e.optDate}, func(string) { e.apply() })
+	e.method = widget.NewRadioGroup(
+		[]string{e.optNoChange, e.optPreset, e.optCustom, e.optDate}, func(string) { e.apply() },
+	)
 	e.method.Horizontal = true
-	e.method.SetSelected(e.optPreset)
+	e.method.SetSelected(e.optNoChange) // default: keep the current expiry
 
 	e.root = container.NewVBox(
 		e.method,
@@ -120,19 +127,39 @@ func newExpiryInput(presets []string) *expiryInput {
 }
 
 // apply shows only the selected method's row of controls; the others are hidden (not just disabled), so unused
-// controls don't clutter the form.
+// controls don't clutter the form. The "(no change)" method needs no control — it keeps the current expiry.
 func (e *expiryInput) apply() {
 	e.predefined.Hide()
 	e.customRow.Hide()
 	e.dateRow.Hide()
 	switch e.method.Selected {
+	case e.optPreset:
+		e.predefined.Show()
 	case e.optCustom:
 		e.customRow.Show()
 	case e.optDate:
 		e.dateRow.Show()
-	default:
-		e.predefined.Show()
 	}
+}
+
+// isNoChange reports whether the "(no change)" method is selected, i.e. the current expiry should be kept.
+func (e *expiryInput) isNoChange() bool { return e.method.Selected == e.optNoChange }
+
+// setPredefinedOptions swaps in the loaded presets while keeping the current selection — appending it when the loaded
+// list omits it — so a duration the operator chose against the fallback list (e.g. "1 year") is never silently reset
+// to the first option just because the wiki's Protect-expiry-options doesn't include it.
+func (e *expiryInput) setPredefinedOptions(options []string) {
+	prev := e.predefined.Selected
+	if prev != "" && !slices.Contains(options, prev) {
+		options = append(slices.Clone(options), prev)
+	}
+	e.predefined.Options = options
+	if prev == "" {
+		e.predefined.SetSelectedIndex(0)
+	} else {
+		e.predefined.SetSelected(prev)
+	}
+	e.predefined.Refresh()
 }
 
 func (e *expiryInput) disableAll() {
@@ -225,9 +252,10 @@ type protectionWorkflowScreen struct {
 	reasonSelect   *widget.Select
 	reasonEntry    *widget.Entry
 	dryRunCheck    *widget.Check
+	optionsContent fyne.CanvasObject // built once and retained, so Back preserves the operator's choices
 	expiryOptions  []string
+	expiryLoading  bool // an async Protect-expiry-options fetch is in flight; guards duplicate loads
 	reasons        []string
-	reasonsLoading bool
 
 	// Captured target + plan.
 	settings protect.Settings
@@ -262,7 +290,7 @@ func NewProtectionWorkflowScreen(app *App) *protectionWorkflowScreen {
 		dryRun:             app.config.Preferences.DryRunByDefault,
 		journalEntries:     []ops.JournalEntry{},
 	}
-	s.wf = newWorkflowController(app, s.onBack, s.onHome, s.onCancel, s.onProceed)
+	s.wf = newWorkflowController(app, s.title(), s.onBack, s.onHome, s.onCancel, s.onProceed)
 	s.root = s.wf.Canvas()
 	s.showSelectionStep()
 	return s
@@ -387,6 +415,9 @@ func (s *protectionWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 		t.T("protect_noncascade", "non-cascading"),
 	}, nil)
 	s.searchCascade.SetSelectedIndex(0)
+	// Wired after all three selects exist: the rule touches expiry and cascade whenever the level changes.
+	s.searchLevel.OnChanged = func(string) { s.applySearchLevelRule() }
+	s.applySearchLevelRule()
 	s.searchMetric = widget.NewSelect([]string{
 		t.T("protect_metric_transclusions", "Transclusions"),
 		t.T("protect_metric_links", "Incoming links"),
@@ -532,14 +563,12 @@ func (s *protectionWorkflowScreen) ingestManualEntry() {
 	s.manualEntry.SetText("")
 }
 
+// namespaceOptions lists the "(any)" sentinel plus each listable namespace. It uses namespaceIDs so the Special (-1)
+// and Media (-2) pseudo-namespaces are excluded — list=allpages can't enumerate them, so offering them would only
+// produce an API error or an empty result.
 func (s *protectionWorkflowScreen) namespaceOptions() []string {
 	labels := []string{t.T("protect_ns_any", "(any)")}
-	ids := make([]int, 0, len(s.app.currentCaps.Namespaces))
-	for id := range s.app.currentCaps.Namespaces {
-		ids = append(ids, id)
-	}
-	sort.Ints(ids)
-	for _, id := range ids {
+	for _, id := range s.namespaceIDs() {
 		name := strings.TrimSpace(s.app.currentCaps.Namespaces[id])
 		if name == "" {
 			name = t.T("protect_ns_main", "(Main)")
@@ -547,6 +576,23 @@ func (s *protectionWorkflowScreen) namespaceOptions() []string {
 		labels = append(labels, fmt.Sprintf("%d: %s", id, name))
 	}
 	return labels
+}
+
+// exposedTypes are the Options tabs to show: the UI's candidate types narrowed to those the wiki actually offers
+// (siteinfo restrictions.types), so a tab can never produce a type action=protect would reject. An unknown wiki (empty
+// RestrictionTypes) shows them all. UI-hidden types such as upload are never exposed here; the planner preserves them.
+func (s *protectionWorkflowScreen) exposedTypes() []string {
+	supported := s.app.currentCaps.RestrictionTypes
+	if len(supported) == 0 {
+		return protectionTabTypes
+	}
+	out := make([]string, 0, len(protectionTabTypes))
+	for _, typ := range protectionTabTypes {
+		if slices.Contains(supported, typ) {
+			out = append(out, typ)
+		}
+	}
+	return out
 }
 
 // levelMenu lists the wiki's protection levels as menu labels. withNoChange prepends the "(no change)" sentinel.
@@ -585,54 +631,205 @@ func (s *protectionWorkflowScreen) selectedNamespaceID() (int, bool) {
 	return id, true
 }
 
-// runSearch queries the wiki with the current search filters and shows the matching titles, off the UI goroutine. A
-// minimum-count threshold (transclusions or inbound links, per the metric picker) is served from the wiki's matching
-// cached querypage (§3.1) so it scales to large wikis; without a threshold it is a plain list=allpages search.
-func (s *protectionWorkflowScreen) runSearch() {
-	if s.app.client == nil {
-		return
-	}
+// searchNoProtectionSelected reports whether the current-level filter is "(no protection)": a request to find pages
+// that carry no direct protection. Unlike a concrete level it has no apprlevel equivalent (allpages lists protected
+// pages only), so it is filtered client-side by subtracting the protected set.
+func (s *protectionWorkflowScreen) searchNoProtectionSelected() bool {
+	return s.searchLevel != nil && strings.TrimSpace(s.searchLevel.Selected) == removeLevel()
+}
+
+// protectSearchCriteria is an immutable snapshot of the search form, captured on the UI goroutine so the background
+// search never reads Fyne widgets off-thread (as the deletion workflow does with searchCriteria).
+type protectSearchCriteria struct {
+	namespaceID  int
+	namespaceSet bool
+	prefix       string
+	apprlevel    string // concrete level filter; "" for "(any)" and "(no protection)"
+	noProtection bool   // "(no protection)" selected: keep only pages with no direct edit/move protection
+	expiryIndex  int    // searchExpiry selection: 1 = definite, 2 = indefinite
+	cascadeIndex int    // searchCascade selection: 1 = cascading, 2 = non-cascading
+	metric       string // querypage serving the count threshold
+	minCount     int
+}
+
+// collectSearchCriteria reads the search-form widgets into a snapshot. Call it on the UI goroutine only.
+func (s *protectionWorkflowScreen) collectSearchCriteria() protectSearchCriteria {
+	nsID, nsSet := s.selectedNamespaceID()
 	minCount := 0
 	if n, err := strconv.Atoi(strings.TrimSpace(s.searchMinLinks.Text)); err == nil && n > 0 {
 		minCount = n
 	}
+	return protectSearchCriteria{
+		namespaceID:  nsID,
+		namespaceSet: nsSet,
+		prefix:       strings.TrimSpace(s.searchPrefix.Text),
+		apprlevel:    s.searchLevelValue(),
+		noProtection: s.searchNoProtectionSelected(),
+		expiryIndex:  s.searchExpiry.SelectedIndex(),
+		cascadeIndex: s.searchCascade.SelectedIndex(),
+		metric:       s.selectedMetric(),
+		minCount:     minCount,
+	}
+}
+
+// protectionFiltersActive reports whether a current-protection filter with an apprlevel/apprexpiry/apprfiltercascade
+// equivalent is set. The unprotected filter is deliberately excluded: it has no allpages equivalent and is handled by
+// subtraction, so it must not add apprtype=edit|move (which would list protected pages — the opposite).
+func (c protectSearchCriteria) protectionFiltersActive() bool {
+	return c.apprlevel != "" || c.expiryIndex > 0 || c.cascadeIndex > 0
+}
+
+// needsAllPages reports whether a count-threshold search must also enumerate allpages: a protection constraint (a
+// level/expiry/cascade filter, or the unprotected filter) has no cached equivalent, so the cache only settles the
+// count while allpages applies the constraint.
+func (c protectSearchCriteria) needsAllPages() bool {
+	return c.protectionFiltersActive() || c.noProtection
+}
+
+// runSearch validates the criteria, confirms an all-namespace sweep, then runs the search behind a cancellable
+// progress dialog. A minimum-count threshold (transclusions or inbound links, per the metric picker) is served from
+// the wiki's matching cached querypage (§3.1) so it scales to large wikis; without a threshold it is a plain
+// list=allpages search.
+func (s *protectionWorkflowScreen) runSearch() {
+	if s.app.client == nil {
+		return
+	}
+	criteria := s.collectSearchCriteria()
+	if !s.hasSearchCriterion(criteria.minCount) {
+		s.app.showMessage(t.T("protect_search", "Search"), t.T(
+			"protect_err_need_criterion",
+			"Enter at least one search criterion: a namespace, a title prefix, a protection filter, or a minimum count.",
+		))
+		return
+	}
+	if s.sweepsAllNamespaces(criteria.minCount) {
+		dialog.NewConfirm(
+			t.T("protect_search", "Search"),
+			t.Td(
+				"protect_confirm_all_namespaces",
+				"No namespace is selected, so all {{.Count}} namespaces will be searched. This can be slow. Search anyway?",
+				map[string]any{"Count": len(s.namespaceIDs())},
+			),
+			func(ok bool) {
+				if ok {
+					s.startSearch(criteria)
+				}
+			},
+			s.app.window,
+		).Show()
+		return
+	}
+	s.startSearch(criteria)
+}
+
+// hasSearchCriterion reports whether at least one criterion narrows the search; a criterion-less search (every
+// namespace, no prefix, no protection filter, no threshold) enumerates the whole wiki to no meaningful end.
+func (s *protectionWorkflowScreen) hasSearchCriterion(minCount int) bool {
+	_, nsSet := s.selectedNamespaceID()
+	return nsSet || strings.TrimSpace(s.searchPrefix.Text) != "" ||
+		s.protectionFiltersActive() || s.searchNoProtectionSelected() || minCount > 0
+}
+
+// sweepsAllNamespaces reports whether the search will enumerate allpages in every namespace — legitimate but slow, so
+// worth a confirmation. A threshold without protection constraints is served from the count cache alone and never
+// visits allpages, so "(any)" namespace costs nothing there; the unprotected filter always enumerates allpages.
+func (s *protectionWorkflowScreen) sweepsAllNamespaces(minCount int) bool {
+	if _, nsSet := s.selectedNamespaceID(); nsSet {
+		return false
+	}
+	return minCount == 0 || s.protectionFiltersActive() || s.searchNoProtectionSelected()
+}
+
+// startSearch runs the search off the UI goroutine behind a cancellable progress dialog and shows the matches. It takes
+// an immutable criteria snapshot so the worker never reads Fyne widgets off-thread.
+func (s *protectionWorkflowScreen) startSearch(criteria protectSearchCriteria) {
+	ctx, cancel := context.WithCancel(context.Background())
+	progressBar := widget.NewProgressBarInfinite()
+	progressBar.Start()
+	status := widget.NewLabel(t.T("protect_searching", "Searching pages…"))
+	cancelButton := widget.NewButton(t.T("common_cancel", "Cancel"), func() {
+		cancel()
+	})
+	progress := dialog.NewCustomWithoutButtons(
+		t.T("protect_search", "Search"),
+		container.NewVBox(status, progressBar, container.NewHBox(cancelButton)),
+		s.app.window,
+	)
+	progress.SetOnClosed(func() {
+		cancel()
+	})
+	progress.Show()
 
 	go func() {
-		ctx := context.Background()
 		var (
 			titles []string
 			err    error
 		)
-		if minCount > 0 {
-			titles, err = s.searchByMetric(ctx, minCount, s.selectedMetric())
+		if criteria.minCount > 0 {
+			titles, err = s.searchByMetric(ctx, criteria)
 		} else {
-			titles, err = s.searchByAllPages(ctx)
-		}
-		if err != nil {
-			fyne.Do(func() { s.app.showError(t.T("protect_search", "Search"), err) })
-			return
+			titles, err = s.searchByAllPages(ctx, criteria)
 		}
 		sort.Strings(titles)
 		fyne.Do(func() {
+			// Capture the cancellation state before Hide(): dialog.Hide() fires SetOnClosed synchronously, which
+			// cancels ctx — so reading ctx.Err() after Hide() would misread every outcome as a user cancel.
+			canceled := ctx.Err() != nil || errors.Is(err, context.Canceled)
+			progress.Hide()
+			progressBar.Stop()
+			// Honor cancellation regardless of err: a request that completed successfully just before the user
+			// canceled must not still publish results for a search they abandoned.
+			if canceled {
+				return
+			}
+			if err != nil {
+				s.showSearchError(err)
+				return
+			}
 			s.searchResults = titles
 			s.refreshLists()
 		})
 	}()
 }
 
-// searchByAllPages runs the structural + current-protection filters over list=allpages and returns the matching
-// titles. MediaWiki caps a single allpages batch at 500; this issues one batch (protection filters, when set, usually
-// narrow the result well below that).
+// showSearchError turns the search-rejection sentinels into localized guidance — pointing at the manual entry as the
+// escape hatch, since building the page list is then a job for a more specialised tool than Skubell — and reports any
+// other failure as a plain error.
+func (s *protectionWorkflowScreen) showSearchError(err error) {
+	title := t.T("protect_search", "Search")
+	var floorErr *countBelowCacheFloorError
+	switch {
+	case errors.Is(err, errSearchTooBroad):
+		s.app.showMessage(title, t.Td("protect_err_too_broad",
+			"The search matches too many pages (more than {{.Max}} in one namespace). Narrow it with a title prefix "+
+				"or a protection filter, or build the page list with a more specialised tool and paste the titles "+
+				"under Manual entry.",
+			map[string]any{"Max": allPagesBatchSize * maxAllPagesBatches}))
+	case errors.Is(err, errNoCountCache):
+		s.app.showMessage(title, t.T("protect_err_no_count_cache",
+			"This wiki has no cached count data to search, and counting live page by page is too costly. Build the "+
+				"page list with a more specialised tool and paste the titles under Manual entry."))
+	case errors.As(err, &floorErr):
+		s.app.showMessage(title, t.Td("protect_err_count_floor",
+			"This wiki's cached counts only go down to {{.Floor}}, so a lower minimum cannot be answered from them. "+
+				"Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool "+
+				"and paste the titles under Manual entry.",
+			map[string]any{"Floor": floorErr.Floor}))
+	default:
+		s.app.showError(title, err)
+	}
+}
+
 // searchByAllPages runs the structural + current-protection filters over list=allpages. allpages is per-namespace with
 // no "all namespaces" option — so when no namespace is chosen it searches every namespace and combines. (Otherwise a
 // protection-level search in "(any)" namespace silently covers only the main namespace and misses e.g. templates.)
-func (s *protectionWorkflowScreen) searchByAllPages(ctx context.Context) ([]string, error) {
-	if id, ok := s.selectedNamespaceID(); ok {
-		return s.allPagesInNamespace(ctx, id)
+func (s *protectionWorkflowScreen) searchByAllPages(ctx context.Context, c protectSearchCriteria) ([]string, error) {
+	if c.namespaceSet {
+		return s.allPagesInNamespace(ctx, c, c.namespaceID)
 	}
 	var all []string
 	for _, id := range s.namespaceIDs() {
-		titles, err := s.allPagesInNamespace(ctx, id)
+		titles, err := s.allPagesInNamespace(ctx, c, id)
 		if err != nil {
 			return nil, err
 		}
@@ -641,39 +838,132 @@ func (s *protectionWorkflowScreen) searchByAllPages(ctx context.Context) ([]stri
 	return all, nil
 }
 
-// allPagesInNamespace queries a single namespace with the current structural + current-protection filters.
-func (s *protectionWorkflowScreen) allPagesInNamespace(ctx context.Context, nsID int) ([]string, error) {
-	params := map[string]string{
-		"action": "query", "list": "allpages", "aplimit": "500", "formatversion": "2",
-		"apnamespace": strconv.Itoa(nsID),
+// allPagesBatchSize is aplimit per request; maxAllPagesBatches bounds one namespace's enumeration. A namespace still
+// unfinished past the cap fails the search as too broad rather than returning a silently truncated list — a partial
+// result would leave matching pages unprotected with nothing telling the user.
+const (
+	allPagesBatchSize  = 500
+	maxAllPagesBatches = 10
+)
+
+// errSearchTooBroad rejects a search whose allpages enumeration outgrew maxAllPagesBatches; showSearchError maps it to
+// guidance (narrow the search, or paste an explicit list as manual entries).
+var errSearchTooBroad = errors.New("the search matches too many pages")
+
+// allPagesInNamespace queries a single namespace with the criteria's structural + current-protection filters. The
+// "(no protection)" filter has no allpages equivalent, so it is served by subtraction (unprotectedPagesInNamespace).
+func (s *protectionWorkflowScreen) allPagesInNamespace(
+	ctx context.Context, c protectSearchCriteria, nsID int,
+) ([]string, error) {
+	if c.noProtection {
+		return s.unprotectedPagesInNamespace(ctx, c, nsID)
 	}
-	if prefix := strings.TrimSpace(s.searchPrefix.Text); prefix != "" {
-		params["apprefix"] = prefix
+	extra := map[string]string{}
+	if c.apprlevel != "" {
+		extra["apprlevel"] = c.apprlevel
 	}
-	if lvl := s.searchLevelValue(); lvl != "" {
-		params["apprlevel"] = lvl
-	}
-	switch s.searchExpiry.SelectedIndex() {
+	switch c.expiryIndex {
 	case 1:
-		params["apprexpiry"] = "definite"
+		extra["apprexpiry"] = "definite"
 	case 2:
-		params["apprexpiry"] = "indefinite"
+		extra["apprexpiry"] = "indefinite"
 	}
-	switch s.searchCascade.SelectedIndex() {
+	switch c.cascadeIndex {
 	case 1:
-		params["apprfiltercascade"] = "cascading"
+		extra["apprfiltercascade"] = "cascading"
 	case 2:
-		params["apprfiltercascade"] = "noncascading"
+		extra["apprfiltercascade"] = "noncascading"
 	}
-	if s.protectionFiltersActive() {
+	if c.protectionFiltersActive() {
 		// The protection filters only apply when a protection type is named; edit|move covers page protection.
-		params["apprtype"] = "edit|move"
+		extra["apprtype"] = "edit|move"
 	}
-	payload, err := s.app.client.GetContext(ctx, s.app.apiURL, params)
+	return s.enumerateAllPages(ctx, nsID, c.prefix, extra)
+}
+
+// unprotectedPagesInNamespace returns the namespace's titles that carry no protection at all. list=allpages has no
+// "unprotected only" filter and its apprtype filter joins only the direct page_restrictions table, so a page protected
+// through another page's cascade has no direct row and would slip through. It therefore enumerates every matching page
+// and confirms each is unprotected with prop=info, which reports the inherited (sourced) cascade entry too.
+func (s *protectionWorkflowScreen) unprotectedPagesInNamespace(
+	ctx context.Context, c protectSearchCriteria, nsID int,
+) ([]string, error) {
+	all, err := s.enumerateAllPages(ctx, nsID, c.prefix, nil)
 	if err != nil {
 		return nil, err
 	}
-	return parseAllPagesTitles(payload), nil
+	return s.keepUnprotected(ctx, all)
+}
+
+// keepUnprotected returns the subset of titles whose prop=info&inprop=protection reports no protection — direct or
+// inherited via another page's cascade — querying in batches of 50 (the non-apihighlimits titles cap).
+func (s *protectionWorkflowScreen) keepUnprotected(ctx context.Context, titles []string) ([]string, error) {
+	const chunkSize = 50
+	kept := []string{}
+	for start := 0; start < len(titles); start += chunkSize {
+		end := min(start+chunkSize, len(titles))
+		payload, err := s.app.client.GetContext(ctx, s.app.apiURL, map[string]string{
+			"action": "query", "prop": "info", "inprop": "protection",
+			"titles": strings.Join(titles[start:end], "|"), "formatversion": "2",
+		})
+		if err != nil {
+			return nil, err
+		}
+		kept = append(kept, unprotectedTitles(payload)...)
+	}
+	return kept, nil
+}
+
+// unprotectedTitles returns the titles in a prop=info&inprop=protection payload whose protection array is empty — no
+// direct restriction and no cascade-sourced entry. A non-empty array (including a sourced/inherited one) means the page
+// is effectively protected, so it is excluded.
+func unprotectedTitles(payload map[string]any) []string {
+	out := []string{}
+	query, _ := payload["query"].(map[string]any)
+	pages, _ := query["pages"].([]any)
+	for _, raw := range pages {
+		page, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if prot, _ := page["protection"].([]any); len(prot) > 0 {
+			continue
+		}
+		if title, _ := page["title"].(string); strings.TrimSpace(title) != "" {
+			out = append(out, title)
+		}
+	}
+	return out
+}
+
+// enumerateAllPages lists a namespace's titles under the given prefix and extra allpages filters, following the
+// continuation until the namespace is exhausted or the batch cap trips (errSearchTooBroad).
+func (s *protectionWorkflowScreen) enumerateAllPages(
+	ctx context.Context, nsID int, prefix string, extra map[string]string,
+) ([]string, error) {
+	params := map[string]string{
+		"action": "query", "list": "allpages", "aplimit": strconv.Itoa(allPagesBatchSize), "formatversion": "2",
+		"apnamespace": strconv.Itoa(nsID),
+	}
+	if prefix != "" {
+		params["apprefix"] = prefix
+	}
+	maps.Copy(params, extra)
+	titles := []string{}
+	for range maxAllPagesBatches {
+		payload, err := s.app.client.GetContext(ctx, s.app.apiURL, params)
+		if err != nil {
+			return nil, err
+		}
+		titles = append(titles, parseAllPagesTitles(payload)...)
+		continueMap, _ := payload["continue"].(map[string]any)
+		next, _ := continueMap["apcontinue"].(string)
+		if next == "" {
+			return titles, nil
+		}
+		params["apcontinue"] = next
+	}
+	return nil, errSearchTooBroad
 }
 
 // namespaceIDs returns the wiki's listable namespace IDs (>= 0, excluding the Special/Media pseudo-namespaces), sorted.
@@ -694,82 +984,92 @@ func (s *protectionWorkflowScreen) protectionFiltersActive() bool {
 	return s.searchLevelValue() != "" || s.searchExpiry.SelectedIndex() > 0 || s.searchCascade.SelectedIndex() > 0
 }
 
-// linkMetric bundles the API surfaces for a count metric so the search machinery is metric-agnostic: a whole-wiki
-// cached querypage (the primary source) plus the per-page prop used for the bounded live fallback.
-type linkMetric struct {
-	queryPage  string // list=querypage&qppage= : cached whole-wiki list, sorted by count
-	prop       string // prop= : per-page count for the live fallback
-	limitParam string // the prop's limit parameter (tilimit / lhlimit)
-	resultKey  string // the array key the prop returns (transcludedin / linkshere)
-}
-
-var (
-	metricTransclusions = linkMetric{"Mostlinkedtemplates", "transcludedin", "tilimit", "transcludedin"}
-	metricInboundLinks  = linkMetric{"Mostlinked", "linkshere", "lhlimit", "linkshere"}
+// The cached querypage serving each count metric (list=querypage&qppage=): a whole-wiki title-to-count list, sorted
+// by count. Transclusions come from Mostlinkedtemplates and inbound links from Mostlinked — the names MediaWiki
+// accepts (Mosttranscludedpages / Mostlinkedpages are badvalue).
+const (
+	queryPageTransclusions = "Mostlinkedtemplates"
+	queryPageInboundLinks  = "Mostlinked"
 )
 
-// selectedMetric maps the metric picker to its API surfaces; transclusions is the default (index 0).
-func (s *protectionWorkflowScreen) selectedMetric() linkMetric {
+// selectedMetric maps the metric picker to the querypage serving it; transclusions is the default (index 0).
+func (s *protectionWorkflowScreen) selectedMetric() string {
 	if s.searchMetric != nil && s.searchMetric.SelectedIndex() == 1 {
-		return metricInboundLinks
+		return queryPageInboundLinks
 	}
-	return metricTransclusions
+	return queryPageTransclusions
+}
+
+// errNoCountCache rejects a count search on a wiki whose querypage cache is empty (a miser-mode wiki whose cron has
+// not run): Skubell never counts live page by page — prohibitive in the general case — so a more specialised tool must
+// produce the page list instead, pasted as manual entries. showSearchError maps it to that guidance.
+var errNoCountCache = errors.New("the wiki has no cached count data")
+
+// countBelowCacheFloorError rejects a threshold the cache can't settle: the querypage holds only the wiki's top pages
+// and may be truncated amid entries tied at the smallest cached count, so a page with exactly that count can be absent.
+type countBelowCacheFloorError struct {
+	Floor int // one above the smallest cached count — the lowest threshold the cache can answer reliably
+}
+
+func (e *countBelowCacheFloorError) Error() string {
+	return fmt.Sprintf("the minimum count is below the cached floor of %d", e.Floor)
 }
 
 // searchByMetric serves the minimum-count threshold from the wiki's matching cached querypage (whole-wiki, counts
 // precomputed) so a page used/linked on tens of thousands of pages is found regardless of alphabetical position, in a
 // couple of requests; namespace/prefix are then applied client-side. When current-protection filters are also set —
-// they have no cached equivalent — MediaWiki applies them via allpages and the threshold is taken from the cache. If
-// the cache is unavailable (a miser-mode wiki whose querypage cron has not run), it degrades to a bounded live
-// allpages enumeration.
-func (s *protectionWorkflowScreen) searchByMetric(ctx context.Context, minCount int, m linkMetric) ([]string, error) {
-	counts, minCached, cacheOK := s.fetchQueryPageCounts(ctx, m.queryPage)
-
-	if s.protectionFiltersActive() {
-		titles, err := s.searchByAllPages(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !cacheOK {
-			return s.liveCountThreshold(ctx, titles, minCount, m), nil
-		}
-		kept, needLive := partitionByCachedCounts(titles, counts, minCached, cacheOK, minCount)
-		return append(kept, s.liveCountThreshold(ctx, needLive, minCount, m)...), nil
+// they have no cached equivalent — MediaWiki applies them via allpages and the cache settles the threshold. A search
+// the cache cannot settle is rejected (errNoCountCache / countBelowCacheFloorError) rather than counted live.
+func (s *protectionWorkflowScreen) searchByMetric(ctx context.Context, c protectSearchCriteria) ([]string, error) {
+	counts, minCached, err := s.fetchQueryPageCounts(ctx, c.metric)
+	if err != nil {
+		return nil, err
+	}
+	// The cache holds only the wiki's top pages, so it may be truncated amid entries tied at the smallest cached
+	// count — a page with exactly that count can be missing. Only thresholds strictly above the floor are safe; the
+	// error reports the lowest answerable threshold (one above the floor).
+	if c.minCount <= minCached {
+		return nil, &countBelowCacheFloorError{Floor: minCached + 1}
 	}
 
-	if !cacheOK {
-		titles, err := s.searchByAllPages(ctx)
+	if c.needsAllPages() {
+		titles, err := s.searchByAllPages(ctx, c)
 		if err != nil {
 			return nil, err
 		}
-		return s.liveCountThreshold(ctx, titles, minCount, m), nil
+		// minCount > minCached, so a title absent from the cache is genuinely below the threshold.
+		kept := []string{}
+		for _, title := range titles {
+			if counts[title] >= c.minCount {
+				kept = append(kept, title)
+			}
+		}
+		return kept, nil
 	}
 
 	candidates := make([]string, 0, len(counts))
 	for title, count := range counts {
-		if count >= minCount {
+		if count >= c.minCount {
 			candidates = append(candidates, title)
 		}
 	}
-	return s.filterByNamespaceAndPrefix(candidates), nil
+	return s.filterByNamespaceAndPrefix(c, candidates), nil
 }
 
-// filterByNamespaceAndPrefix keeps cache candidates matching the selected namespace and title prefix, evaluated
+// filterByNamespaceAndPrefix keeps cache candidates matching the criteria's namespace and title prefix, evaluated
 // client-side (no extra requests). Prefix matching is case/underscore-insensitive on the page's main text — a search
 // convenience; operations always use the exact cached title, so there is no case conflation (§3.3).
-func (s *protectionWorkflowScreen) filterByNamespaceAndPrefix(titles []string) []string {
-	nsID, nsSet := s.selectedNamespaceID()
-	prefix := strings.TrimSpace(s.searchPrefix.Text)
-	if !nsSet && prefix == "" {
+func (s *protectionWorkflowScreen) filterByNamespaceAndPrefix(c protectSearchCriteria, titles []string) []string {
+	if !c.namespaceSet && c.prefix == "" {
 		return titles
 	}
 	kept := []string{}
 	for _, title := range titles {
 		id, main := s.splitNamespace(title)
-		if nsSet && id != nsID {
+		if c.namespaceSet && id != c.namespaceID {
 			continue
 		}
-		if prefix != "" && !hasPrefixFold(main, prefix) {
+		if c.prefix != "" && !hasPrefixFold(main, c.prefix) {
 			continue
 		}
 		kept = append(kept, title)
@@ -819,6 +1119,21 @@ func (s *protectionWorkflowScreen) searchLevelValue() string {
 	return sel
 }
 
+// applySearchLevelRule keeps the current-expiry and cascade filters usable for any level and for "(any)" — they are
+// independent protection filters (all temporary / all cascading pages), each implying apprtype=edit|move on its own.
+// They are only disabled and reset for "(no protection)", where they are contradictory: an unprotected page has neither.
+func (s *protectionWorkflowScreen) applySearchLevelRule() {
+	if s.searchNoProtectionSelected() {
+		s.searchExpiry.SetSelectedIndex(0)
+		s.searchExpiry.Disable()
+		s.searchCascade.SetSelectedIndex(0)
+		s.searchCascade.Disable()
+		return
+	}
+	s.searchExpiry.Enable()
+	s.searchCascade.Enable()
+}
+
 func parseAllPagesTitles(payload map[string]any) []string {
 	out := []string{}
 	query, _ := payload["query"].(map[string]any)
@@ -833,33 +1148,12 @@ func parseAllPagesTitles(payload map[string]any) []string {
 	return out
 }
 
-// partitionByCachedCounts splits titles into those the cached counts already settle (kept when count >= minLinks) and
-// those needing a live recount. Absence from the cache means "below threshold" only when the cache is authoritative
-// down to minLinks (minLinks >= the smallest cached count); otherwise the title must be verified live.
-func partitionByCachedCounts(
-	titles []string, counts map[string]int, minCached int, cacheOK bool, minLinks int,
-) (kept, needLive []string) {
-	for _, title := range titles {
-		if c, found := counts[title]; found {
-			if c >= minLinks {
-				kept = append(kept, title)
-			}
-			continue
-		}
-		if cacheOK && minLinks >= minCached {
-			continue
-		}
-		needLive = append(needLive, title)
-	}
-	return kept, needLive
-}
-
-// fetchQueryPageCounts reads a cached count querypage (e.g. Mostlinkedtemplates / Mostlinked) into title -> count. The
-// bool is false when the cache is empty or unavailable (e.g. a freshly-installed wiki whose querypage cron has not run
-// yet), telling the caller to verify live instead. The int is the smallest count returned — the cache's authority floor.
+// fetchQueryPageCounts reads a cached count querypage (e.g. Mostlinkedtemplates / Mostlinked) into title -> count,
+// plus the smallest count returned — the cache's authority floor. An empty cache (e.g. a freshly-installed wiki whose
+// querypage cron has not run yet) is errNoCountCache; a failed request is reported as itself, not as a missing cache.
 func (s *protectionWorkflowScreen) fetchQueryPageCounts(
 	ctx context.Context, qpPage string,
-) (map[string]int, int, bool) {
+) (map[string]int, int, error) {
 	params := map[string]string{
 		"action": "query", "list": "querypage", "qppage": qpPage,
 		"qplimit": "max", "formatversion": "2",
@@ -869,7 +1163,7 @@ func (s *protectionWorkflowScreen) fetchQueryPageCounts(
 	for {
 		payload, err := s.app.client.GetContext(ctx, s.app.apiURL, params)
 		if err != nil {
-			return nil, 0, false
+			return nil, 0, err
 		}
 		for title, value := range parseQueryPageCounts(payload) {
 			counts[title] = value
@@ -878,42 +1172,32 @@ func (s *protectionWorkflowScreen) fetchQueryPageCounts(
 			}
 		}
 		continueMap, _ := payload["continue"].(map[string]any)
-		next, _ := continueMap["qpoffset"].(string)
+		next := continueToken(continueMap["qpoffset"])
 		if next == "" {
 			break
 		}
 		params["qpoffset"] = next
 	}
 	if len(counts) == 0 {
-		return nil, 0, false
+		return nil, 0, errNoCountCache
 	}
-	return counts, minCached, true
+	return counts, minCached, nil
 }
 
-// liveCountThreshold counts the metric live per candidate — the degraded path, used only when the cached querypage is
-// unavailable, or for the few allpages hits absent from the cache. Each title costs one request (fetching at most
-// minCount entries, inferring "more exist" from the continue token). Inputs are already bounded by the allpages batch
-// (≤500); it honors context cancellation so a slow degraded search can be stopped.
-func (s *protectionWorkflowScreen) liveCountThreshold(
-	ctx context.Context, titles []string, minCount int, m linkMetric,
-) []string {
-	kept := []string{}
-	for _, title := range titles {
-		if ctx.Err() != nil {
-			break
-		}
-		payload, err := s.app.client.GetContext(ctx, s.app.apiURL, map[string]string{
-			"action": "query", "prop": m.prop, "titles": title,
-			m.limitParam: strconv.Itoa(minCount), "formatversion": "2",
-		})
-		if err != nil {
-			continue
-		}
-		if countAtLeast(payload, m.resultKey, minCount) {
-			kept = append(kept, title)
-		}
+// continueToken renders a continuation value, which MediaWiki may serialize as a string or (for qpoffset under
+// formatversion=2) a JSON number, into its decimal string form. A plain string assertion drops the numeric form and
+// stops the loop after the first batch, truncating the cache; other types yield "".
+func continueToken(v any) string {
+	switch n := v.(type) {
+	case string:
+		return strings.TrimSpace(n)
+	case float64:
+		return strconv.FormatInt(int64(n), 10)
+	case json.Number:
+		return n.String()
+	default:
+		return ""
 	}
-	return kept
 }
 
 // parseQueryPageCounts extracts title -> value (the querypage metric, here transclusion count) from a querypage
@@ -964,25 +1248,6 @@ func queryPageValue(v any) int {
 	}
 }
 
-// countAtLeast reports whether the page's metric array (key: transcludedin / linkshere) holds at least minCount
-// entries, using the returned batch size plus the presence of a continuation token (more exist beyond the limit).
-func countAtLeast(payload map[string]any, key string, minCount int) bool {
-	query, _ := payload["query"].(map[string]any)
-	pages, _ := query["pages"].([]any)
-	count := 0
-	for _, raw := range pages {
-		page, _ := raw.(map[string]any)
-		if arr, ok := page[key].([]any); ok {
-			count += len(arr)
-		}
-	}
-	if count >= minCount {
-		return true
-	}
-	_, hasMore := payload["continue"]
-	return hasMore
-}
-
 // ---- options ----
 
 func (s *protectionWorkflowScreen) showOptionsStep() {
@@ -994,12 +1259,18 @@ func (s *protectionWorkflowScreen) showOptionsStep() {
 		ProceedEnabled: true,
 		ProceedLabel:   t.T("common_proceed", "Proceed"),
 	})
-	s.wf.SetContent(s.buildOptionsContent())
-	s.loadExpiryOptions()
-	s.loadProtectReasonsIfNeeded()
+	// Build the Options widgets once and retain them: navigating to Verification and Back must preserve every choice
+	// (level, expiry, same-as-edit, cascade, reason), not reset to defaults. Reasons come from the session cache, so
+	// the Select is built already populated.
+	if s.optionsContent == nil {
+		s.loadReasons()
+		s.optionsContent = s.buildOptionsContent()
+		s.loadExpiryOptions()
+	}
+	s.wf.SetContent(s.optionsContent)
 }
 
-// reasonSelectOptions lists "(none)" plus the wiki's predefined protection reasons, showing "(loading…)" while they load.
+// reasonSelectOptions lists "(none)" plus the wiki's predefined protection reasons.
 func (s *protectionWorkflowScreen) reasonSelectOptions() []string {
 	none := t.T("protect_reason_none", "(none)")
 	options := []string{none}
@@ -1008,16 +1279,13 @@ func (s *protectionWorkflowScreen) reasonSelectOptions() []string {
 			options = append(options, r)
 		}
 	}
-	if len(s.reasons) == 0 && s.reasonsLoading {
-		options = append(options, t.T("protect_reason_loading", "(loading...)"))
-	}
 	return options
 }
 
 // combinedReason joins the selected predefined reason and the free-text addition, mirroring the deletion workflow.
 func (s *protectionWorkflowScreen) combinedReason() string {
 	reason := strings.TrimSpace(s.reasonSelect.Selected)
-	if reason == t.T("protect_reason_none", "(none)") || reason == t.T("protect_reason_loading", "(loading...)") {
+	if reason == t.T("protect_reason_none", "(none)") {
 		reason = ""
 	}
 	extra := strings.TrimSpace(s.reasonEntry.Text)
@@ -1031,52 +1299,18 @@ func (s *protectionWorkflowScreen) combinedReason() string {
 	}
 }
 
-// loadProtectReasonsIfNeeded lazily fetches the wiki's Protect-dropdown reasons and repopulates the reason Select.
-func (s *protectionWorkflowScreen) loadProtectReasonsIfNeeded() {
-	if len(s.reasons) > 0 || s.reasonsLoading || s.app.client == nil {
+// loadReasons fills the reason list from the reasons cached when the session connected, so reaching the options step
+// costs no request and cannot fail here.
+func (s *protectionWorkflowScreen) loadReasons() {
+	if len(s.reasons) > 0 {
 		return
 	}
-	s.reasonsLoading = true
-	if s.reasonSelect != nil {
-		s.reasonSelect.Options = s.reasonSelectOptions()
-		s.reasonSelect.Refresh()
-	}
-	go func() {
-		dropdowns, err := api.FetchReasonDropdownsContext(
-			context.Background(), s.app.client, s.app.apiURL, s.app.currentWiki.AdminLanguage)
-		reasons := []string{}
-		if err == nil {
-			if protectReasons, ok := dropdowns["protect"]; ok {
-				for _, category := range protectReasons.Categories {
-					for _, reason := range category.Reasons {
-						if strings.TrimSpace(reason) != "" {
-							reasons = append(reasons, reason)
-						}
-					}
-				}
-			}
-		}
-		sort.Strings(reasons)
-		fyne.Do(func() {
-			s.reasonsLoading = false
-			s.reasons = reasons
-			if s.reasonSelect != nil {
-				previous := s.reasonSelect.Selected
-				s.reasonSelect.Options = s.reasonSelectOptions()
-				s.reasonSelect.Refresh()
-				if previous != "" && previous != t.T("protect_reason_loading", "(loading...)") {
-					s.reasonSelect.SetSelected(previous)
-				} else {
-					s.reasonSelect.SetSelectedIndex(0)
-				}
-			}
-		})
-	}()
+	s.reasons = s.app.reasonsForAction(api.ReasonActionProtect)
 }
 
 func (s *protectionWorkflowScreen) buildOptionsContent() fyne.CanvasObject {
 	tabs := container.NewAppTabs()
-	for _, typ := range protectionTabTypes {
+	for _, typ := range s.exposedTypes() {
 		tabs.Append(container.NewTabItem(s.typeTabLabel(typ), s.buildTypeTab(typ)))
 	}
 
@@ -1134,7 +1368,10 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 		labeled(t.T("protect_field_expiry", "Expiry"), expiry.root),
 	)
 
-	if typ == "edit" {
+	// The "Same as Edit" mirror only makes sense when an Edit tab exists. When the wiki omits edit protection (its
+	// configured types have move/create but not edit), captureOptions would otherwise mirror to an absent edit tab and
+	// dereference nil widgets, so mirroring is offered only when edit is exposed.
+	if typ == "edit" || !s.editExposed() {
 		s.applyTypeEnabled(typ) // no "same as edit" box, but still apply the level -> expiry rule
 		return body
 	}
@@ -1144,6 +1381,11 @@ func (s *protectionWorkflowScreen) buildTypeTab(typ string) fyne.CanvasObject {
 	s.sameAsEdit[typ] = same
 	s.applyTypeEnabled(typ)
 	return container.NewVBox(same, body)
+}
+
+// editExposed reports whether the Edit tab is among the exposed tabs.
+func (s *protectionWorkflowScreen) editExposed() bool {
+	return slices.Contains(s.exposedTypes(), "edit")
 }
 
 func (s *protectionWorkflowScreen) applicabilityNote(typ string) string {
@@ -1194,28 +1436,30 @@ func (s *protectionWorkflowScreen) expiryMenu() []string {
 	return []string{"infinite", "1 week", "1 month", "3 months", "6 months", "1 year"}
 }
 
-// loadExpiryOptions fetches MediaWiki:Protect-expiry-options (the predefined-durations dropdown) once.
+// loadExpiryOptions fetches MediaWiki:Protect-expiry-options (the predefined-durations dropdown) once. When the reply
+// arrives it preserves each control's current preset selection if it still exists, so a choice made against the
+// fallback menu before the fetch returns is not silently reset. expiryLoading guards against a duplicate in-flight load.
 func (s *protectionWorkflowScreen) loadExpiryOptions() {
-	if len(s.expiryOptions) > 0 || s.app.client == nil {
+	if len(s.expiryOptions) > 0 || s.expiryLoading || s.app.client == nil {
 		return
 	}
+	s.expiryLoading = true
 	go func() {
 		payload, err := s.app.client.GetContext(context.Background(), s.app.apiURL, map[string]string{
 			"action": "query", "meta": "allmessages", "ammessages": "Protect-expiry-options", "formatversion": "2",
 		})
-		if err != nil {
-			return
-		}
-		options := parseExpiryOptions(payload)
-		if len(options) == 0 {
-			return
+		var options []string
+		if err == nil {
+			options = parseExpiryOptions(payload)
 		}
 		fyne.Do(func() {
+			s.expiryLoading = false
+			if len(options) == 0 {
+				return
+			}
 			s.expiryOptions = options
 			for _, in := range s.expiryInputs {
-				in.predefined.Options = options
-				in.predefined.SetSelectedIndex(0)
-				in.predefined.Refresh()
+				in.setPredefinedOptions(options)
 			}
 		})
 	}()
@@ -1250,7 +1494,7 @@ func parseExpiryOptions(payload map[string]any) []string {
 // captureOptions reads the Options widgets into protect.Settings, returning a validation message (or "" when valid).
 func (s *protectionWorkflowScreen) captureOptions() string {
 	byType := map[string]protect.TypeSetting{}
-	for _, typ := range protectionTabTypes {
+	for _, typ := range s.exposedTypes() {
 		src := typ
 		if same, ok := s.sameAsEdit[typ]; ok && same.Checked {
 			src = "edit" // mirror edit's level+expiry
@@ -1284,20 +1528,29 @@ func (s *protectionWorkflowScreen) validateNamespaceProtectAccess() string {
 	return ""
 }
 
-// typeSetting builds the target for one restriction type, returning a validation message when its expiry is invalid.
+// typeSetting builds the target for one restriction type from its independent level and expiry controls, returning a
+// validation message when the expiry is invalid. Level and expiry each carry a "(no change)" state, so a page's level
+// and expiry can be changed independently (e.g. keep the level but set a new expiry, or vice versa).
 func (s *protectionWorkflowScreen) typeSetting(typ string) (protect.TypeSetting, string) {
 	levelSel := strings.TrimSpace(s.levelSelects[typ].Selected)
-	if levelSel == noChangeLevel() || levelSel == "" {
-		return protect.TypeSetting{KeepLevel: true, KeepExpiry: true}, "" // leave this type unchanged
-	}
 	if levelSel == removeLevel() {
 		return protect.TypeSetting{Level: ""}, "" // remove protection; expiry is irrelevant
 	}
-	expiry, err := s.expiryInputs[typ].value()
+	setting := protect.TypeSetting{KeepLevel: levelSel == noChangeLevel() || levelSel == ""}
+	if !setting.KeepLevel {
+		setting.Level = levelSel
+	}
+	expiry := s.expiryInputs[typ]
+	if expiry.isNoChange() {
+		setting.KeepExpiry = true
+		return setting, ""
+	}
+	value, err := expiry.value()
 	if err != nil {
 		return protect.TypeSetting{}, err.Error()
 	}
-	return protect.TypeSetting{Level: levelSel, Expiry: expiry}, ""
+	setting.Expiry = value
+	return setting, ""
 }
 
 // ---- verification (read phase) ----
@@ -1355,7 +1608,19 @@ func protectionRowText(item protect.PlanItem) string {
 			parts = append(parts, fmt.Sprintf("%s: %s → %s", c.Type, from, to))
 		}
 	}
+	if item.FromCascade != item.ToCascade {
+		parts = append(parts, fmt.Sprintf("%s: %s → %s", t.T("protect_field_cur_cascade", "Cascade"),
+			cascadeStateWord(item.FromCascade), cascadeStateWord(item.ToCascade)))
+	}
 	return item.Title + "  [" + strings.Join(parts, ", ") + "]"
+}
+
+// cascadeStateWord names a cascade on/off state using the same words as the search cascade filter.
+func cascadeStateWord(on bool) string {
+	if on {
+		return t.T("protect_cascade_only", "cascading")
+	}
+	return t.T("protect_noncascade", "non-cascading")
 }
 
 func protectionStateText(level, expiry string) string {
@@ -1376,9 +1641,10 @@ func (s *protectionWorkflowScreen) computePreview() {
 	s.previewComputing = true
 	reader := &protectionProvider{client: s.app.client, apiURL: s.app.apiURL}
 	cascading := s.app.currentCaps.CascadingLevels
+	restrictionTypes := s.app.currentCaps.RestrictionTypes
 
 	go func() {
-		plan, err := protect.BuildPlan(ctx, reader, titles, s.settings, cascading)
+		plan, err := protect.BuildPlan(ctx, reader, titles, s.settings, cascading, restrictionTypes)
 		fyne.Do(func() {
 			s.previewComputing = false
 			s.previewCancel = nil
@@ -1561,7 +1827,7 @@ func (s *protectionWorkflowScreen) applyOne(
 	}
 	if len(results) == 0 || !results[0].Success {
 		if len(results) > 0 && results[0].Error != nil {
-			return "error", api.FriendlyErrorMessage(results[0].Error), results[0].Error.Code
+			return "error", api.FriendlyProtectErrorMessage(results[0].Error), results[0].Error.Code
 		}
 		return "error", t.T("protect_unknown_failure", "unknown failure"), ""
 	}

@@ -34,3 +34,21 @@ func TestParsePageProtection(t *testing.T) {
 	require.True(t, unprotected.Exists)
 	require.Empty(t, unprotected.Protections)
 }
+
+// A restriction inherited from another page's cascade carries a "source" field: it is not a direct protection on this
+// page, so it must be excluded — otherwise a later move/edit change resends it and an unprotect preview claims to
+// remove a restriction that stays inherited.
+func TestParsePageProtectionExcludesInherited(t *testing.T) {
+	t.Parallel()
+
+	page := parsePageProtection("Cascaded", map[string]any{
+		"title": "Cascaded",
+		"protection": []any{
+			map[string]any{"type": "edit", "level": "sysop", "expiry": "infinity", "source": "Template:Hub"},
+			map[string]any{"type": "move", "level": "autoconfirmed", "expiry": "infinity"}, // page's own
+		},
+	})
+	require.True(t, page.Exists)
+	require.NotContains(t, page.Protections, "edit", "inherited (sourced) protection is not direct")
+	require.Equal(t, "autoconfirmed", page.Protections["move"].Level)
+}

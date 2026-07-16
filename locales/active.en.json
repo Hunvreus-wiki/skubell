@@ -319,6 +319,9 @@
   "protect_computing": {
     "other": "Computing changes…"
   },
+  "protect_confirm_all_namespaces": {
+    "other": "No namespace is selected, so all {{.Count}} namespaces will be searched. This can be slow. Search anyway?"
+  },
   "protect_download_journal": {
     "other": "Download journal"
   },
@@ -331,11 +334,23 @@
   "protect_err_bad_duration": {
     "other": "Enter a positive whole number for the custom duration."
   },
+  "protect_err_count_floor": {
+    "other": "This wiki's cached counts only go down to {{.Floor}}, so a lower minimum cannot be answered from them. Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool and paste the titles under Manual entry."
+  },
+  "protect_err_need_criterion": {
+    "other": "Enter at least one search criterion: a namespace, a title prefix, a protection filter, or a minimum count."
+  },
+  "protect_err_no_count_cache": {
+    "other": "This wiki has no cached count data to search, and counting live page by page is too costly. Build the page list with a more specialised tool and paste the titles under Manual entry."
+  },
   "protect_err_no_date": {
     "other": "Pick a date for the expiry."
   },
   "protect_err_past_date": {
     "other": "The expiry date must be in the future."
+  },
+  "protect_err_too_broad": {
+    "other": "The search matches too many pages (more than {{.Max}} in one namespace). Narrow it with a title prefix or a protection filter, or build the page list with a more specialised tool and paste the titles under Manual entry."
   },
   "protect_exec_canceled": {
     "other": "Execution canceled."
@@ -463,9 +478,6 @@
   "protect_preview_summary": {
     "other": "{{.Change}} will change · {{.Unchanged}} unchanged · {{.Invalid}} can't apply"
   },
-  "protect_reason_loading": {
-    "other": "(loading...)"
-  },
   "protect_reason_none": {
     "other": "(none)"
   },
@@ -480,6 +492,9 @@
   },
   "protect_search_results": {
     "other": "Search results"
+  },
+  "protect_searching": {
+    "other": "Searching pages…"
   },
   "protect_selected_count": {
     "other": "{{.Count}} selected"

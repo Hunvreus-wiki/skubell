@@ -60,6 +60,29 @@ func TestProtectTranslatorUnprotectAndDefaults(t *testing.T) {
 	require.False(t, hasReason)
 }
 
+// A wiki-specific custom restriction type the planner preserved (beyond edit/create/move/upload) must still be
+// emitted, or action=protect's whole-set replacement would drop it — the very removal the preservation guards against.
+func TestProtectTranslatorEmitsCustomTypes(t *testing.T) {
+	t.Parallel()
+
+	op := ops.Operation{
+		Type: ops.OpProtectPage,
+		Params: map[string]string{
+			"title":        "Board:Discussion",
+			"protect_edit": "sysop",
+			"expiry_edit":  "infinite",
+			"protect_flow": "sysop", // a custom $wgRestrictionTypes action
+			"expiry_flow":  "infinite",
+		},
+	}
+
+	calls, err := ProtectTranslator{}.Translate(op, WikiCapabilities{})
+	require.NoError(t, err)
+	// Canonical types come first (edit), custom types after in sorted order (flow).
+	require.Equal(t, "edit=sysop|flow=sysop", calls[0].Params["protections"])
+	require.Equal(t, "infinite|infinite", calls[0].Params["expiry"])
+}
+
 func TestProtectTranslatorRejectsBadInput(t *testing.T) {
 	t.Parallel()
 

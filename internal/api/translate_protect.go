@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/Hunvreus-wiki/skubell/internal/ops"
@@ -40,12 +41,9 @@ func (t ProtectTranslator) Translate(op ops.Operation, _ WikiCapabilities) ([]AP
 	}
 
 	var protections, expiries []string
-	for _, typ := range protectionTypeOrder {
-		level, ok := op.Params["protect_"+typ]
-		if !ok {
-			continue // this type is not being set on this page
-		}
-		if level = strings.TrimSpace(level); level == "" {
+	for _, typ := range protectionTypesInParams(op.Params) {
+		level := strings.TrimSpace(op.Params["protect_"+typ])
+		if level == "" {
 			level = "all" // "" and "all" both mean "no restriction" to the API
 		}
 		protections = append(protections, typ+"="+level)
@@ -79,4 +77,31 @@ func (t ProtectTranslator) Translate(op ops.Operation, _ WikiCapabilities) ([]AP
 			Params: params,
 		},
 	}, nil
+}
+
+// protectionTypesInParams lists the restriction types present as protect_<type> keys: the canonical types first (in
+// protectionTypeOrder), then any wiki-specific custom types sorted for determinism. Emitting every present type — not
+// just the canonical four — is what keeps a preserved custom restriction from being dropped by action=protect's
+// whole-set replacement.
+func protectionTypesInParams(params map[string]string) []string {
+	seen := map[string]struct{}{}
+	types := make([]string, 0, len(params))
+	for _, typ := range protectionTypeOrder {
+		if _, ok := params["protect_"+typ]; ok {
+			types = append(types, typ)
+			seen[typ] = struct{}{}
+		}
+	}
+	extra := []string{}
+	for key := range params {
+		typ, ok := strings.CutPrefix(key, "protect_")
+		if !ok {
+			continue
+		}
+		if _, known := seen[typ]; !known {
+			extra = append(extra, typ)
+		}
+	}
+	sort.Strings(extra)
+	return append(types, extra...)
 }

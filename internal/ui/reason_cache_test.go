@@ -59,3 +59,17 @@ func TestLoadReasonsUsesCacheWithoutClient(t *testing.T) {
 	require.Equal(t, []string{"Copyright violation", "Spam"}, screen.reasons)
 	require.Equal(t, []string{"(none)", "Copyright violation", "Spam"}, screen.reasonSelectOptions())
 }
+
+// TestProtectLoadReasonsUsesCacheWithoutClient is the same guarantee for the protection workflow: its options step
+// reads the session cache, so the reasons appear even with no client to fetch them with.
+func TestProtectLoadReasonsUsesCacheWithoutClient(t *testing.T) {
+	t.Parallel()
+
+	screen := &protectionWorkflowScreen{app: &App{reasonDropdowns: testReasonDropdowns()}}
+	require.Nil(t, screen.app.client)
+
+	screen.loadReasons()
+
+	require.Equal(t, []string{"Edit war"}, screen.reasons)
+	require.Equal(t, []string{"(none)", "Edit war"}, screen.reasonSelectOptions())
+}

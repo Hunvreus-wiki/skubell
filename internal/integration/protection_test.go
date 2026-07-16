@@ -72,7 +72,9 @@ func runProtectionPlan(
 	t *testing.T, c *api.Client, url string, caps api.WikiCapabilities, titles []string, s protect.Settings,
 ) []api.APIResult {
 	t.Helper()
-	plan, err := protect.BuildPlan(context.Background(), protReader{c: c, url: url}, titles, s, caps.CascadingLevels)
+	plan, err := protect.BuildPlan(
+		context.Background(), protReader{c: c, url: url}, titles, s, caps.CascadingLevels, caps.RestrictionTypes,
+	)
 	require.NoError(t, err)
 	executor, err := api.NewHttpExecutor(c, url)
 	require.NoError(t, err)
