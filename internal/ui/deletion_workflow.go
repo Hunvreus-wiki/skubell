@@ -191,7 +191,8 @@ func NewDeletionWorkflowScreen(app *App) *deleteWorkflowScreen {
 		selectedFinalIndex:   -1,
 		selectedPreviewIndex: -1,
 	}
-	s.wf = newWorkflowController(app, s.onBack, s.onHome, s.onCancel, s.onProceed)
+	s.wf = newWorkflowController(app, t.T("workflow_delete_pages", "Delete pages"), s.onBack, s.onHome, s.onCancel,
+		s.onProceed)
 	s.root = s.wf.Canvas()
 	s.showSelectionStep()
 	return s

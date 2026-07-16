@@ -20,6 +20,36 @@ func TestParseSiteInfoFromFixture(t *testing.T) {
 	require.Contains(t, caps.Extensions, "Abuse Filter")
 }
 
+func TestParseSiteInfoParsesRestrictions(t *testing.T) {
+	t.Parallel()
+
+	withRestrictions, err := parseSiteInfoResponse(map[string]any{
+		"query": map[string]any{
+			"general": map[string]any{"generator": "MediaWiki 1.46.0"},
+			"restrictions": map[string]any{
+				"types":               []any{"create", "edit", "move", "upload"},
+				"levels":              []any{"", "autoconfirmed", "extendedconfirmed", "sysop"},
+				"cascadinglevels":     []any{"sysop"},
+				"semiprotectedlevels": []any{"autoconfirmed"},
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{"create", "edit", "move", "upload"}, withRestrictions.RestrictionTypes)
+	// The "" (no-restriction) level is preserved, and a wiki's custom/extended level comes through.
+	require.Equal(t, []string{"", "autoconfirmed", "extendedconfirmed", "sysop"}, withRestrictions.RestrictionLevels)
+	require.Equal(t, []string{"sysop"}, withRestrictions.CascadingLevels)
+	require.Equal(t, []string{"autoconfirmed"}, withRestrictions.SemiProtectedLevels)
+
+	// Restrictions are optional: absence yields nil, not an error.
+	without, err := parseSiteInfoResponse(map[string]any{
+		"query": map[string]any{"general": map[string]any{"generator": "MediaWiki 1.43.9"}},
+	})
+	require.NoError(t, err)
+	require.Nil(t, without.RestrictionTypes)
+	require.Nil(t, without.RestrictionLevels)
+}
+
 func TestParseSiteInfoParsesStatistics(t *testing.T) {
 	t.Parallel()
 

@@ -301,6 +301,252 @@
   "prefs_title": {
     "other": "Préférences"
   },
+  "protect_add_results": {
+    "other": "Ajouter les résultats à la liste"
+  },
+  "protect_add_to_list": {
+    "other": "Ajouter à la liste"
+  },
+  "protect_any": {
+    "other": "(tous)"
+  },
+  "protect_cascade": {
+    "other": "Cascade (protéger les pages transcluses)"
+  },
+  "protect_cascade_only": {
+    "other": "en cascade"
+  },
+  "protect_clear_list": {
+    "other": "Vider la liste"
+  },
+  "protect_computing": {
+    "other": "Calcul des modifications…"
+  },
+  "protect_confirm_all_namespaces": {
+    "other": "Aucun espace de noms n’est sélectionné, les {{.Count}} espaces de noms seront donc tous parcourus, ce qui peut être lent. Rechercher quand même ?"
+  },
+  "protect_download_journal": {
+    "other": "Télécharger le journal"
+  },
+  "protect_dry_run": {
+    "other": "Simulation"
+  },
+  "protect_dry_run_ok": {
+    "other": "(simulation)"
+  },
+  "protect_err_bad_duration": {
+    "other": "Saisissez un nombre entier positif pour la durée personnalisée."
+  },
+  "protect_err_count_floor": {
+    "other": "Les comptages en cache de ce wiki ne descendent pas sous {{.Min}}, ils ne peuvent donc vérifier de façon fiable qu’un nombre minimal de {{.Floor}} ou plus. Fixez le nombre minimal à {{.Floor}} ou plus, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+  },
+  "protect_err_need_criterion": {
+    "other": "Saisissez au moins un critère de recherche : un espace de noms, un préfixe de titre, un filtre de protection ou un nombre minimal."
+  },
+  "protect_err_no_count_cache": {
+    "other": "Ce wiki n’a pas de comptages en cache où chercher, et compter en direct page par page serait trop coûteux. Construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+  },
+  "protect_err_no_date": {
+    "other": "Choisissez une date d’expiration."
+  },
+  "protect_err_past_date": {
+    "other": "La date d’expiration doit être dans le futur."
+  },
+  "protect_err_too_broad": {
+    "other": "La recherche correspond à trop de pages (plus de {{.Max}} dans un même espace de noms). Restreignez-la avec un préfixe de titre ou un filtre de protection, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+  },
+  "protect_exec_canceled": {
+    "other": "Exécution annulée."
+  },
+  "protect_exec_complete": {
+    "other": "Exécution terminée."
+  },
+  "protect_executing": {
+    "other": "Application des modifications de protection…"
+  },
+  "protect_expiry_custom": {
+    "other": "Durée personnalisée"
+  },
+  "protect_expiry_date": {
+    "other": "Jusqu’à une date"
+  },
+  "protect_expiry_permanent": {
+    "other": "permanent"
+  },
+  "protect_expiry_preset": {
+    "other": "Durée prédéfinie"
+  },
+  "protect_expiry_temporary": {
+    "other": "temporaire"
+  },
+  "protect_field_additional_reason": {
+    "other": "Motif complémentaire"
+  },
+  "protect_field_cur_cascade": {
+    "other": "Cascade"
+  },
+  "protect_field_cur_expiry": {
+    "other": "Expiration actuelle"
+  },
+  "protect_field_cur_level": {
+    "other": "Niveau actuel"
+  },
+  "protect_field_expiry": {
+    "other": "Expiration"
+  },
+  "protect_field_level": {
+    "other": "Niveau"
+  },
+  "protect_field_metric": {
+    "other": "Critère de comptage"
+  },
+  "protect_field_min_count": {
+    "other": "Nombre minimum"
+  },
+  "protect_field_namespace": {
+    "other": "Espace de noms"
+  },
+  "protect_field_prefix": {
+    "other": "Préfixe de titre"
+  },
+  "protect_field_reason": {
+    "other": "Motif"
+  },
+  "protect_final_list": {
+    "other": "Pages sélectionnées"
+  },
+  "protect_grant_mediawiki_namespace": {
+    "other": "Skubell ne peut pas protéger de pages dans l’espace de noms MediaWiki avec cette session : il lui manque le droit « editinterface ». Dans Special:BotPasswords, activez le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editinterface »), puis reconnectez Skubell."
+  },
+  "protect_grant_site_css": {
+    "other": "Skubell ne peut pas protéger les pages CSS du site (MediaWiki:*.css) avec cette session : il lui manque le droit « editsitecss ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "protect_grant_site_js": {
+    "other": "Skubell ne peut pas protéger les pages JavaScript du site (MediaWiki:*.js) avec cette session : il lui manque le droit « editsitejs ». Ce droit est réservé aux administrateurs d’interface ; ajoutez votre compte à ce groupe, activez pour ce mot de passe de robot le droit applicable « Modifier les CSS/JS du site et ceux de l’utilisateur », puis reconnectez Skubell."
+  },
+  "protect_grant_site_json": {
+    "other": "Skubell ne peut pas protéger les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
+  },
+  "protect_invalid_cascade_level": {
+    "other": "la protection en cascade exige un niveau de modification qui l’autorise ; « {{.Level}} » ne l’autorise pas"
+  },
+  "protect_legend_invalid": {
+    "other": "inapplicable"
+  },
+  "protect_legend_unchanged": {
+    "other": "inchangé"
+  },
+  "protect_level_no_change": {
+    "other": "(inchangé)"
+  },
+  "protect_level_none": {
+    "other": "(aucune protection)"
+  },
+  "protect_metric_links": {
+    "other": "Liens entrants"
+  },
+  "protect_metric_transclusions": {
+    "other": "Transclusions"
+  },
+  "protect_need_one_page": {
+    "other": "Ajoutez au moins une page pour continuer."
+  },
+  "protect_noncascade": {
+    "other": "sans cascade"
+  },
+  "protect_note_create": {
+    "other": "S’applique uniquement aux pages qui n’existent pas encore."
+  },
+  "protect_note_existing": {
+    "other": "S’applique uniquement aux pages qui existent déjà."
+  },
+  "protect_nothing_to_change": {
+    "other": "Aucune page ne changerait ; ajustez les réglages ou la sélection."
+  },
+  "protect_ns_any": {
+    "other": "(tous)"
+  },
+  "protect_ns_main": {
+    "other": "(Principal)"
+  },
+  "protect_options_heading": {
+    "other": "Réglages de protection"
+  },
+  "protect_placeholder_manual": {
+    "other": "Un titre par ligne"
+  },
+  "protect_press_proceed": {
+    "other": "Appuyez sur Continuer pour appliquer les modifications de protection."
+  },
+  "protect_press_proceed_dry": {
+    "other": "Simulation : appuyez sur Continuer pour simuler (aucune modification écrite)."
+  },
+  "protect_preview_summary": {
+    "other": "{{.Change}} à modifier · {{.Unchanged}} inchangées · {{.Invalid}} inapplicables"
+  },
+  "protect_reason_none": {
+    "other": "(aucun)"
+  },
+  "protect_reason_placeholder": {
+    "other": "Motif complémentaire"
+  },
+  "protect_same_as_edit": {
+    "other": "Comme Modifier"
+  },
+  "protect_search": {
+    "other": "Rechercher"
+  },
+  "protect_search_results": {
+    "other": "Résultats de recherche"
+  },
+  "protect_searching": {
+    "other": "Recherche de pages…"
+  },
+  "protect_selected_count": {
+    "other": "{{.Count}} sélectionnée(s)"
+  },
+  "protect_state_none": {
+    "other": "aucune"
+  },
+  "protect_state_until": {
+    "other": "{{.Level}} jusqu’au {{.Expiry}}"
+  },
+  "protect_tab_create": {
+    "other": "Créer"
+  },
+  "protect_tab_edit": {
+    "other": "Modifier"
+  },
+  "protect_tab_manual": {
+    "other": "Saisie manuelle"
+  },
+  "protect_tab_move": {
+    "other": "Renommer"
+  },
+  "protect_title": {
+    "other": "Modifier la protection des pages"
+  },
+  "protect_unit_days": {
+    "other": "jours"
+  },
+  "protect_unit_hours": {
+    "other": "heures"
+  },
+  "protect_unit_months": {
+    "other": "mois"
+  },
+  "protect_unit_weeks": {
+    "other": "semaines"
+  },
+  "protect_unit_years": {
+    "other": "années"
+  },
+  "protect_unknown_failure": {
+    "other": "échec inconnu"
+  },
+  "protect_utc": {
+    "other": "UTC"
+  },
   "security_insecure": {
     "other": "Non sécurisé"
   },
@@ -396,6 +642,9 @@
   },
   "workflow_missing_sitewide_block": {
     "other": "blocage sur tout le site"
+  },
+  "workflow_protection": {
+    "other": "Modifier la protection des pages"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (nécessite {{.Rights}})"

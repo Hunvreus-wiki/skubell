@@ -301,6 +301,252 @@
   "prefs_title": {
     "other": "Preferences"
   },
+  "protect_add_results": {
+    "other": "Add results to list"
+  },
+  "protect_add_to_list": {
+    "other": "Add to list"
+  },
+  "protect_any": {
+    "other": "(any)"
+  },
+  "protect_cascade": {
+    "other": "Cascade (protect transcluded pages)"
+  },
+  "protect_cascade_only": {
+    "other": "cascading"
+  },
+  "protect_clear_list": {
+    "other": "Clear list"
+  },
+  "protect_computing": {
+    "other": "Computing changes…"
+  },
+  "protect_confirm_all_namespaces": {
+    "other": "No namespace is selected, so all {{.Count}} namespaces will be searched. This can be slow. Search anyway?"
+  },
+  "protect_download_journal": {
+    "other": "Download journal"
+  },
+  "protect_dry_run": {
+    "other": "Dry-run"
+  },
+  "protect_dry_run_ok": {
+    "other": "(dry-run)"
+  },
+  "protect_err_bad_duration": {
+    "other": "Enter a positive whole number for the custom duration."
+  },
+  "protect_err_count_floor": {
+    "other": "This wiki's cached counts only go down to {{.Min}}, so they can only reliably answer a minimum count of {{.Floor}} or more. Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool and paste the titles under Manual entry."
+  },
+  "protect_err_need_criterion": {
+    "other": "Enter at least one search criterion: a namespace, a title prefix, a protection filter, or a minimum count."
+  },
+  "protect_err_no_count_cache": {
+    "other": "This wiki has no cached count data to search, and counting live page by page is too costly. Build the page list with a more specialised tool and paste the titles under Manual entry."
+  },
+  "protect_err_no_date": {
+    "other": "Pick a date for the expiry."
+  },
+  "protect_err_past_date": {
+    "other": "The expiry date must be in the future."
+  },
+  "protect_err_too_broad": {
+    "other": "The search matches too many pages (more than {{.Max}} in one namespace). Narrow it with a title prefix or a protection filter, or build the page list with a more specialised tool and paste the titles under Manual entry."
+  },
+  "protect_exec_canceled": {
+    "other": "Execution canceled."
+  },
+  "protect_exec_complete": {
+    "other": "Execution complete."
+  },
+  "protect_executing": {
+    "other": "Applying protection changes…"
+  },
+  "protect_expiry_custom": {
+    "other": "Custom duration"
+  },
+  "protect_expiry_date": {
+    "other": "Until a date"
+  },
+  "protect_expiry_permanent": {
+    "other": "permanent"
+  },
+  "protect_expiry_preset": {
+    "other": "Preset duration"
+  },
+  "protect_expiry_temporary": {
+    "other": "temporary"
+  },
+  "protect_field_additional_reason": {
+    "other": "Additional reason text"
+  },
+  "protect_field_cur_cascade": {
+    "other": "Cascade"
+  },
+  "protect_field_cur_expiry": {
+    "other": "Current expiry"
+  },
+  "protect_field_cur_level": {
+    "other": "Current level"
+  },
+  "protect_field_expiry": {
+    "other": "Expiry"
+  },
+  "protect_field_level": {
+    "other": "Level"
+  },
+  "protect_field_metric": {
+    "other": "Count metric"
+  },
+  "protect_field_min_count": {
+    "other": "Minimum count"
+  },
+  "protect_field_namespace": {
+    "other": "Namespace"
+  },
+  "protect_field_prefix": {
+    "other": "Title prefix"
+  },
+  "protect_field_reason": {
+    "other": "Reason"
+  },
+  "protect_final_list": {
+    "other": "Selected pages"
+  },
+  "protect_grant_mediawiki_namespace": {
+    "other": "Skubell cannot protect pages in the MediaWiki namespace with this session: it lacks the \"editinterface\" right. In Special:BotPasswords, enable the \"Edit the MediaWiki namespace and sitewide/user JSON\" grant (and ensure your account holds \"editinterface\"), then reconnect Skubell."
+  },
+  "protect_grant_site_css": {
+    "other": "Skubell cannot protect sitewide CSS pages (MediaWiki:*.css) with this session: it lacks the \"editsitecss\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's \"Edit sitewide and user CSS/JS\" grant, then reconnect Skubell."
+  },
+  "protect_grant_site_js": {
+    "other": "Skubell cannot protect sitewide JavaScript pages (MediaWiki:*.js) with this session: it lacks the \"editsitejs\" right. That right belongs to interface administrators; add your account to that group and enable the bot password's \"Edit sitewide and user CSS/JS\" grant, then reconnect Skubell."
+  },
+  "protect_grant_site_json": {
+    "other": "Skubell cannot protect sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's \"Edit the MediaWiki namespace and sitewide/user JSON\" grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
+  },
+  "protect_invalid_cascade_level": {
+    "other": "cascade requires a cascading edit level; \"{{.Level}}\" is not one"
+  },
+  "protect_legend_invalid": {
+    "other": "can't apply"
+  },
+  "protect_legend_unchanged": {
+    "other": "unchanged"
+  },
+  "protect_level_no_change": {
+    "other": "(no change)"
+  },
+  "protect_level_none": {
+    "other": "(no protection)"
+  },
+  "protect_metric_links": {
+    "other": "Incoming links"
+  },
+  "protect_metric_transclusions": {
+    "other": "Transclusions"
+  },
+  "protect_need_one_page": {
+    "other": "Add at least one page to continue."
+  },
+  "protect_noncascade": {
+    "other": "non-cascading"
+  },
+  "protect_note_create": {
+    "other": "Applies only to pages that don't exist yet."
+  },
+  "protect_note_existing": {
+    "other": "Applies only to pages that already exist."
+  },
+  "protect_nothing_to_change": {
+    "other": "No pages would change; adjust the settings or selection."
+  },
+  "protect_ns_any": {
+    "other": "(any)"
+  },
+  "protect_ns_main": {
+    "other": "(Main)"
+  },
+  "protect_options_heading": {
+    "other": "Protection settings"
+  },
+  "protect_placeholder_manual": {
+    "other": "One title per line"
+  },
+  "protect_press_proceed": {
+    "other": "Press Proceed to apply the protection changes."
+  },
+  "protect_press_proceed_dry": {
+    "other": "Dry-run: press Proceed to simulate (no changes are written)."
+  },
+  "protect_preview_summary": {
+    "other": "{{.Change}} will change · {{.Unchanged}} unchanged · {{.Invalid}} can't apply"
+  },
+  "protect_reason_none": {
+    "other": "(none)"
+  },
+  "protect_reason_placeholder": {
+    "other": "Additional reason"
+  },
+  "protect_same_as_edit": {
+    "other": "Same as Edit"
+  },
+  "protect_search": {
+    "other": "Search"
+  },
+  "protect_search_results": {
+    "other": "Search results"
+  },
+  "protect_searching": {
+    "other": "Searching pages…"
+  },
+  "protect_selected_count": {
+    "other": "{{.Count}} selected"
+  },
+  "protect_state_none": {
+    "other": "none"
+  },
+  "protect_state_until": {
+    "other": "{{.Level}} until {{.Expiry}}"
+  },
+  "protect_tab_create": {
+    "other": "Create"
+  },
+  "protect_tab_edit": {
+    "other": "Edit"
+  },
+  "protect_tab_manual": {
+    "other": "Manual entry"
+  },
+  "protect_tab_move": {
+    "other": "Move"
+  },
+  "protect_title": {
+    "other": "Change page protection"
+  },
+  "protect_unit_days": {
+    "other": "days"
+  },
+  "protect_unit_hours": {
+    "other": "hours"
+  },
+  "protect_unit_months": {
+    "other": "months"
+  },
+  "protect_unit_weeks": {
+    "other": "weeks"
+  },
+  "protect_unit_years": {
+    "other": "years"
+  },
+  "protect_unknown_failure": {
+    "other": "unknown failure"
+  },
+  "protect_utc": {
+    "other": "UTC"
+  },
   "security_insecure": {
     "other": "Insecure"
   },
@@ -396,6 +642,9 @@
   },
   "workflow_missing_sitewide_block": {
     "other": "sitewide block"
+  },
+  "workflow_protection": {
+    "other": "Change page protection"
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (requires {{.Rights}})"
