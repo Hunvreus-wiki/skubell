@@ -304,6 +304,9 @@
   "protect_add_results": {
     "other": "Ouzhpennañ an disoc’hoù d’ar roll"
   },
+  "protect_add_to_list": {
+    "other": "Ouzhpennañ d’ar roll"
+  },
   "protect_any": {
     "other": "(an holl)"
   },
@@ -335,7 +338,7 @@
     "other": "Enankit un niver anterin pozitivel evit ar badelezh."
   },
   "protect_err_count_floor": {
-    "other": "Kontoù krubuilhet ar wiki-mañ ne ziskennont ket dindan {{.Floor}}, setu ne c’haller ket respont d’un niver izelañ bihanoc’h evitañ. Lakait an niver izelañ da {{.Floor}} pe muioc’h, pe savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
+    "other": "Kontoù krubuilhet ar wiki-mañ ne ziskennont ket dindan {{.Min}}, setu ne c’haller respont ent sur nemet d’un niver izelañ a {{.Floor}} pe muioc’h. Lakait an niver izelañ da {{.Floor}} pe muioc’h, pe savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
   },
   "protect_err_need_criterion": {
     "other": "Dibabit un dezverk klask da nebeutañ : un esaouenn anv, ur rakger titl, ur sil gwareziñ pe un niver izelañ."
@@ -423,6 +426,9 @@
   },
   "protect_grant_site_json": {
     "other": "Ne c’hall ket Skubell gwareziñ pajennoù JSON al lec’hienn (MediaWiki:*.json) gant an dalc’h-mañ : n’he deus ket ar gwir « editsitejson ». Gweredekait evit ar ger-tremen robot an aotre « Kemmañ esaouenn anv MediaWiki ha JSON al lec’hienn / an implijerien » (ha gwiriit ez eus gant ho kont ar gwir « editsitejson »), ha kevreit en-dro gant Skubell."
+  },
+  "protect_invalid_cascade_level": {
+    "other": "ar gwarez dre skalier a c’houlenn ul live Kemmañ hag a aotre ar skalier ; n’aotre ket « {{.Level}} » ar skalier"
   },
   "protect_legend_invalid": {
     "other": "n’haller ket kemmañ"

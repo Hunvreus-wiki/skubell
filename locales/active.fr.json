@@ -304,6 +304,9 @@
   "protect_add_results": {
     "other": "Ajouter les résultats à la liste"
   },
+  "protect_add_to_list": {
+    "other": "Ajouter à la liste"
+  },
   "protect_any": {
     "other": "(tous)"
   },
@@ -335,7 +338,7 @@
     "other": "Saisissez un nombre entier positif pour la durée personnalisée."
   },
   "protect_err_count_floor": {
-    "other": "Les comptages en cache de ce wiki ne descendent pas sous {{.Floor}}, un minimum plus bas ne peut donc pas y être vérifié. Fixez le nombre minimal à {{.Floor}} ou plus, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
+    "other": "Les comptages en cache de ce wiki ne descendent pas sous {{.Min}}, ils ne peuvent donc vérifier de façon fiable qu’un nombre minimal de {{.Floor}} ou plus. Fixez le nombre minimal à {{.Floor}} ou plus, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
   },
   "protect_err_need_criterion": {
     "other": "Saisissez au moins un critère de recherche : un espace de noms, un préfixe de titre, un filtre de protection ou un nombre minimal."
@@ -423,6 +426,9 @@
   },
   "protect_grant_site_json": {
     "other": "Skubell ne peut pas protéger les pages JSON du site (MediaWiki:*.json) avec cette session : il lui manque le droit « editsitejson ». Activez pour ce mot de passe de robot le droit applicable « Modifier l’espace de noms MediaWiki et le JSON du site/utilisateur » (et vérifiez que votre compte possède « editsitejson »), puis reconnectez Skubell."
+  },
+  "protect_invalid_cascade_level": {
+    "other": "la protection en cascade exige un niveau de modification qui l’autorise ; « {{.Level}} » ne l’autorise pas"
   },
   "protect_legend_invalid": {
     "other": "inapplicable"

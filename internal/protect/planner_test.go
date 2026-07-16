@@ -140,6 +140,7 @@ func TestBuildPlanCascadeValidity(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, invalid.Invalid)
 	require.True(t, itemFor(t, invalid, "Foo").Invalid)
+	require.Equal(t, "autoconfirmed", itemFor(t, invalid, "Foo").InvalidLevel, "the blocking level is reported")
 	require.Equal(t, ops.Operation{}, itemFor(t, invalid, "Foo").Op)
 
 	valid, err := BuildPlan(context.Background(), reader, []string{"Foo"}, Settings{

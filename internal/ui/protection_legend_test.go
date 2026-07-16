@@ -16,10 +16,11 @@ func TestProtectionLegendExplainsTheGlyphsTheRowsDraw(t *testing.T) {
 	t.Parallel()
 
 	unchanged := protectionRowText(protect.PlanItem{Title: "Banana"})
-	invalid := protectionRowText(protect.PlanItem{Title: "Cherry", Invalid: true, Note: "no rights"})
+	invalid := protectionRowText(protect.PlanItem{Title: "Cherry", Invalid: true, InvalidLevel: "autoconfirmed"})
 
 	require.True(t, strings.HasPrefix(unchanged, glyphUnchanged+" "), "got %q", unchanged)
 	require.True(t, strings.HasPrefix(invalid, glyphWarning+" "), "got %q", invalid)
+	require.Contains(t, invalid, `"autoconfirmed"`, "the invalid row names the blocking level")
 
 	// A changing row carries no glyph at all: it shows the change itself, which is why the legend must not claim one.
 	changing := protectionRowText(protect.PlanItem{Title: "Apple", Changed: true, Changes: []protect.TypeChange{

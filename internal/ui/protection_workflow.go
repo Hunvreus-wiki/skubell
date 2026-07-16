@@ -448,7 +448,8 @@ func (s *protectionWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 
 	s.manualEntry = widget.NewMultiLineEntry()
 	s.manualEntry.SetPlaceHolder(t.T("protect_placeholder_manual", "One title per line"))
-	manualAddBtn := widget.NewButton(t.T("protect_add_results", "Add results to list"), func() {
+	// Not protect_add_results: this button adds the typed titles, not search results.
+	manualAddBtn := widget.NewButton(t.T("protect_add_to_list", "Add to list"), func() {
 		s.ingestManualEntry()
 		s.refreshLists()
 	})
@@ -686,6 +687,22 @@ func (c protectSearchCriteria) needsAllPages() bool {
 	return c.protectionFiltersActive() || c.noProtection
 }
 
+// hasCriterion reports whether at least one criterion narrows the search; a criterion-less search (every namespace, no
+// prefix, no protection constraint, no threshold) enumerates the whole wiki to no meaningful end.
+func (c protectSearchCriteria) hasCriterion() bool {
+	return c.namespaceSet || c.prefix != "" || c.protectionFiltersActive() || c.noProtection || c.minCount > 0
+}
+
+// sweepsAllNamespaces reports whether the search will enumerate allpages in every namespace — legitimate but slow, so
+// worth a confirmation. A threshold without protection constraints is served from the count cache alone and never
+// visits allpages, so "(any)" namespace costs nothing there; the unprotected filter always enumerates allpages.
+func (c protectSearchCriteria) sweepsAllNamespaces() bool {
+	if c.namespaceSet {
+		return false
+	}
+	return c.minCount == 0 || c.protectionFiltersActive() || c.noProtection
+}
+
 // runSearch validates the criteria, confirms an all-namespace sweep, then runs the search behind a cancellable
 // progress dialog. A minimum-count threshold (transclusions or inbound links, per the metric picker) is served from
 // the wiki's matching cached querypage (§3.1) so it scales to large wikis; without a threshold it is a plain
@@ -695,14 +712,14 @@ func (s *protectionWorkflowScreen) runSearch() {
 		return
 	}
 	criteria := s.collectSearchCriteria()
-	if !s.hasSearchCriterion(criteria.minCount) {
+	if !criteria.hasCriterion() {
 		s.app.showMessage(t.T("protect_search", "Search"), t.T(
 			"protect_err_need_criterion",
 			"Enter at least one search criterion: a namespace, a title prefix, a protection filter, or a minimum count.",
 		))
 		return
 	}
-	if s.sweepsAllNamespaces(criteria.minCount) {
+	if criteria.sweepsAllNamespaces() {
 		dialog.NewConfirm(
 			t.T("protect_search", "Search"),
 			t.Td(
@@ -720,24 +737,6 @@ func (s *protectionWorkflowScreen) runSearch() {
 		return
 	}
 	s.startSearch(criteria)
-}
-
-// hasSearchCriterion reports whether at least one criterion narrows the search; a criterion-less search (every
-// namespace, no prefix, no protection filter, no threshold) enumerates the whole wiki to no meaningful end.
-func (s *protectionWorkflowScreen) hasSearchCriterion(minCount int) bool {
-	_, nsSet := s.selectedNamespaceID()
-	return nsSet || strings.TrimSpace(s.searchPrefix.Text) != "" ||
-		s.protectionFiltersActive() || s.searchNoProtectionSelected() || minCount > 0
-}
-
-// sweepsAllNamespaces reports whether the search will enumerate allpages in every namespace — legitimate but slow, so
-// worth a confirmation. A threshold without protection constraints is served from the count cache alone and never
-// visits allpages, so "(any)" namespace costs nothing there; the unprotected filter always enumerates allpages.
-func (s *protectionWorkflowScreen) sweepsAllNamespaces(minCount int) bool {
-	if _, nsSet := s.selectedNamespaceID(); nsSet {
-		return false
-	}
-	return minCount == 0 || s.protectionFiltersActive() || s.searchNoProtectionSelected()
 }
 
 // startSearch runs the search off the UI goroutine behind a cancellable progress dialog and shows the matches. It takes
@@ -810,11 +809,13 @@ func (s *protectionWorkflowScreen) showSearchError(err error) {
 			"This wiki has no cached count data to search, and counting live page by page is too costly. Build the "+
 				"page list with a more specialised tool and paste the titles under Manual entry."))
 	case errors.As(err, &floorErr):
+		// Min is the smallest cached count; Floor (= Min+1) is the lowest threshold the cache answers reliably — the
+		// cache may be truncated amid entries tied at Min, so a threshold at Min could return an incomplete set.
 		s.app.showMessage(title, t.Td("protect_err_count_floor",
-			"This wiki's cached counts only go down to {{.Floor}}, so a lower minimum cannot be answered from them. "+
-				"Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool "+
-				"and paste the titles under Manual entry.",
-			map[string]any{"Floor": floorErr.Floor}))
+			"This wiki's cached counts only go down to {{.Min}}, so they can only reliably answer a minimum count "+
+				"of {{.Floor}} or more. Raise the minimum count to {{.Floor}} or more, or build the page list with "+
+				"a more specialised tool and paste the titles under Manual entry.",
+			map[string]any{"Min": floorErr.MinCached, "Floor": floorErr.MinCached + 1}))
 	default:
 		s.app.showError(title, err)
 	}
@@ -978,12 +979,6 @@ func (s *protectionWorkflowScreen) namespaceIDs() []int {
 	return ids
 }
 
-// protectionFiltersActive reports whether any current-protection search filter (level / expiry class / cascade) is
-// set. The "(none)" level maps to no filter (§3.2), matching the level<->apprlevel mapping.
-func (s *protectionWorkflowScreen) protectionFiltersActive() bool {
-	return s.searchLevelValue() != "" || s.searchExpiry.SelectedIndex() > 0 || s.searchCascade.SelectedIndex() > 0
-}
-
 // The cached querypage serving each count metric (list=querypage&qppage=): a whole-wiki title-to-count list, sorted
 // by count. Transclusions come from Mostlinkedtemplates and inbound links from Mostlinked — the names MediaWiki
 // accepts (Mosttranscludedpages / Mostlinkedpages are badvalue).
@@ -1008,11 +1003,11 @@ var errNoCountCache = errors.New("the wiki has no cached count data")
 // countBelowCacheFloorError rejects a threshold the cache can't settle: the querypage holds only the wiki's top pages
 // and may be truncated amid entries tied at the smallest cached count, so a page with exactly that count can be absent.
 type countBelowCacheFloorError struct {
-	Floor int // one above the smallest cached count — the lowest threshold the cache can answer reliably
+	MinCached int // the smallest cached count; only thresholds strictly above it are answerable reliably
 }
 
 func (e *countBelowCacheFloorError) Error() string {
-	return fmt.Sprintf("the minimum count is below the cached floor of %d", e.Floor)
+	return fmt.Sprintf("the minimum count must exceed the smallest cached count (%d)", e.MinCached)
 }
 
 // searchByMetric serves the minimum-count threshold from the wiki's matching cached querypage (whole-wiki, counts
@@ -1026,10 +1021,9 @@ func (s *protectionWorkflowScreen) searchByMetric(ctx context.Context, c protect
 		return nil, err
 	}
 	// The cache holds only the wiki's top pages, so it may be truncated amid entries tied at the smallest cached
-	// count — a page with exactly that count can be missing. Only thresholds strictly above the floor are safe; the
-	// error reports the lowest answerable threshold (one above the floor).
+	// count — a page with exactly that count can be missing. Only thresholds strictly above that floor are safe.
 	if c.minCount <= minCached {
-		return nil, &countBelowCacheFloorError{Floor: minCached + 1}
+		return nil, &countBelowCacheFloorError{MinCached: minCached}
 	}
 
 	if c.needsAllPages() {
@@ -1596,7 +1590,12 @@ const glyphUnchanged = "⊘"
 func protectionRowText(item protect.PlanItem) string {
 	switch {
 	case item.Invalid:
-		return glyphWarning + " " + item.Title + " — " + item.Note
+		// The planner reports the blocking level structurally (its only invalid case), so the reason is rendered here,
+		// in the user's language — a raw English note from a non-UI package would leak through translated rows.
+		reason := t.Td("protect_invalid_cascade_level",
+			`cascade requires a cascading edit level; "{{.Level}}" is not one`,
+			map[string]any{"Level": item.InvalidLevel})
+		return glyphWarning + " " + item.Title + " — " + reason
 	case !item.Changed:
 		return glyphUnchanged + " " + item.Title
 	}
@@ -1851,12 +1850,20 @@ func (s *protectionWorkflowScreen) saveJournal(filename string) {
 		s.app.showError(t.T("protect_download_journal", "Download journal"), err)
 		return
 	}
+	// Report save/write failures (mirroring the deletion workflow): a journal the user asked for that silently never
+	// lands on disk is worse than an error dialog. A nil writer just means the user canceled the dialog.
 	d := dialog.NewFileSave(func(w fyne.URIWriteCloser, saveErr error) {
-		if saveErr != nil || w == nil {
+		if saveErr != nil {
+			s.app.showError(t.T("protect_download_journal", "Download journal"), saveErr)
+			return
+		}
+		if w == nil {
 			return
 		}
 		defer func() { _ = w.Close() }()
-		_, _ = w.Write(payload)
+		if _, writeErr := w.Write(payload); writeErr != nil {
+			s.app.showError(t.T("protect_download_journal", "Download journal"), writeErr)
+		}
 	}, s.app.window)
 	d.SetFileName(filename)
 	d.Show()

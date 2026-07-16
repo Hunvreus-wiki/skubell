@@ -88,6 +88,7 @@ func newSearchScreen(t *testing.T, serverURL string) *protectionWorkflowScreen {
 	s.searchCascade.SetSelectedIndex(0)
 	s.searchMetric = widget.NewSelect([]string{"Transclusions", "Incoming links"}, nil)
 	s.searchMetric.SetSelectedIndex(0)
+	s.searchMinLinks = widget.NewEntry()
 	return s
 }
 
@@ -125,27 +126,42 @@ func TestSearchCriterionAndSweep(t *testing.T) {
 	s := newSearchScreen(t, "")
 
 	// Nothing set: no criterion, and a bare search would sweep every namespace.
-	require.False(t, s.hasSearchCriterion(0))
-	require.True(t, s.sweepsAllNamespaces(0))
+	c := s.collectSearchCriteria()
+	require.False(t, c.hasCriterion())
+	require.True(t, c.sweepsAllNamespaces())
 
 	// A count threshold alone is a criterion served from the cache: no allpages sweep to confirm.
-	require.True(t, s.hasSearchCriterion(3))
-	require.False(t, s.sweepsAllNamespaces(3))
+	s.searchMinLinks.SetText("3")
+	c = s.collectSearchCriteria()
+	require.True(t, c.hasCriterion())
+	require.False(t, c.sweepsAllNamespaces())
 
 	// A protection filter makes a threshold search visit allpages again.
 	s.searchLevel.SetSelectedIndex(1) // sysop
-	require.True(t, s.sweepsAllNamespaces(3))
+	c = s.collectSearchCriteria()
+	require.True(t, c.sweepsAllNamespaces())
 
 	// Choosing a namespace ends the sweep and is a criterion by itself.
 	s.searchNamespace.SetSelectedIndex(1)
-	require.False(t, s.sweepsAllNamespaces(0))
-	require.True(t, s.hasSearchCriterion(0))
+	s.searchMinLinks.SetText("")
+	c = s.collectSearchCriteria()
+	require.False(t, c.sweepsAllNamespaces())
+	require.True(t, c.hasCriterion())
 
 	// A prefix alone is a criterion: apprefix filters server-side, unlike deletion's client-side prefix.
 	prefixed := newSearchScreen(t, "")
 	prefixed.searchPrefix.SetText("Infobox")
-	require.True(t, prefixed.hasSearchCriterion(0))
-	require.True(t, prefixed.sweepsAllNamespaces(0))
+	c = prefixed.collectSearchCriteria()
+	require.True(t, c.hasCriterion())
+	require.True(t, c.sweepsAllNamespaces())
+
+	// "(no protection)" alone is a criterion too, and always sweeps: it has no cached or apprtype equivalent.
+	unprotected := newSearchScreen(t, "")
+	unprotected.searchLevel.SetSelectedIndex(2) // "(no protection)"
+	c = unprotected.collectSearchCriteria()
+	require.True(t, c.noProtection)
+	require.True(t, c.hasCriterion())
+	require.True(t, c.sweepsAllNamespaces())
 }
 
 func TestAllPagesInNamespaceFollowsContinuation(t *testing.T) {
@@ -225,7 +241,7 @@ func TestSearchByMetricRejectsInsteadOfLiveCounting(t *testing.T) {
 	_, err = s.searchByMetric(context.Background(), protectSearchCriteria{minCount: 11, metric: queryPageTransclusions})
 	var floorErr *countBelowCacheFloorError
 	require.ErrorAs(t, err, &floorErr)
-	require.Equal(t, 12, floorErr.Floor)
+	require.Equal(t, 11, floorErr.MinCached, "the error reports the smallest cached count")
 
 	// Threshold strictly above the floor: answerable from the cache alone, no other request allowed.
 	titles, err := s.searchByMetric(

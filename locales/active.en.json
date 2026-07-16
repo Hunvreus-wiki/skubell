@@ -304,6 +304,9 @@
   "protect_add_results": {
     "other": "Add results to list"
   },
+  "protect_add_to_list": {
+    "other": "Add to list"
+  },
   "protect_any": {
     "other": "(any)"
   },
@@ -335,7 +338,7 @@
     "other": "Enter a positive whole number for the custom duration."
   },
   "protect_err_count_floor": {
-    "other": "This wiki's cached counts only go down to {{.Floor}}, so a lower minimum cannot be answered from them. Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool and paste the titles under Manual entry."
+    "other": "This wiki's cached counts only go down to {{.Min}}, so they can only reliably answer a minimum count of {{.Floor}} or more. Raise the minimum count to {{.Floor}} or more, or build the page list with a more specialised tool and paste the titles under Manual entry."
   },
   "protect_err_need_criterion": {
     "other": "Enter at least one search criterion: a namespace, a title prefix, a protection filter, or a minimum count."
@@ -423,6 +426,9 @@
   },
   "protect_grant_site_json": {
     "other": "Skubell cannot protect sitewide JSON pages (MediaWiki:*.json) with this session: it lacks the \"editsitejson\" right. Enable the bot password's \"Edit the MediaWiki namespace and sitewide/user JSON\" grant (and ensure your account holds \"editsitejson\"), then reconnect Skubell."
+  },
+  "protect_invalid_cascade_level": {
+    "other": "cascade requires a cascading edit level; \"{{.Level}}\" is not one"
   },
   "protect_legend_invalid": {
     "other": "can't apply"

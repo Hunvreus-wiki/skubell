@@ -71,15 +71,15 @@ type TypeChange struct {
 
 // PlanItem is one page's protection change (or non-change).
 type PlanItem struct {
-	Title       string
-	Exists      bool
-	Changes     []TypeChange  // per applicable type
-	Changed     bool          // true when at least one applicable type (or cascade) changes
-	FromCascade bool          // current direct cascade state
-	ToCascade   bool          // resulting cascade state
-	Invalid     bool          // true when the request can't be made (e.g. cascade with a non-cascading level)
-	Note        string        // why it is invalid, when Invalid
-	Op          ops.Operation // the OpProtectPage to run; zero when unchanged or invalid
+	Title        string
+	Exists       bool
+	Changes      []TypeChange  // per applicable type
+	Changed      bool          // true when at least one applicable type (or cascade) changes
+	FromCascade  bool          // current direct cascade state
+	ToCascade    bool          // resulting cascade state
+	Invalid      bool          // true when the request can't be made (cascade with a non-cascading edit level)
+	InvalidLevel string        // the non-cascading edit level blocking the requested cascade, when Invalid
+	Op           ops.Operation // the OpProtectPage to run; zero when unchanged or invalid
 }
 
 // Plan is the outcome of BuildPlan: display-ordered items and counts.
@@ -206,7 +206,7 @@ func buildItem(page PageProtection, s Settings, cascadingLevels, restrictionType
 	cascadeApplies := s.Cascade && page.Exists && editLevel != ""
 	if cascadeApplies && !slices.Contains(cascadingLevels, editLevel) {
 		item.Invalid = true
-		item.Note = fmt.Sprintf("cascade requires a cascading edit level; %q is not one", editLevel)
+		item.InvalidLevel = editLevel // structured, so the UI can render the reason in the user's language
 		return item
 	}
 	// FromCascade is the page's own (direct) cascade — sourced/inherited entries are excluded upstream so they can't
