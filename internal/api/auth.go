@@ -95,6 +95,8 @@ func LogoutContext(ctx context.Context, client *Client, apiURL string) error {
 		return errors.New("api client is nil")
 	}
 
+	// An intentional disconnect: stop asserting the login and never resurrect this session.
+	client.DisableSessionRecovery()
 	_, err := client.PostContext(ctx, apiURL, map[string]string{
 		"action": "logout",
 	})

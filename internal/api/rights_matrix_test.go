@@ -46,6 +46,27 @@ func TestRightsMatrixAugeasCoreRequiresRollback(t *testing.T) {
 	require.Equal(t, []string{"rollback"}, missing[WorkflowAugeasCore].MissingRights)
 }
 
+// Revision visibility is any-of: a regular admin (deleterevision) and a non-admin suppressor (suppressrevision)
+// must each get the workflow; only a user with neither right is turned away, told either right would unlock it.
+func TestRightsMatrixRevisionDeleteAnyOf(t *testing.T) {
+	t.Parallel()
+
+	admin := EvaluateWorkflowAvailability([]string{"deleterevision"})
+	require.True(t, admin[WorkflowRevisionDelete].Available)
+
+	suppressor := EvaluateWorkflowAvailability([]string{"suppressrevision"})
+	require.True(t, suppressor[WorkflowRevisionDelete].Available)
+	require.Empty(t, suppressor[WorkflowRevisionDelete].MissingRights)
+
+	neither := EvaluateWorkflowAvailability([]string{"read"})
+	require.False(t, neither[WorkflowRevisionDelete].Available)
+	require.Equal(t, []string{"deleterevision", "suppressrevision"}, neither[WorkflowRevisionDelete].MissingRights)
+
+	// The dedicated suppression workflow still strictly requires suppressrevision.
+	require.False(t, admin[WorkflowSuppression].Available)
+	require.True(t, suppressor[WorkflowSuppression].Available)
+}
+
 func TestRightsMatrixProtectionAndUnprotect(t *testing.T) {
 	t.Parallel()
 

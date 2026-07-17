@@ -2794,16 +2794,11 @@ func (p *deletionDataProvider) GetSubjectPageTitle(title string) (string, error)
 	return prefix + ":" + remainder, nil
 }
 
-// PagesExist reports whether each requested title exists, in apihighlimits-aware
-// batches. Titles absent from the returned map are treated as non-existent.
+// PagesExist reports whether each requested title exists, in batches sized to the session's live multivalue
+// cap (see api.Client.ForEachChunk). Titles absent from the returned map are treated as non-existent.
 func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, error) {
 	result := make(map[string]bool, len(titles))
-	batchSize := 50
-	if p.caps.HasHighLimits {
-		batchSize = 500
-	}
-	for start := 0; start < len(titles); start += batchSize {
-		batch := titles[start:min(start+batchSize, len(titles))]
+	err := p.client.ForEachChunk("query", titles, func(batch []string) error {
 		params := map[string]string{
 			"action":        "query",
 			"prop":          "info",
@@ -2812,7 +2807,7 @@ func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, err
 		}
 		payload, err := p.client.GetContext(p.context(), p.apiURL, params)
 		if err != nil {
-			return nil, fmt.Errorf("query page info: %w", err)
+			return err
 		}
 		query, _ := payload["query"].(map[string]any)
 
@@ -2842,6 +2837,10 @@ func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, err
 			_, missing := entry["missing"]
 			result[key] = !missing
 		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("query page info: %w", err)
 	}
 	return result, nil
 }
@@ -2855,12 +2854,7 @@ func (p *deletionDataProvider) PagesExist(titles []string) (map[string]bool, err
 // taken "Kucing" with it, which redirects to Kuching, a city in Malaysia.
 func (p *deletionDataProvider) GetRedirects(titles []string) (map[string][]string, error) {
 	result := make(map[string][]string, len(titles))
-	batchSize := 50
-	if p.caps.HasHighLimits {
-		batchSize = 500
-	}
-	for start := 0; start < len(titles); start += batchSize {
-		batch := titles[start:min(start+batchSize, len(titles))]
+	err := p.client.ForEachChunk("query", titles, func(batch []string) error {
 		params := map[string]string{
 			"action":        "query",
 			"prop":          "redirects",
@@ -2871,7 +2865,7 @@ func (p *deletionDataProvider) GetRedirects(titles []string) (map[string][]strin
 		for {
 			payload, err := p.client.GetContext(p.context(), p.apiURL, params)
 			if err != nil {
-				return nil, fmt.Errorf("query redirects: %w", err)
+				return err
 			}
 			query, _ := payload["query"].(map[string]any)
 
@@ -2916,10 +2910,13 @@ func (p *deletionDataProvider) GetRedirects(titles []string) (map[string][]strin
 			continueMap, _ := payload["continue"].(map[string]any)
 			next, _ := continueMap["rdcontinue"].(string)
 			if next == "" {
-				break
+				return nil
 			}
 			params["rdcontinue"] = next
 		}
+	})
+	if err != nil {
+		return nil, fmt.Errorf("query redirects: %w", err)
 	}
 	return result, nil
 }

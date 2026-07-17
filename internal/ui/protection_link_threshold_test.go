@@ -341,6 +341,8 @@ func TestOptionsWithoutEditTabDoesNotCrash(t *testing.T) {
 	require.NotContains(t, s.levelSelects, "edit", "no edit tab is built")
 	require.NotContains(t, s.sameAsEdit, "move", "no Same-as-Edit mirror without an edit tab")
 	require.NotContains(t, s.sameAsEdit, "create")
+	require.NotEmpty(t, s.captureOptions(), `the "(none)" reason without additional text is rejected`)
+	s.reasonEntry.SetText("test")
 	require.Empty(t, s.captureOptions(), "capturing options must not panic or error without an edit tab")
 }
 

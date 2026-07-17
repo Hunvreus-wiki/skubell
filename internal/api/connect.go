@@ -62,6 +62,9 @@ func ConnectContext(ctx context.Context, client *Client, wikiEntry config.WikiEn
 		return result, fmt.Errorf("connect/login failed: %w", err)
 	}
 	result.Username = username
+	// Arm transparent session recovery: every request from here on asserts its login, and a session the wiki
+	// reports gone is re-established with these credentials before the failed request is retried.
+	client.EnableSessionRecovery(apiURL, wikiEntry.Username, wikiEntry.Credential)
 
 	siteInfo, err := FetchSiteInfoContext(ctx, client, apiURL)
 	if err != nil {
@@ -80,6 +83,19 @@ func ConnectContext(ctx context.Context, client *Client, wikiEntry config.WikiEn
 	caps.BlockReason = userInfo.BlockReason
 	caps.BlockExpiry = userInfo.BlockExpiry
 	result.Capabilities = caps
+
+	// Seed the session's multivalue caps with the wiki's own session-aware, per-action answers; the
+	// rights-derived default covers actions the wiki does not answer for. The wiki's live "toomanyvalues"
+	// answers can still shrink each action's cap from here (see batch.go).
+	defaultCap := defaultMultiValueCap
+	if caps.HasHighLimits {
+		defaultCap = highLimitsMultiValueCap
+	}
+	perAction, capErr := FetchMultiValueCapsContext(ctx, client, apiURL)
+	if capErr != nil {
+		perAction = nil
+	}
+	client.SetMultiValueCaps(defaultCap, perAction)
 
 	reasons, err := FetchReasonDropdownsContext(ctx, client, apiURL, wikiEntry.AdminLanguage)
 	if err != nil {

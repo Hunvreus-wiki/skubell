@@ -283,6 +283,14 @@
   "journal_delete_page_talk": {
     "other": "Supprimer la page « {{.Title}} » et sa page de discussion"
   },
+  "journal_revdel_revisions": {
+    "one": "Changer la visibilité de {{.Count}} version",
+    "other": "Changer la visibilité de {{.Count}} versions"
+  },
+  "journal_suppress_revisions": {
+    "one": "Supprimer {{.Count}} version",
+    "other": "Supprimer {{.Count}} versions"
+  },
   "prefs_language": {
     "other": "Langue"
   },
@@ -351,6 +359,9 @@
   },
   "protect_err_past_date": {
     "other": "La date d’expiration doit être dans le futur."
+  },
+  "protect_err_reason_text_required": {
+    "other": "Un motif complémentaire est requis lorsque {{.None}} est sélectionné."
   },
   "protect_err_too_broad": {
     "other": "La recherche correspond à trop de pages (plus de {{.Max}} dans un même espace de noms). Restreignez-la avec un préfixe de titre ou un filtre de protection, ou construisez la liste des pages avec un outil plus spécialisé, puis collez les titres dans la saisie manuelle."
@@ -547,6 +558,180 @@
   "protect_utc": {
     "other": "UTC"
   },
+  "revdel_batch_revisions": {
+    "one": "{{.Count}} version",
+    "other": "{{.Count}} versions"
+  },
+  "revdel_clear_selection": {
+    "other": "Vider la sélection"
+  },
+  "revdel_current_marker": {
+    "other": "(actuelle)"
+  },
+  "revdel_download_journal": {
+    "other": "Télécharger le journal"
+  },
+  "revdel_dry_run": {
+    "other": "Simulation"
+  },
+  "revdel_dry_run_ok": {
+    "other": "(simulation)"
+  },
+  "revdel_err_bad_datetime": {
+    "other": "Saisissez les dates au format « AAAA-MM-JJ HH:MM:SS » (UTC), ou laissez-les vides."
+  },
+  "revdel_err_missing": {
+    "other": "La page « {{.Title}} » n’existe pas."
+  },
+  "revdel_err_reason_text_required": {
+    "other": "Un motif complémentaire est requis lorsque {{.None}} est sélectionné."
+  },
+  "revdel_exec_canceled": {
+    "other": "Exécution annulée."
+  },
+  "revdel_exec_complete": {
+    "other": "Exécution terminée."
+  },
+  "revdel_executing": {
+    "other": "Application des changements de visibilité…"
+  },
+  "revdel_field_additional_reason": {
+    "other": "Motif complémentaire"
+  },
+  "revdel_field_author": {
+    "other": "Auteur"
+  },
+  "revdel_field_comment": {
+    "other": "résumé"
+  },
+  "revdel_field_content": {
+    "other": "contenu"
+  },
+  "revdel_field_from": {
+    "other": "Du (UTC)"
+  },
+  "revdel_field_page": {
+    "other": "Page"
+  },
+  "revdel_field_reason": {
+    "other": "Motif"
+  },
+  "revdel_field_to": {
+    "other": "Au (UTC)"
+  },
+  "revdel_field_user": {
+    "other": "nom d’utilisateur"
+  },
+  "revdel_hidden_field": {
+    "other": "(masqué)"
+  },
+  "revdel_legend_unchanged": {
+    "other": "déjà comme demandé"
+  },
+  "revdel_loading": {
+    "other": "Chargement de l’historique de la page…"
+  },
+  "revdel_loading_count": {
+    "one": "{{.Count}} version chargée…",
+    "other": "{{.Count}} versions chargées…"
+  },
+  "revdel_manual_skipped": {
+    "one": "{{.Count}} entrée a été ignorée : pas un ID de version de cette page, la version actuelle, ou une version supprimée que cette session ne peut pas modifier.",
+    "other": "{{.Count}} entrées ont été ignorées : pas des ID de version de cette page, la version actuelle, ou des versions supprimées que cette session ne peut pas modifier."
+  },
+  "revdel_need_change": {
+    "other": "Choisissez un changement de visibilité : cochez Supprimé ou réglez au moins un champ."
+  },
+  "revdel_need_page": {
+    "other": "Saisissez un titre de page pour continuer."
+  },
+  "revdel_need_selection": {
+    "other": "Sélectionnez au moins une version pour continuer."
+  },
+  "revdel_no_match": {
+    "other": "Aucune version ne correspond aux critères."
+  },
+  "revdel_nothing_to_change": {
+    "other": "Aucune version ne changerait ; ajustez les réglages ou la sélection."
+  },
+  "revdel_options_heading": {
+    "other": "Visibilité des versions sélectionnées"
+  },
+  "revdel_placeholder_author": {
+    "other": "(tous)"
+  },
+  "revdel_placeholder_ids": {
+    "other": "Un ID de version par ligne"
+  },
+  "revdel_placeholder_page": {
+    "other": "Titre de la page"
+  },
+  "revdel_press_proceed": {
+    "other": "Appuyez sur Continuer pour appliquer les changements de visibilité."
+  },
+  "revdel_press_proceed_dry": {
+    "other": "Simulation : appuyez sur Continuer pour simuler (aucune modification écrite)."
+  },
+  "revdel_preview_summary": {
+    "other": "{{.Change}} à modifier · {{.Unchanged}} inchangées"
+  },
+  "revdel_reason_none": {
+    "other": "(aucun)"
+  },
+  "revdel_reason_placeholder": {
+    "other": "Motif complémentaire"
+  },
+  "revdel_revision_list": {
+    "other": "Versions"
+  },
+  "revdel_row_current": {
+    "other": "version actuelle ; ne peut pas être modifiée"
+  },
+  "revdel_select_listed": {
+    "other": "Sélectionner les versions listées"
+  },
+  "revdel_select_matching": {
+    "other": "Sélectionner les versions correspondantes"
+  },
+  "revdel_selected_count": {
+    "other": "{{.Count}} sur {{.Total}} sélectionnées"
+  },
+  "revdel_selection_intro": {
+    "other": "Saisissez la page dont vous voulez changer la visibilité des versions. L’étape suivante liste ses versions."
+  },
+  "revdel_state_deleted": {
+    "other": "masqué"
+  },
+  "revdel_state_suppressed": {
+    "other": "supprimé"
+  },
+  "revdel_state_visible": {
+    "other": "visible"
+  },
+  "revdel_suppress": {
+    "other": "Supprimé (masqué aussi pour les administrateurs)"
+  },
+  "revdel_tab_criteria": {
+    "other": "Critères"
+  },
+  "revdel_tab_manual": {
+    "other": "Saisie manuelle"
+  },
+  "revdel_target_deleted": {
+    "other": "masqué"
+  },
+  "revdel_target_no_change": {
+    "other": "(inchangé)"
+  },
+  "revdel_target_visible": {
+    "other": "visible"
+  },
+  "revdel_title": {
+    "other": "Changer la visibilité des versions"
+  },
+  "revdel_unknown_failure": {
+    "other": "échec inconnu"
+  },
   "security_insecure": {
     "other": "Non sécurisé"
   },
@@ -648,6 +833,9 @@
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (nécessite {{.Rights}})"
+  },
+  "workflow_revdel": {
+    "other": "Changer la visibilité des versions"
   },
   "workflow_step_execution": {
     "other": "Exécution"

@@ -218,14 +218,16 @@ cmd/skubell/      Entry point, app icon, FyneApp.toml packaging metadata
 internal/
   ops/            Level 1 — semantic operations, execution plans, journal
   api/            Levels 2 & 3 — translator, executor, capability detection
-  deletion/       Deletion planner (the implemented workflow)
+  deletion/       Deletion planner
+  protect/        Protection planner
+  revdel/         Revision-visibility planner (revision deletion and suppression)
   ui/             Fyne interface (welcome, wiki settings, deletion, …)
   config/         JSON config: wikis + preferences
   security/       OS credential store (keyring)
   registry/       Known-wiki URL inference (Wikimedia, Fandom, Miraheze, …)
   i18n/           go-i18n wrapper (T/Td/Tp/Tpd helpers)
   integration/    Live-wiki integration suite (build tag: integration)
-  merge/ blocking/ protect/ revdel/ augeas/   Scaffolded — future workflows
+  merge/ blocking/ augeas/   Scaffolded — future workflows
 locales/          Translations (en, fr, br) embedded into the binary + translator guide
 ```
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strconv"
@@ -322,6 +323,68 @@ func FetchUserInfoContext(ctx context.Context, client *Client, apiURL string) (W
 	caps, err := parseUserInfoResponse(response)
 	if err != nil {
 		return WikiCapabilities{}, err
+	}
+	return caps, nil
+}
+
+// multiValueParams maps each action Skubell batches multivalue calls on to the batched parameter, for
+// paraminfo discovery. Extend it when a new batched action appears; unlisted actions fall back to the
+// rights-derived default cap (and to the live per-rejection shrink in batch.go).
+var multiValueParams = map[string]string{
+	"query":          "titles",
+	"revisiondelete": "ids",
+}
+
+// FetchMultiValueCapsContext asks the wiki, in one paraminfo request, how many values this session may put in
+// the multivalue parameter of each action Skubell batches on (multiValueParams). Each reported "limit" is
+// computed for the current session's rights — so the answers already account for apihighlimits, for
+// per-module overrides, and for any future MediaWiki change to the 50/500 defaults. Modules the wiki does not
+// answer for are simply absent from the result; an error means nothing usable came back and callers keep the
+// rights-derived caps.
+func FetchMultiValueCapsContext(ctx context.Context, client *Client, apiURL string) (map[string]int, error) {
+	modules := slices.Sorted(maps.Keys(multiValueParams))
+	response, err := client.GetContext(ctx, apiURL, map[string]string{
+		"action":        "paraminfo",
+		"modules":       strings.Join(modules, "|"),
+		"formatversion": "2",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fetch paraminfo: %w", err)
+	}
+	return parseMultiValueCaps(response)
+}
+
+func parseMultiValueCaps(response map[string]any) (map[string]int, error) {
+	paraminfo, _ := response["paraminfo"].(map[string]any)
+	modules, _ := paraminfo["modules"].([]any)
+	caps := map[string]int{}
+	for _, rawModule := range modules {
+		module, ok := rawModule.(map[string]any)
+		if !ok {
+			continue
+		}
+		action, _ := module["name"].(string)
+		paramName, tracked := multiValueParams[action]
+		if !tracked {
+			continue
+		}
+		parameters, _ := module["parameters"].([]any)
+		for _, raw := range parameters {
+			parameter, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			if name, _ := parameter["name"].(string); name != paramName {
+				continue
+			}
+			if limit, ok := parameter["limit"].(float64); ok && limit > 0 {
+				caps[action] = int(limit)
+			}
+			break
+		}
+	}
+	if len(caps) == 0 {
+		return nil, errors.New("paraminfo did not report any multivalue limit")
 	}
 	return caps, nil
 }

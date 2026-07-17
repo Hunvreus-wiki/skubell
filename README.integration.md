@@ -29,10 +29,12 @@ wikis (`8081`/`8082`) except where a per-wiki value is shown.
 | Username | Password | Groups | Notes |
 | --- | --- | --- | --- |
 | `admin` | `otempssuspendstonvol` | `sysop`, `bureaucrat` | convenience account for manual browser testing |
-| `TestAdmin` | `TestAdminPass!` | `sysop`, `bureaucrat` | |
+| `TestAdmin` | `TestAdminPass!` | `sysop`, `bureaucrat`, `suppress` | in `suppress` so revdel rights reach the bot logins (see below) |
 | `TestEditor` | `TestEditorPass!` | (default) | |
 | `TestBlocked` | `TestBlockedPass!` | `sysop` | **sitewide blocked** |
 | `TestPartial` | `TestPartialPass!` | `sysop` | **partial block** (namespace 0) |
+| `Shiva` | `ShivaPass!` | `suppress` | **non-admin suppressor**: revdel + suppression rights without the admin bundle |
+| `Vishnu` | `VishnuPass!` | `sysop`, `suppress` | **admin+suppressor**: the admin bundle and suppression together |
 | `WikiSysop` | `WikiSysopPass143!` (8081) / `WikiSysopPass146!` (8082) | `sysop`, `bureaucrat` | created by the installer; the provisioning script logs in as this to seed pages/blocks |
 
 ### Bot-password logins (API login; username is `Account@AppId`)
@@ -43,7 +45,17 @@ wikis (`8081`/`8082`) except where a per-wiki value is shown.
 | `TestEditor@SkubellTest` | `testeditor00botpass00skubell0002` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
 | `TestBlocked@SkubellTest` | `testblocked0botpass00skubell0003` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
 | `TestPartial@SkubellTest` | `testpartial0botpass00skubell0004` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage` |
+| `Shiva@SkubellTest` | `shiva0000000botpass00skubell0005` | `basic`, `highvolume`, `delete`, `oversight`, `viewrestrictedlogs` |
+| `Vishnu@SkubellTest` | `vishnu000000botpass00skubell0006` | `basic`, `highvolume`, `delete`, `protect`, `createeditmovepage`, `oversight`, `viewrestrictedlogs` |
 | `TestAdmin@SkubellIface` | `iface0edit0grant0testadmin0mw143` (8081) / `iface0edit0grant0testadmin0mw146` (8082) | `basic`, `highvolume`, `delete`, `editinterface`, `editsiteconfig` |
+
+A bot session's rights are the intersection of the account's rights and the bot password's grants. The
+`delete` grant carries `deleterevision`/`deletelogentry`, but vanilla MediaWiki gives those rights to the
+`suppress` group only (not `sysop`), so `TestAdmin` is added to `suppress` — this makes revdel effective on
+`TestAdmin@SkubellTest`. Suppression (`suppressrevision`) is deliberately NOT effective there: it would need
+the `oversight` grant on top of the account right. Use `Shiva@SkubellTest` for the suppressor persona —
+`Shiva` is in `suppress` only (no sysop), and its grants expose revdel, suppression, and the suppression log —
+and `Vishnu@SkubellTest` for the admin+suppressor persona (everything effective at once).
 
 `TestAdmin@SkubellIface` is the interface-edit bot password: it can edit/delete `MediaWiki:`
 namespace pages (effective rights `editinterface` + `delete`). Sitewide `MediaWiki:*.css`/`*.js`

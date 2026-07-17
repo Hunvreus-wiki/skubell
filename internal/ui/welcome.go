@@ -50,8 +50,8 @@ func (w *WelcomeScreen) build() fyne.CanvasObject {
 	topBar := container.NewHBox(picker.Canvas(), layout.NewSpacer(), home, preferences)
 
 	// Only implemented workflows are shown; the rest are hidden rather than displayed as dead buttons. As each remaining
-	// workflow is built (Restoration, Blocking, HistoryMerge, Protection, RevisionDelete, UserRights, AugeasCore — see
-	// api.Workflow* constants), add its button here.
+	// workflow is built (Restoration, Blocking, HistoryMerge, UserRights, AugeasCore — see api.Workflow* constants), add
+	// its button here.
 	buttons := []fyne.CanvasObject{
 		w.workflowButton(t.T("workflow_delete_pages", "Delete pages"), api.WorkflowDeletion, func() {
 			w.app.openDeletionWorkflow()
@@ -59,6 +59,10 @@ func (w *WelcomeScreen) build() fyne.CanvasObject {
 		w.workflowButton(t.T("workflow_protection", "Change page protection"), api.WorkflowProtection, func() {
 			w.app.openProtectionWorkflow()
 		}),
+		w.workflowButton(t.T("workflow_revdel", "Change the visibility of versions"), api.WorkflowRevisionDelete,
+			func() {
+				w.app.openRevDelWorkflow()
+			}),
 	}
 	grid := container.NewGridWithColumns(2, buttons...)
 
@@ -144,6 +148,18 @@ func journalActionSummary(entry ops.JournalEntry) string {
 					map[string]any{"Title": title})
 			}
 			return t.Td("journal_delete_page", `Delete page "{{.Title}}"`, map[string]any{"Title": title})
+		}
+	}
+	if op.Type == ops.OpRevisionDelete || op.Type == ops.OpSuppress {
+		if ids := strings.TrimSpace(op.Params["ids"]); ids != "" {
+			count := len(strings.Split(ids, "|"))
+			// OpSuppress appears only in journals persisted before suppression became a level on OpRevisionDelete.
+			if op.Type == ops.OpSuppress || op.Params["suppress"] == "yes" {
+				return t.Tp("journal_suppress_revisions",
+					"Suppress {{.Count}} revision", "Suppress {{.Count}} revisions", count)
+			}
+			return t.Tp("journal_revdel_revisions",
+				"Change the visibility of {{.Count}} revision", "Change the visibility of {{.Count}} revisions", count)
 		}
 	}
 	if d := strings.TrimSpace(op.Description); d != "" {

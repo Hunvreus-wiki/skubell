@@ -283,6 +283,14 @@
   "journal_delete_page_talk": {
     "other": "Diverkañ ar bajenn « {{.Title}} » hag he fajenn gaozeal"
   },
+  "journal_revdel_revisions": {
+    "one": "Kemmañ hewelusted {{.Count}} stumm",
+    "other": "Kemmañ hewelusted {{.Count}} stumm"
+  },
+  "journal_suppress_revisions": {
+    "one": "Dilemel {{.Count}} stumm",
+    "other": "Dilemel {{.Count}} stumm"
+  },
   "prefs_language": {
     "other": "Yezh"
   },
@@ -351,6 +359,9 @@
   },
   "protect_err_past_date": {
     "other": "Ret eo d’an deiziad termen bezañ en dazont."
+  },
+  "protect_err_reason_text_required": {
+    "other": "Ret eo reiñ un abeg ouzhpenn pa vez dibabet {{.None}}."
   },
   "protect_err_too_broad": {
     "other": "Re a bajennoù a glot gant ar c’hlask (muioc’h eget {{.Max}} en un esaouenn anv hepken). Strishait anezhañ gant ur rakger titl pe ur sil gwareziñ, pe savit roll ar pajennoù gant ur benveg arbennikoc’h ha pegit an titloù en takad merkañ dre zorn."
@@ -547,6 +558,180 @@
   "protect_utc": {
     "other": "UTC"
   },
+  "revdel_batch_revisions": {
+    "one": "{{.Count}} stumm",
+    "other": "{{.Count}} stumm"
+  },
+  "revdel_clear_selection": {
+    "other": "Goullonderiñ an diuzadenn"
+  },
+  "revdel_current_marker": {
+    "other": "(a-vremañ)"
+  },
+  "revdel_download_journal": {
+    "other": "Pellgargañ ar marilh"
+  },
+  "revdel_dry_run": {
+    "other": "Darvanañ"
+  },
+  "revdel_dry_run_ok": {
+    "other": "(darvanañ)"
+  },
+  "revdel_err_bad_datetime": {
+    "other": "Merkit an deiziadoù er stumm « BBBB-MM-DD HH:MM:SS » (UTC), pe laoskit anezho goullo."
+  },
+  "revdel_err_missing": {
+    "other": "N’eus ket eus ar bajenn « {{.Title}} »."
+  },
+  "revdel_err_reason_text_required": {
+    "other": "Ret eo reiñ un abeg ouzhpenn pa vez dibabet {{.None}}."
+  },
+  "revdel_exec_canceled": {
+    "other": "Peurgas nullet."
+  },
+  "revdel_exec_complete": {
+    "other": "Peurgas echu."
+  },
+  "revdel_executing": {
+    "other": "Oc’h arloañ kemmoù an hewelusted…"
+  },
+  "revdel_field_additional_reason": {
+    "other": "Testenn abeg ouzhpenn"
+  },
+  "revdel_field_author": {
+    "other": "Aozer"
+  },
+  "revdel_field_comment": {
+    "other": "diverradenn"
+  },
+  "revdel_field_content": {
+    "other": "endalc’had"
+  },
+  "revdel_field_from": {
+    "other": "Adalek (UTC)"
+  },
+  "revdel_field_page": {
+    "other": "Pajenn"
+  },
+  "revdel_field_reason": {
+    "other": "Abeg"
+  },
+  "revdel_field_to": {
+    "other": "Betek (UTC)"
+  },
+  "revdel_field_user": {
+    "other": "anv implijer"
+  },
+  "revdel_hidden_field": {
+    "other": "(kuzhet)"
+  },
+  "revdel_legend_unchanged": {
+    "other": "evel goulennet dija"
+  },
+  "revdel_loading": {
+    "other": "O kargañ istor ar bajenn…"
+  },
+  "revdel_loading_count": {
+    "one": "{{.Count}} stumm karget…",
+    "other": "{{.Count}} stumm karget…"
+  },
+  "revdel_manual_skipped": {
+    "one": "{{.Count}} enmont zo bet laosket a-gostez : n’eo ket un ID stumm eus ar bajenn-mañ, ar stumm a-vremañ, pe ur stumm supprimet na c’hell ket an estez-mañ kemmañ.",
+    "other": "{{.Count}} enmont zo bet laosket a-gostez : n’int ket IDoù stumm eus ar bajenn-mañ, ar stumm a-vremañ, pe stummoù supprimet na c’hell ket an estez-mañ kemmañ."
+  },
+  "revdel_need_change": {
+    "other": "Dibabit ur c’hemm hewelusted : askit Dilamet pe arventennit ur vaezienn da nebeutañ."
+  },
+  "revdel_need_page": {
+    "other": "Merkit titl ur bajenn evit kenderc’hel."
+  },
+  "revdel_need_selection": {
+    "other": "Diuzit ur stumm da nebeutañ evit kenderc’hel."
+  },
+  "revdel_no_match": {
+    "other": "Stumm ebet ne glot gant an dezverkoù."
+  },
+  "revdel_nothing_to_change": {
+    "other": "Ne gemmfe stumm ebet ; kemmit an arventennoù pe an diuzadenn."
+  },
+  "revdel_options_heading": {
+    "other": "Hewelusted ar stummoù diuzet"
+  },
+  "revdel_placeholder_author": {
+    "other": "(an holl)"
+  },
+  "revdel_placeholder_ids": {
+    "other": "Un ID stumm e pep linenn"
+  },
+  "revdel_placeholder_page": {
+    "other": "Titl ar bajenn"
+  },
+  "revdel_press_proceed": {
+    "other": "Pouezit war Kenderc’hel evit arloañ ar c’hemmoù hewelusted."
+  },
+  "revdel_press_proceed_dry": {
+    "other": "Darvanañ : pouezit war Kenderc’hel evit darvanañ (kemm ebet graet)."
+  },
+  "revdel_preview_summary": {
+    "other": "{{.Change}} da gemmañ · {{.Unchanged}} digemm"
+  },
+  "revdel_reason_none": {
+    "other": "(hini ebet)"
+  },
+  "revdel_reason_placeholder": {
+    "other": "Abeg ouzhpenn"
+  },
+  "revdel_revision_list": {
+    "other": "Stummoù"
+  },
+  "revdel_row_current": {
+    "other": "ar stumm a-vremañ ; n’haller ket kemmañ anezhañ"
+  },
+  "revdel_select_listed": {
+    "other": "Diuzañ ar stummoù rollet"
+  },
+  "revdel_select_matching": {
+    "other": "Diuzañ ar stummoù o klotañ"
+  },
+  "revdel_selected_count": {
+    "other": "{{.Count}} diuzet diwar {{.Total}}"
+  },
+  "revdel_selection_intro": {
+    "other": "Merkit ar bajenn a fell deoc’h kemmañ hewelusted he stummoù. Er bazenn da heul e vo rollet he stummoù."
+  },
+  "revdel_state_deleted": {
+    "other": "diverket"
+  },
+  "revdel_state_suppressed": {
+    "other": "dilamet"
+  },
+  "revdel_state_visible": {
+    "other": "hewel"
+  },
+  "revdel_suppress": {
+    "other": "Dilamet (kuzhet ivez ouzh ar verourien)"
+  },
+  "revdel_tab_criteria": {
+    "other": "Dezverkoù"
+  },
+  "revdel_tab_manual": {
+    "other": "Merkañ dre zorn"
+  },
+  "revdel_target_deleted": {
+    "other": "diverket"
+  },
+  "revdel_target_no_change": {
+    "other": "(hep kemm)"
+  },
+  "revdel_target_visible": {
+    "other": "hewel"
+  },
+  "revdel_title": {
+    "other": "Kemmañ hewelusted ar stummoù"
+  },
+  "revdel_unknown_failure": {
+    "other": "c’hwitadenn dianav"
+  },
   "security_insecure": {
     "other": "Nann-sur"
   },
@@ -648,6 +833,9 @@
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (ezhomm eus {{.Rights}})"
+  },
+  "workflow_revdel": {
+    "other": "Kemmañ hewelusted ar stummoù"
   },
   "workflow_step_execution": {
     "other": "Peurgas"

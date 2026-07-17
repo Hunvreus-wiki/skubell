@@ -36,9 +36,11 @@ const (
 
 // APIError represents an error returned by the MediaWiki API.
 type APIError struct {
-	Code string
-	Info string
-	Lag  float64
+	Code      string
+	Info      string
+	Lag       float64
+	Parameter string // multivalue parameter a "toomanyvalues" error names ("" otherwise)
+	Limit     int    // value cap the wiki reported alongside "toomanyvalues" (0 otherwise)
 }
 
 func (e *APIError) Error() string {
@@ -64,7 +66,29 @@ type Client struct {
 
 	warnMu         sync.Mutex
 	warnedInsecure map[string]struct{}
+
+	multiValueMu      sync.Mutex
+	multiValueDefault int            // rights-derived fallback cap; 0 until SetMultiValueCaps
+	multiValueCaps    map[string]int // per-action caps, wiki-discovered and rejection-shrunk; see MultiValueCap()
+
+	sessionMu sync.Mutex       // guards session; never held across network calls
+	session   *sessionRecovery // nil until EnableSessionRecovery
+	recoverMu sync.Mutex       // serializes recoverSession runs (held across the re-login network calls)
 }
+
+// sessionRecovery is what the client needs to transparently re-login when the wiki reports the session gone:
+// the credentials of the last successful connect, plus a generation counter so that when several in-flight
+// requests see the same session die, only the first re-logs in and the others just retry.
+type sessionRecovery struct {
+	apiURL     string
+	username   string
+	credential string
+	generation uint64 // bumped on each successful recovery
+}
+
+// noRecoveryContextKey marks a context whose requests must not attempt session recovery: the requests
+// recoverSession itself makes (login, cap re-discovery) would otherwise recurse into it.
+type noRecoveryContextKey struct{}
 
 // NewClient creates an API client with cookie-jar session support.
 func NewClient(writeThrottleMS, maxRetries int, logger *logrus.Logger) (*Client, error) {
@@ -102,6 +126,175 @@ func NewClient(writeThrottleMS, maxRetries int, logger *logrus.Logger) (*Client,
 
 func defaultUserAgent() string {
 	return fmt.Sprintf("%s/%s (https://github.com/Hunvreus-wiki/skubell; bot)", version.AppName, version.Number)
+}
+
+// defaultMultiValueCap is the multivalue cap assumed before capability detection: the MediaWiki limit for a
+// session without apihighlimits, safe against any wiki. highLimitsMultiValueCap is the limit apihighlimits raises
+// it to.
+const (
+	defaultMultiValueCap    = 50
+	highLimitsMultiValueCap = 500
+)
+
+// MultiValueCap is the number of values one multivalue parameter of the given action (query's titles,
+// revisiondelete's ids, …) may carry on this session. Modules may cap their parameters individually, so the
+// value is per-action: wiki-discovered at connect (SetMultiValueCaps) and shrunk for the action the moment one
+// of its requests is rejected with "toomanyvalues" — the wiki's live answer overrides whatever discovery or
+// rights implied. Actions without a discovered or learned cap use the rights-derived default. Batching callers
+// must size their chunks with it at call time, not once up front.
+func (c *Client) MultiValueCap(action string) int {
+	c.multiValueMu.Lock()
+	defer c.multiValueMu.Unlock()
+	if actionCap, ok := c.multiValueCaps[action]; ok && actionCap > 0 {
+		return actionCap
+	}
+	if c.multiValueDefault > 0 {
+		return c.multiValueDefault
+	}
+	return defaultMultiValueCap
+}
+
+// SetMultiValueCaps resets the session's multivalue caps: defaultCap from the detected rights (500 with
+// apihighlimits, 50 without) and perAction from wiki discovery (nil is fine). Call it on (re)connect and
+// session recovery only; between those the caps move solely via shrinkMultiValueCap.
+func (c *Client) SetMultiValueCaps(defaultCap int, perAction map[string]int) {
+	c.multiValueMu.Lock()
+	defer c.multiValueMu.Unlock()
+	c.multiValueDefault = defaultCap
+	c.multiValueCaps = maps.Clone(perAction)
+	if c.multiValueCaps == nil {
+		c.multiValueCaps = map[string]int{}
+	}
+}
+
+// shrinkMultiValueCap lowers an action's cap to what the wiki just reported; it never raises one.
+func (c *Client) shrinkMultiValueCap(action string, limit int) {
+	if action == "" || limit <= 0 {
+		return
+	}
+	c.multiValueMu.Lock()
+	defer c.multiValueMu.Unlock()
+	current := c.multiValueCaps[action]
+	if current <= 0 {
+		current = c.multiValueDefault
+	}
+	if current <= 0 {
+		current = defaultMultiValueCap
+	}
+	if limit < current {
+		if c.multiValueCaps == nil {
+			c.multiValueCaps = map[string]int{}
+		}
+		c.multiValueCaps[action] = limit
+	}
+}
+
+// observeAPIError updates session state from any API error the client sees: a multivalue overflow proves the
+// wiki's real cap for that action, so every later batched call on it shrinks to the reported limit.
+func (c *Client) observeAPIError(action string, apiErr *APIError) {
+	if apiErr != nil && apiErr.Code == "toomanyvalues" {
+		c.shrinkMultiValueCap(action, apiErr.Limit)
+	}
+}
+
+// EnableSessionRecovery arms transparent session recovery: from now on every request asserts its login
+// (assert=user, exempting the login flow itself) and a session the wiki reports gone is re-established by
+// re-running the login flow with these credentials before the failed request is retried. MediaWiki checks the
+// assertion before anything else — parameter counts, tokens — so an expired session surfaces as
+// "assertuserfailed" instead of masquerading as, say, a multivalue-limit rejection. Call after a successful
+// login; Logout disables it.
+func (c *Client) EnableSessionRecovery(apiURL, username, credential string) {
+	c.sessionMu.Lock()
+	defer c.sessionMu.Unlock()
+	generation := uint64(0)
+	if c.session != nil {
+		generation = c.session.generation
+	}
+	c.session = &sessionRecovery{apiURL: apiURL, username: username, credential: credential, generation: generation}
+}
+
+// DisableSessionRecovery forgets the stored credentials: requests stop asserting a login and a dead session
+// is no longer resurrected. Called on logout.
+func (c *Client) DisableSessionRecovery() {
+	c.sessionMu.Lock()
+	defer c.sessionMu.Unlock()
+	c.session = nil
+}
+
+// sessionSnapshot returns a copy of the recovery state and whether recovery is enabled.
+func (c *Client) sessionSnapshot() (sessionRecovery, bool) {
+	c.sessionMu.Lock()
+	defer c.sessionMu.Unlock()
+	if c.session == nil {
+		return sessionRecovery{}, false
+	}
+	return *c.session, true
+}
+
+// recoverSession re-establishes a session the wiki reported gone: re-run the login flow with the stored
+// credentials, drop the now-stale CSRF token, and re-learn the multivalue cap from the fresh session (a
+// disconnection must not leave the cap small once the reconnection restores high limits — see batch.go).
+// failedGeneration is the generation the failing request saw: when several requests watch the same session
+// die, the first one recovers it and the rest return immediately to retry on the new session.
+func (c *Client) recoverSession(ctx context.Context, failedGeneration uint64) error {
+	c.recoverMu.Lock()
+	defer c.recoverMu.Unlock()
+
+	session, enabled := c.sessionSnapshot()
+	if !enabled {
+		return errors.New("session recovery not enabled")
+	}
+	if session.generation != failedGeneration {
+		return nil // another request already recovered the session; just retry
+	}
+
+	ctx = context.WithValue(ctx, noRecoveryContextKey{}, true)
+	if _, err := LoginContext(ctx, c, session.apiURL, session.username, session.credential); err != nil {
+		return fmt.Errorf("re-login as %s: %w", session.username, err)
+	}
+	c.logger.Infof("session expired; re-logged in as %s", session.username)
+
+	c.sessionMu.Lock()
+	if c.session != nil {
+		c.session.generation++
+	}
+	c.sessionMu.Unlock()
+
+	// The old session's CSRF token died with it.
+	c.csrfMu.Lock()
+	c.csrfToken = ""
+	c.csrfMu.Unlock()
+
+	// The fresh session's rights decide the caps now: ask the wiki rather than keep what the dying session's
+	// answers taught. Keep the current (safe) caps when the wiki cannot be asked.
+	if perAction, err := FetchMultiValueCapsContext(ctx, c, session.apiURL); err == nil {
+		c.multiValueMu.Lock()
+		currentDefault := c.multiValueDefault
+		c.multiValueMu.Unlock()
+		c.SetMultiValueCaps(currentDefault, perAction)
+	} else {
+		c.logger.Warnf("could not re-learn multivalue caps after re-login: %v", err)
+	}
+	return nil
+}
+
+// isSessionLostError reports whether the API error means the login session is gone (the assert=user we attach
+// to requests failed).
+func isSessionLostError(apiErr *APIError) bool {
+	return apiErr.Code == "assertuserfailed" || apiErr.Code == "assertnameduserfailed"
+}
+
+// isLoginFlowParams reports whether the request is part of the login/logout flow itself, which must run
+// without a login assertion: it is establishing (or ending) the very session the assertion would test.
+func isLoginFlowParams(params map[string]string) bool {
+	switch params["action"] {
+	case "login", "logout", "clientlogin":
+		return true
+	case "query":
+		return params["meta"] == "tokens" && strings.Contains(params["type"], "login")
+	default:
+		return false
+	}
 }
 
 // Get executes a GET request against api.php and decodes the JSON result.
@@ -154,9 +347,19 @@ func (c *Client) request(ctx context.Context, method, apiURL string, params map[
 		workingParams["errorlang"] = t.CurrentLanguage()
 	}
 
+	// With recovery armed, every request asserts its login so a dead session fails fast and unambiguously
+	// (assertuserfailed) instead of as whatever check the anonymous request trips first.
+	session, recoveryEnabled := c.sessionSnapshot()
+	if recoveryEnabled && !isLoginFlowParams(workingParams) {
+		if _, ok := workingParams["assert"]; !ok {
+			workingParams["assert"] = "user"
+		}
+	}
+
 	c.warnIfInsecure(apiURL)
 
 	badTokenRefreshed := false
+	sessionRecovered := false
 	attempts := c.maxRetries + 1
 	for attempt := range attempts {
 		if err := ctx.Err(); err != nil {
@@ -197,7 +400,17 @@ func (c *Client) request(ctx context.Context, method, apiURL string, params map[
 		}
 
 		apiErr := extractAPIError(responseBody)
+		c.observeAPIError(workingParams["action"], apiErr)
 		if apiErr != nil {
+			if isSessionLostError(apiErr) && recoveryEnabled && !sessionRecovered &&
+				ctx.Value(noRecoveryContextKey{}) == nil {
+				if recoverErr := c.recoverSession(ctx, session.generation); recoverErr != nil {
+					return nil, fmt.Errorf("session lost and recovery failed: %w", recoverErr)
+				}
+				sessionRecovered = true
+				continue
+			}
+
 			if normalizedMethod == http.MethodPost && apiErr.Code == "badtoken" && !badTokenRefreshed &&
 				shouldAttachCSRF(workingParams) {
 				if _, refreshErr := c.getCSRFTokenContext(ctx, apiURL, true); refreshErr != nil {
@@ -401,8 +614,20 @@ func extractLocalizedAPIError(payload map[string]any) *APIError {
 		if lag, ok := data["lag"].(float64); ok {
 			apiErr.Lag = lag
 		}
+		fillMultiValueDetails(apiErr, data)
 	}
 	return apiErr
+}
+
+// fillMultiValueDetails reads the multivalue-overflow details ("toomanyvalues") out of the error's machine data:
+// under errorformat=plaintext they sit in the "data" object, in the legacy shape directly in the error object.
+func fillMultiValueDetails(apiErr *APIError, data map[string]any) {
+	if parameter, ok := data["parameter"].(string); ok {
+		apiErr.Parameter = parameter
+	}
+	if limit, ok := data["limit"].(float64); ok {
+		apiErr.Limit = int(limit)
+	}
 }
 
 func extractLegacyAPIError(payload map[string]any) *APIError {
@@ -421,6 +646,7 @@ func extractLegacyAPIError(payload map[string]any) *APIError {
 	if lag, ok := errorData["lag"].(float64); ok {
 		apiErr.Lag = lag
 	}
+	fillMultiValueDetails(apiErr, errorData)
 	return apiErr
 }
 

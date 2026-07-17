@@ -51,6 +51,16 @@ IFACE_GRANTS="basic,highvolume,delete,editinterface,editsiteconfig"
 BOTPASS_TESTEDITOR='testeditor00botpass00skubell0002'
 BOTPASS_TESTBLOCKED='testblocked0botpass00skubell0003'
 BOTPASS_TESTPARTIAL='testpartial0botpass00skubell0004'
+BOTPASS_SHIVA='shiva0000000botpass00skubell0005'
+BOTPASS_VISHNU='vishnu000000botpass00skubell0006'
+
+# Non-admin suppressor persona (suppress group, no sysop): revdel + suppression rights without the
+# admin bundle. The oversight grant exposes suppressrevision/viewsuppressed, delete exposes
+# deleterevision/deletelogentry, viewrestrictedlogs exposes suppressionlog.
+SHIVA_GRANTS="basic,highvolume,delete,oversight,viewrestrictedlogs"
+
+# Admin+suppressor persona (sysop + suppress): the full admin workflow grants plus suppression.
+VISHNU_GRANTS="basic,highvolume,delete,protect,createeditmovepage,oversight,viewrestrictedlogs"
 
 run_compose_exec() {
   docker compose -f "${COMPOSE_FILE}" exec -T "${APP_SERVICE}" "$@"
@@ -260,16 +270,24 @@ echo "Provisioning ${TARGET} via service '${APP_SERVICE}' ..."
 echo "Creating/updating test users ..."
 # Convenience local login account for manual browser testing.
 create_or_update_user admin 'otempssuspendstonvol' --sysop --bureaucrat
-create_or_update_user TestAdmin 'TestAdminPass!' --sysop --bureaucrat
+# suppress group: vanilla sysop lacks deleterevision/deletelogentry, so revdel via the delete
+# grant only works if the account holds them; suppress is the built-in group that does.
+create_or_update_user TestAdmin 'TestAdminPass!' --sysop --bureaucrat --custom-groups suppress
 create_or_update_user TestEditor 'TestEditorPass!'
 create_or_update_user TestBlocked 'TestBlockedPass!' --sysop
 create_or_update_user TestPartial 'TestPartialPass!' --sysop
+# Non-admin suppressor: suppress group only, deliberately NOT sysop.
+create_or_update_user Shiva 'ShivaPass!' --custom-groups suppress
+# Admin+suppressor: both the admin bundle and the suppression rights.
+create_or_update_user Vishnu 'VishnuPass!' --sysop --custom-groups suppress
 
 echo "Creating/updating bot passwords ..."
 create_or_update_botpassword TestAdmin "${BOTPASS_TESTADMIN}"
 create_or_update_botpassword TestEditor "${BOTPASS_TESTEDITOR}"
 create_or_update_botpassword TestBlocked "${BOTPASS_TESTBLOCKED}"
 create_or_update_botpassword TestPartial "${BOTPASS_TESTPARTIAL}"
+create_or_update_botpassword Shiva "${BOTPASS_SHIVA}" "${BOT_NAME}" "${SHIVA_GRANTS}"
+create_or_update_botpassword Vishnu "${BOTPASS_VISHNU}" "${BOT_NAME}" "${VISHNU_GRANTS}"
 # Interface-edit bot password (separate app id) for MediaWiki: namespace edits/deletions.
 create_or_update_botpassword TestAdmin "${BOTPASS_TESTADMIN_IFACE}" "${IFACE_BOT_NAME}" "${IFACE_GRANTS}"
 
@@ -290,5 +308,7 @@ Bot password credentials:
   - TestEditor@SkubellTest  / ${BOTPASS_TESTEDITOR}
   - TestBlocked@SkubellTest / ${BOTPASS_TESTBLOCKED}
   - TestPartial@SkubellTest / ${BOTPASS_TESTPARTIAL}
+  - Shiva@SkubellTest       / ${BOTPASS_SHIVA}  (non-admin suppressor: revdel + suppression)
+  - Vishnu@SkubellTest      / ${BOTPASS_VISHNU}  (admin+suppressor: admin bundle + suppression)
   - TestAdmin@${IFACE_BOT_NAME}  / ${BOTPASS_TESTADMIN_IFACE}  (interface-edit: editinterface + delete)
 SUMMARY

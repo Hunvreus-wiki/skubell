@@ -453,7 +453,9 @@ func (s *protectionWorkflowScreen) buildSelectionContent() fyne.CanvasObject {
 		s.ingestManualEntry()
 		s.refreshLists()
 	})
-	manualTab := container.NewVBox(s.manualEntry, container.NewHBox(manualAddBtn))
+	// Border (not VBox) so the multi-line entry fills the tab's full height, with the button pinned at the
+	// bottom — same layout as the deletion workflow's manual tab.
+	manualTab := container.NewBorder(nil, container.NewHBox(manualAddBtn), nil, nil, s.manualEntry)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem(t.T("protect_search", "Search"), container.NewVScroll(searchForm)),
@@ -897,20 +899,23 @@ func (s *protectionWorkflowScreen) unprotectedPagesInNamespace(
 }
 
 // keepUnprotected returns the subset of titles whose prop=info&inprop=protection reports no protection — direct or
-// inherited via another page's cascade — querying in batches of 50 (the non-apihighlimits titles cap).
+// inherited via another page's cascade — querying in batches sized to the session's live multivalue cap (see
+// api.Client.ForEachChunk).
 func (s *protectionWorkflowScreen) keepUnprotected(ctx context.Context, titles []string) ([]string, error) {
-	const chunkSize = 50
 	kept := []string{}
-	for start := 0; start < len(titles); start += chunkSize {
-		end := min(start+chunkSize, len(titles))
+	err := s.app.client.ForEachChunk("query", titles, func(batch []string) error {
 		payload, err := s.app.client.GetContext(ctx, s.app.apiURL, map[string]string{
 			"action": "query", "prop": "info", "inprop": "protection",
-			"titles": strings.Join(titles[start:end], "|"), "formatversion": "2",
+			"titles": strings.Join(batch, "|"), "formatversion": "2",
 		})
 		if err != nil {
-			return nil, err
+			return err
 		}
 		kept = append(kept, unprotectedTitles(payload)...)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return kept, nil
 }
@@ -1498,6 +1503,11 @@ func (s *protectionWorkflowScreen) captureOptions() string {
 			return msg
 		}
 		byType[typ] = setting
+	}
+	none := t.T("protect_reason_none", "(none)")
+	if strings.TrimSpace(s.reasonSelect.Selected) == none && strings.TrimSpace(s.reasonEntry.Text) == "" {
+		return t.Td("protect_err_reason_text_required",
+			"Additional reason text is required when {{.None}} is selected.", map[string]any{"None": none})
 	}
 	s.settings = protect.Settings{
 		ByType:  byType,

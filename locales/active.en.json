@@ -283,6 +283,14 @@
   "journal_delete_page_talk": {
     "other": "Delete page \"{{.Title}}\" and its talk page"
   },
+  "journal_revdel_revisions": {
+    "one": "Change the visibility of {{.Count}} revision",
+    "other": "Change the visibility of {{.Count}} revisions"
+  },
+  "journal_suppress_revisions": {
+    "one": "Suppress {{.Count}} revision",
+    "other": "Suppress {{.Count}} revisions"
+  },
   "prefs_language": {
     "other": "Language"
   },
@@ -351,6 +359,9 @@
   },
   "protect_err_past_date": {
     "other": "The expiry date must be in the future."
+  },
+  "protect_err_reason_text_required": {
+    "other": "Additional reason text is required when {{.None}} is selected."
   },
   "protect_err_too_broad": {
     "other": "The search matches too many pages (more than {{.Max}} in one namespace). Narrow it with a title prefix or a protection filter, or build the page list with a more specialised tool and paste the titles under Manual entry."
@@ -547,6 +558,180 @@
   "protect_utc": {
     "other": "UTC"
   },
+  "revdel_batch_revisions": {
+    "one": "{{.Count}} revision",
+    "other": "{{.Count}} revisions"
+  },
+  "revdel_clear_selection": {
+    "other": "Clear selection"
+  },
+  "revdel_current_marker": {
+    "other": "(current)"
+  },
+  "revdel_download_journal": {
+    "other": "Download journal"
+  },
+  "revdel_dry_run": {
+    "other": "Dry-run"
+  },
+  "revdel_dry_run_ok": {
+    "other": "(dry-run)"
+  },
+  "revdel_err_bad_datetime": {
+    "other": "Enter datetimes as \"YYYY-MM-DD HH:MM:SS\" (UTC), or leave them empty."
+  },
+  "revdel_err_missing": {
+    "other": "The page \"{{.Title}}\" does not exist."
+  },
+  "revdel_err_reason_text_required": {
+    "other": "Additional reason text is required when {{.None}} is selected."
+  },
+  "revdel_exec_canceled": {
+    "other": "Execution canceled."
+  },
+  "revdel_exec_complete": {
+    "other": "Execution complete."
+  },
+  "revdel_executing": {
+    "other": "Applying visibility changes…"
+  },
+  "revdel_field_additional_reason": {
+    "other": "Additional reason text"
+  },
+  "revdel_field_author": {
+    "other": "Author"
+  },
+  "revdel_field_comment": {
+    "other": "comment"
+  },
+  "revdel_field_content": {
+    "other": "content"
+  },
+  "revdel_field_from": {
+    "other": "From (UTC)"
+  },
+  "revdel_field_page": {
+    "other": "Page"
+  },
+  "revdel_field_reason": {
+    "other": "Reason"
+  },
+  "revdel_field_to": {
+    "other": "To (UTC)"
+  },
+  "revdel_field_user": {
+    "other": "username"
+  },
+  "revdel_hidden_field": {
+    "other": "(hidden)"
+  },
+  "revdel_legend_unchanged": {
+    "other": "already as requested"
+  },
+  "revdel_loading": {
+    "other": "Loading the page history…"
+  },
+  "revdel_loading_count": {
+    "one": "{{.Count}} revision loaded…",
+    "other": "{{.Count}} revisions loaded…"
+  },
+  "revdel_manual_skipped": {
+    "one": "{{.Count}} entry was skipped: not a revision ID of this page, the current revision, or a suppressed revision this session cannot change.",
+    "other": "{{.Count}} entries were skipped: not revision IDs of this page, the current revision, or suppressed revisions this session cannot change."
+  },
+  "revdel_need_change": {
+    "other": "Choose a visibility change: check Suppressed or set at least one field."
+  },
+  "revdel_need_page": {
+    "other": "Enter a page title to continue."
+  },
+  "revdel_need_selection": {
+    "other": "Select at least one revision to continue."
+  },
+  "revdel_no_match": {
+    "other": "No revision matches the criteria."
+  },
+  "revdel_nothing_to_change": {
+    "other": "No revision would change; adjust the settings or selection."
+  },
+  "revdel_options_heading": {
+    "other": "Visibility of the selected revisions"
+  },
+  "revdel_placeholder_author": {
+    "other": "(any)"
+  },
+  "revdel_placeholder_ids": {
+    "other": "One revision ID per line"
+  },
+  "revdel_placeholder_page": {
+    "other": "Page title"
+  },
+  "revdel_press_proceed": {
+    "other": "Press Proceed to apply the visibility changes."
+  },
+  "revdel_press_proceed_dry": {
+    "other": "Dry-run: press Proceed to simulate (no changes are written)."
+  },
+  "revdel_preview_summary": {
+    "other": "{{.Change}} will change · {{.Unchanged}} unchanged"
+  },
+  "revdel_reason_none": {
+    "other": "(none)"
+  },
+  "revdel_reason_placeholder": {
+    "other": "Additional reason"
+  },
+  "revdel_revision_list": {
+    "other": "Revisions"
+  },
+  "revdel_row_current": {
+    "other": "current revision; cannot be changed"
+  },
+  "revdel_select_listed": {
+    "other": "Select listed revisions"
+  },
+  "revdel_select_matching": {
+    "other": "Select matching revisions"
+  },
+  "revdel_selected_count": {
+    "other": "{{.Count}} of {{.Total}} selected"
+  },
+  "revdel_selection_intro": {
+    "other": "Enter the page whose revision visibility you want to change. The next step lists its revisions."
+  },
+  "revdel_state_deleted": {
+    "other": "deleted"
+  },
+  "revdel_state_suppressed": {
+    "other": "suppressed"
+  },
+  "revdel_state_visible": {
+    "other": "visible"
+  },
+  "revdel_suppress": {
+    "other": "Suppressed (hidden from administrators too)"
+  },
+  "revdel_tab_criteria": {
+    "other": "Criteria"
+  },
+  "revdel_tab_manual": {
+    "other": "Manual entry"
+  },
+  "revdel_target_deleted": {
+    "other": "deleted"
+  },
+  "revdel_target_no_change": {
+    "other": "(no change)"
+  },
+  "revdel_target_visible": {
+    "other": "visible"
+  },
+  "revdel_title": {
+    "other": "Change the visibility of versions"
+  },
+  "revdel_unknown_failure": {
+    "other": "unknown failure"
+  },
   "security_insecure": {
     "other": "Insecure"
   },
@@ -648,6 +833,9 @@
   },
   "workflow_requires_rights": {
     "other": "{{.Label}} (requires {{.Rights}})"
+  },
+  "workflow_revdel": {
+    "other": "Change the visibility of versions"
   },
   "workflow_step_execution": {
     "other": "Execution"

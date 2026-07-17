@@ -8,6 +8,12 @@ type APICall struct {
 	Method   string
 	Params   map[string]string
 	SourceOp int
+	// MultiParam names the pipe-joined multivalue parameter in Params (e.g. "ids") that HttpExecutor may
+	// re-split when the wiki rejects the batch as larger than the session's real cap; "" disables re-splitting.
+	MultiParam string
+	// Validate, when set, inspects each successful response payload (once per chunk for a re-split call) and
+	// returns the failure hidden inside it, for actions that report per-item errors under an overall "Success".
+	Validate func(response map[string]any) *APIError
 }
 
 // WikiCapabilities summarizes detected capabilities of the target wiki.

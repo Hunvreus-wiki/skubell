@@ -1,6 +1,9 @@
 package api
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 const (
 	WorkflowDeletion       = "deletion"
@@ -36,6 +39,13 @@ var workflowRequiredRights = map[string][]string{
 	WorkflowAugeasRevDel:   {"deleterevision"},
 }
 
+// workflowAnyOfRights lists workflows usable with ANY one of the listed rights, overriding the all-required matrix
+// above. Revision visibility serves regular admins (deleterevision) and non-admin suppressors (suppressrevision)
+// alike, so either right makes the workflow available; the UI then gates each control by its specific right.
+var workflowAnyOfRights = map[string][]string{
+	WorkflowRevisionDelete: {"deleterevision", "suppressrevision"},
+}
+
 // EvaluateWorkflowAvailability maps rights to workflow availability.
 func EvaluateWorkflowAvailability(rights []string) map[string]WorkflowAvailability {
 	rightSet := make(map[string]struct{}, len(rights))
@@ -45,6 +55,10 @@ func EvaluateWorkflowAvailability(rights []string) map[string]WorkflowAvailabili
 
 	result := map[string]WorkflowAvailability{}
 	for workflow, required := range workflowRequiredRights {
+		if anyOf, ok := workflowAnyOfRights[workflow]; ok {
+			result[workflow] = anyOfAvailability(rightSet, anyOf)
+			continue
+		}
 		missing := []string{}
 		for _, right := range required {
 			if _, ok := rightSet[right]; !ok {
@@ -58,4 +72,17 @@ func EvaluateWorkflowAvailability(rights []string) map[string]WorkflowAvailabili
 		}
 	}
 	return result
+}
+
+// anyOfAvailability reports a workflow available when at least one of the alternative rights is held; when none is,
+// every alternative is listed as missing (any single one of them would unlock the workflow).
+func anyOfAvailability(rightSet map[string]struct{}, anyOf []string) WorkflowAvailability {
+	for _, right := range anyOf {
+		if _, ok := rightSet[right]; ok {
+			return WorkflowAvailability{Available: true, MissingRights: []string{}}
+		}
+	}
+	missing := slices.Clone(anyOf)
+	sort.Strings(missing)
+	return WorkflowAvailability{Available: false, MissingRights: missing}
 }
