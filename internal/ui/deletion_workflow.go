@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -322,6 +323,47 @@ func (s *deleteWorkflowScreen) showVerificationStep() {
 // (thousands of pages) read phase does not flood the main goroutine with updates.
 const progressThrottle = 120 * time.Millisecond
 
+// verificationProgress rate-limits the read phase's UI updates while remembering the newest one it drops for each
+// step. The last callback of a pass carries the final counts and usually lands inside the throttle window; discarding
+// it froze the label at the last survivor ("84/89 pages processed" on a finished search) while complete() filled the
+// bar. flush replays the held update when the pass ends, so the words agree with the bar.
+type verificationProgress struct {
+	mu       sync.Mutex
+	lastPush time.Time
+	held     map[string]func() // newest dropped update per step, keyed by the step's name
+	do       func(func())      // fyne.Do, injectable for tests
+}
+
+func newVerificationProgress() *verificationProgress {
+	return &verificationProgress{held: map[string]func(){}, do: fyne.Do}
+}
+
+// push runs update on the main goroutine, or — inside the throttle window — holds it under key, replacing any update
+// already held there: only the newest counts matter.
+func (p *verificationProgress) push(key string, update func()) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if time.Since(p.lastPush) < progressThrottle {
+		p.held[key] = update
+		return
+	}
+	p.lastPush = time.Now()
+	delete(p.held, key)
+	p.do(update)
+}
+
+// flush runs the update held for key, if any. Call it on the main goroutine, after the pass that pushes under key has
+// finished — it applies the final counts the throttle held back, unthrottled, since the pass will send no more.
+func (p *verificationProgress) flush(key string) {
+	p.mu.Lock()
+	update := p.held[key]
+	delete(p.held, key)
+	p.mu.Unlock()
+	if update != nil {
+		update()
+	}
+}
+
 // computePreview runs the deletion read phase off the main goroutine and streams progress to the verification screen.
 // Phase 1 (BuildPlan) expands the selection (redirects, talk pages) and reports "Calculating… N% (M found)"; once the
 // list exists it is shown immediately, then phase 2 annotates categories (emptiness checks) with a percentage over the
@@ -360,25 +402,18 @@ func (s *deleteWorkflowScreen) computePreview() {
 	go func() {
 		defer cancel()
 
-		var lastPush time.Time
-		throttled := func(update func()) {
-			if time.Since(lastPush) < progressThrottle {
-				return
-			}
-			lastPush = time.Now()
-			fyne.Do(update)
-		}
+		progress := newVerificationProgress()
 
 		// Discovery, measured against the reference pages — the only total known this early.
 		if planOptions.IncludeRedirect {
 			planOptions.OnProgress = func(processed, total, found int) {
-				throttled(func() {
+				progress.push("redirects", func() {
 					s.stepRedirects.set(processed, total, redirectStepLabel(processed, total, found))
 				})
 			}
 		}
 		planOptions.OnTalkCheck = func(done, total int) {
-			throttled(func() { s.stepTalkPages.set(done, total, talkStepLabel(done, total)) })
+			progress.push("talk", func() { s.stepTalkPages.set(done, total, talkStepLabel(done, total)) })
 		}
 		plan, err := deletion.BuildPlan(provider, titles, planOptions)
 		if err != nil {
@@ -394,15 +429,17 @@ func (s *deleteWorkflowScreen) computePreview() {
 		fyne.Do(func() {
 			s.previewRows = base
 			s.verificationList.Refresh()
-			// Both passes are over: fill their bars rather than leave them wherever the throttle last let them land.
-			// Either can finish inside one throttle window.
+			// Both passes are over: apply the final counts the throttle held back, then fill the bars rather than
+			// leave them wherever the throttle last let them land. Either can finish inside one throttle window.
+			progress.flush("redirects")
+			progress.flush("talk")
 			s.stepRedirects.complete()
 			s.stepTalkPages.complete()
 		})
 
 		// The category-emptiness checks: a request per category, and nothing at all for any other page.
 		rows, err := s.buildPreviewRows(ctx, plan, func(done, total int) {
-			throttled(func() { s.stepCategories.set(done, total, categoryCheckLabel(done, total)) })
+			progress.push("categories", func() { s.stepCategories.set(done, total, categoryCheckLabel(done, total)) })
 		})
 		fyne.Do(func() {
 			if err != nil {
@@ -413,6 +450,7 @@ func (s *deleteWorkflowScreen) computePreview() {
 			s.previewCancel = nil
 			s.previewPlan = plan
 			s.previewRows = rows
+			progress.flush("categories")
 			s.completeVerificationSteps()
 			s.verificationInfo.SetText(t.Td(
 				"del_summary",

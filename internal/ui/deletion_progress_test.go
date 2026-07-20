@@ -51,6 +51,44 @@ func TestVerificationStepShowsOnlyRealWork(t *testing.T) {
 	require.False(t, step.row.Visible())
 }
 
+// TestVerificationProgressFlushesTheHeldUpdate pins the fix for the frozen label: the final callback of a pass lands
+// inside the throttle window more often than not, and dropping it left "84/89 pages processed" on a finished search.
+// The throttle must hold the newest dropped update per step and replay it at completion — and only the newest, and
+// only for the step being flushed.
+func TestVerificationProgressFlushesTheHeldUpdate(t *testing.T) {
+	t.Parallel()
+
+	var applied []string
+	progress := newVerificationProgress()
+	progress.do = func(update func()) { update() } // main-goroutine dispatch, inline for the test
+	record := func(text string) func() {
+		return func() { applied = append(applied, text) }
+	}
+
+	// The first update opens the throttle window; everything after it inside the window is held, newest per step.
+	progress.push("redirects", record("redirects 3/89"))
+	progress.push("redirects", record("redirects 84/89"))
+	progress.push("redirects", record("redirects 89/89"))
+	progress.push("talk", record("talk 2/2"))
+	require.Equal(t, []string{"redirects 3/89"}, applied)
+
+	progress.flush("redirects")
+	require.Equal(t, []string{"redirects 3/89", "redirects 89/89"}, applied, "the final counts, not the last survivor")
+
+	progress.flush("redirects")
+	require.Len(t, applied, 2, "a held update is applied once")
+
+	progress.flush("talk")
+	require.Equal(t, "talk 2/2", applied[len(applied)-1], "each step holds its own update")
+
+	// An update that got through leaves nothing behind to replay.
+	progress.lastPush = progress.lastPush.Add(-2 * progressThrottle)
+	progress.push("redirects", record("redirects done"))
+	progress.flush("redirects")
+	require.Equal(t, "redirects done", applied[len(applied)-1])
+	require.Len(t, applied, 4)
+}
+
 // TestBuildPreviewRowsCountsCategoriesNotPages pins what the category row reports. Only a category costs a request
 // there, so a batch of ordinary pages must not announce a pass over all of them — nor show a row at all.
 func TestBuildPreviewRowsCountsCategoriesNotPages(t *testing.T) {
